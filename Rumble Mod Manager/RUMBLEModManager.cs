@@ -657,7 +657,7 @@ namespace Rumble_Mod_Manager
         {
             if (CurrentlySelectedVersion != CurrentlySelectedMod.Version)
             {
-                await ThunderstoreMods.DownloadModFromInternet(CurrentlySelectedMod.ModPageUrl, this, selectedPanel.ModEnabled);
+                await ThunderstoreMods.DownloadModFromInternet(CurrentlySelectedMod, this, selectedPanel.ModEnabled, true);
             }
         }
 

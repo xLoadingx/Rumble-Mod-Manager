@@ -139,7 +139,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        public static async Task DownloadModFromInternet(string ModPageUrl, RUMBLEModManager form1, bool ModEnabled)
+        public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod)
         {
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
 
@@ -155,7 +155,7 @@ namespace Rumble_Mod_Manager
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    HttpResponseMessage response = await client.GetAsync(ModPageUrl);
+                    HttpResponseMessage response = await client.GetAsync(mod.ModPageUrl);
                     response.EnsureSuccessStatusCode();
 
                     using (Stream zipStream = await response.Content.ReadAsStreamAsync())
@@ -166,22 +166,89 @@ namespace Rumble_Mod_Manager
                         }
                     }
                 }
+
+                // Install the main mod
+                InstallMod(tempZipPath, ModEnabled);
+
+                // Check if the mod has any dependencies
+                if (mod.Dependencies != null && mod.Dependencies.Any(dependency => !dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase)))
+                {
+                    StringBuilder installationMessage = new StringBuilder();
+                    installationMessage.AppendLine("Starting installation of dependencies for the mod:");
+
+                    foreach (var dependency in mod.Dependencies)
+                    {
+                        // Ignore specific dependencies like LavaGang-MelonLoader silently
+                        if (dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue; // Skip this dependency
+                        }
+
+                        // Parse the dependency "author-name-version"
+                        var parts = dependency.Split('-');
+                        if (parts.Length >= 2)
+                        {
+                            string author = parts[0];
+                            string name = parts[1];
+
+                            // Add to the combined installation message
+                            installationMessage.AppendLine($"Attempting to install dependency: {author}-{name}...");
+
+                            // Find the ModPageUrl for this dependency by matching the author and name
+                            var dependentMod = FindModByAuthorAndName(author, name);
+                            if (dependentMod != null)
+                            {
+                                // Recursively download and install each dependency
+                                await DownloadModFromInternet(dependentMod, form1, ModEnabled, false);
+                                installationMessage.AppendLine($"Successfully installed: {author}-{name}");
+                            }
+                            else
+                            {
+                                installationMessage.AppendLine($"Dependency {author}-{name} not found.");
+                            }
+                        }
+                    }
+
+                    installationMessage.AppendLine("Dependency installation process completed.");
+                    MessageBox.Show(installationMessage.ToString(), "Installing Dependencies", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                if (initialMod)
+                {
+                    MessageBox.Show("Mod successfully installed", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    form1.LoadMods();
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"An error occurred while downloading or extracting the mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+            }
+        }
+
+        private static Mod FindModByAuthorAndName(string author, string name)
+        {
+            // Assuming you have a list of mods cached somewhere, like ModCache.ModsByPage
+            foreach (var page in ModCache.ModsByPage.Values)
+            {
+                foreach (var mod in page)
+                {
+                    if (mod.Author.Equals(author, StringComparison.OrdinalIgnoreCase) &&
+                        mod.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return mod;
+                    }
+                }
             }
 
-            InstallMod(tempZipPath, form1, ModEnabled);
+            return null; // If the mod is not found
         }
 
         private async void InstallButton_Click(object sender, EventArgs e)
         {
-            await DownloadModFromInternet(CurrentlySelectedMod.ModPageUrl, RumbleManager, true);
+            await DownloadModFromInternet(CurrentlySelectedMod, RumbleManager, true, true);
         }
 
-        public static void InstallMod(string zipPath, RUMBLEModManager form1, bool ModEnabled)
+        public static void InstallMod(string zipPath, bool ModEnabled)
         {
             bool UpdatingMod = false;
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
@@ -255,11 +322,6 @@ namespace Rumble_Mod_Manager
                 {
                     File.Delete(zipPath);
                 }
-
-                string message = UpdatingMod ? "Mod update complete!" : "Mod installation complete!";
-                MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                form1.LoadMods();
             }
             catch (UnauthorizedAccessException ex)
             {
