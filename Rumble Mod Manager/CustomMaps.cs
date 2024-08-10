@@ -84,6 +84,12 @@ namespace Rumble_Mod_Manager
             ModDisplayGrid.RowStyles.Clear();
             ModDisplayGrid.ColumnStyles.Clear();
 
+            if (selectedPanel != null)
+            {
+                selectedPanel.BackColor = Color.FromArgb(30, 30, 30);
+                selectedPanel = null;
+            }
+
             for (int i = 0; i < ModDisplayGrid.RowCount; i++)
             {
                 ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / ModDisplayGrid.RowCount));
@@ -234,6 +240,19 @@ namespace Rumble_Mod_Manager
                     ModVersionLabel.Text = $"Version {CurrentlySelectedMap.version}";
                     InstallButton.Visible = true;
                     ModDescriptionLabel.Visible = true;
+
+                    string mapsDirectory = Path.Combine(Properties.Settings.Default.RumblePath, "UserData", "CustomMultiplayerMaps", "Maps");
+                    if (File.Exists(Path.Combine(mapsDirectory, CurrentlySelectedMap.name + ".txt"))) {
+                        InstallButton.Text = "Update";
+                        InstallButton.BackColor = Color.FromArgb(128, 255, 255);
+                        InstallButton.ForeColor = Color.Teal;
+
+                    } else
+                    {
+                        InstallButton.Text = "Install";
+                        InstallButton.BackColor = Color.FromArgb(128, 255, 128);
+                        InstallButton.ForeColor = Color.Green;
+                    }
                 }
                 else
                 {
@@ -370,6 +389,7 @@ namespace Rumble_Mod_Manager
                     Directory.Delete(tempDir, true);
 
                     MessageBox.Show($"Successfully {(isUpdating ? "updated" : "installed")} {CurrentlySelectedMap.name}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DisplayMaps(CustomMapsCache.MapsByPage[CurrentPage]);
                 }
                 catch (Exception ex)
                 {

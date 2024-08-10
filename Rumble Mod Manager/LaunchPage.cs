@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
+using static Rumble_Mod_Manager.ThunderstoreMods;
 using Timer = System.Threading.Timer;
 
 namespace Rumble_Mod_Manager
@@ -159,17 +160,24 @@ namespace Rumble_Mod_Manager
 
                     progressBar.Maximum = directories.Count;
                     progressBar.Value = 0;
-                    foreach (var directory in directories)
-                    {
-                        if (directory["type"].ToString() == "dir")
+
+                    var tasks = directories
+                        .Where(directory => directory["type"].ToString() == "dir")
+                        .Select(async directory =>
                         {
-                            string dirName = directory["name"].ToString();
                             string dirUrl = directory["url"].ToString();
                             var mapDetail = await GetMapDetailsFromDirectory(dirUrl, client);
-                            progressBar.Value += 1;
-                            mapDetails.Add((mapDetail.name, mapDetail.description, mapDetail.author, mapDetail.version, mapDetail.imageUrl, mapDetail.downloadUrl));
-                        }
-                    }
+                            if (mapDetail != ("Unknown", "Unknown", "Unknown", "Unknown", "", ""))
+                            {
+                                progressBar.Invoke((Action)(() => progressBar.Value += 1));
+                                return mapDetail;
+                            }
+                            return default;
+                        }).ToList();
+
+                    var results = await Task.WhenAll(tasks);
+
+                    mapDetails.AddRange(results.Where(result => result != default));
                 }
             }
 
@@ -245,7 +253,6 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                MessageBox.Show($"Failed to get directory details: {response.ReasonPhrase}");
                 return ("Unknown", "Unknown", "Unknown", "Unknown", "", "");
             }
         }
@@ -292,7 +299,6 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    MessageBox.Show($"Failed to get map details: {response.ReasonPhrase}");
                     return ("Unknown", "Unknown", "Unknown", "Unknown");
                 }
             }
