@@ -291,28 +291,6 @@ namespace Rumble_Mod_Manager
             }
         }
 
-
-
-        private static void RetryFileOperation(Action fileOperation)
-        {
-            int retryCount = 0;
-            bool successful = false;
-
-            while (!successful && retryCount < 3)
-            {
-                try
-                {
-                    fileOperation();
-                    successful = true;
-                }
-                catch (IOException)
-                {
-                    retryCount++;
-                    Thread.Sleep(1000); // Wait for a second before retrying
-                }
-            }
-        }
-
         private static void RetryFileOperation(Action fileOperation, int maxRetries = 3, int delayMilliseconds = 1000)
         {
             for (int i = 0; i < maxRetries; i++)
@@ -402,7 +380,6 @@ namespace Rumble_Mod_Manager
                                         DisplayMod = false;
                                     }
 
-                                    // Check for MelonLoader dependency version 0.5.7
                                     var dependencies = latestVersion?.GetValue("dependencies")?.ToObject<List<string>>();
                                     if (dependencies != null && dependencies.Any(dep => dep.Contains("MelonLoader-0.5.7", StringComparison.OrdinalIgnoreCase)))
                                     {
@@ -426,7 +403,8 @@ namespace Rumble_Mod_Manager
                                         Dependencies = dependencies,
                                         DateUpdated = lastUpdated,
                                         ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
-                                        Show = DisplayMod
+                                        Show = DisplayMod,
+                                        isDeprecated = isDeprecated
                                     };
 
                                     // Fetch the mod image
@@ -442,12 +420,6 @@ namespace Rumble_Mod_Manager
                                                 mod.ModImage = Image.FromStream(imageStream);
                                             }
                                         }
-                                    }
-
-                                    if (!modNameSet.TryAdd(name, true))
-                                    {
-                                        // Duplicate name found, skip this mod
-                                        return;
                                     }
 
                                     if (modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true")
@@ -479,12 +451,16 @@ namespace Rumble_Mod_Manager
                         await Task.WhenAll(tasks);
                     }
 
-                    // Combine pinned mods and regular mods for the front page
-                    var combinedModList = pinnedModList.Concat(modList).ToList();
+                    // Reverse the order of modList
+                    var reversedModList = modList.Reverse().ToList();
+
+                    // Combine pinned mods and reversed mod list for the front page
+                    var combinedModList = pinnedModList.Concat(reversedModList).ToList();
 
                     int pageSize = 26;
                     int totalPages = (int)Math.Ceiling(combinedModList.Count / (double)pageSize);
 
+                    // Create pages in the original order
                     for (int i = 0; i < totalPages; i++)
                     {
                         var modsForPage = combinedModList.Skip(i * pageSize).Take(pageSize).ToList();
@@ -519,6 +495,7 @@ namespace Rumble_Mod_Manager
             public string DateUpdated { get; set; }
             public List<string> Dependencies { get; set; } = new List<string>();
             public bool Show { get; set; } = true;
+            public bool isDeprecated { get; set; } = false;
         }
 
         private void BackButton_Click(object sender, EventArgs e)

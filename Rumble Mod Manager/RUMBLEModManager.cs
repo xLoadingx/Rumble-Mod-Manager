@@ -260,7 +260,7 @@ namespace Rumble_Mod_Manager
                 {
                     foreach (var mod in kvp.Value)
                     {
-                        if (mod.Name.Replace("_", " ") == modNameFromMapping)
+                        if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
                         {
                             ModAuthor = mod.Author;
                             modImage = mod.ModImage;
@@ -500,7 +500,7 @@ namespace Rumble_Mod_Manager
                             {
                                 foreach (var mod in kvp.Value)
                                 {
-                                    if (mod.Name.Replace("_", " ") == modNameFromMapping)
+                                    if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
                                     {
                                         modVersionStr = modVersionStr ?? mod.Version;
                                         CurrentlySelectedName = selectedPanel.ModName;

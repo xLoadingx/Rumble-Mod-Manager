@@ -525,26 +525,39 @@ namespace Rumble_Mod_Manager
 
         static List<string> FindSteamAppsDirectories()
         {
-            List<string> possibleDirectories = new List<string>
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam", "steamapps", "common"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Steam", "steamapps", "common"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "Steam", "steamapps", "common"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Steam", "steamapps", "common"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".local", "share", "Steam", "steamapps", "common")
-            };
-
-            possibleDirectories.Add(@"D:\SteamLibrary\steamapps\common");
-            possibleDirectories.Add(@"E:\Games\SteamLibrary\steamapps\common");
-
             List<string> foundDirectories = new List<string>();
 
-            foreach (var dir in possibleDirectories)
+            // Default Steam installation path
+            string defaultSteamPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam");
+            string libraryFoldersFile = Path.Combine(defaultSteamPath, "steamapps", "libraryfolders.vdf");
+
+            if (File.Exists(libraryFoldersFile))
             {
-                if (Directory.Exists(dir))
+                // Read and parse the libraryfolders.vdf file
+                string[] lines = File.ReadAllLines(libraryFoldersFile);
+                Regex pathRegex = new Regex(@"\""path\""\s*\""(.*?)\""");
+
+                foreach (var line in lines)
                 {
-                    foundDirectories.Add(dir);
+                    var match = pathRegex.Match(line);
+                    if (match.Success)
+                    {
+                        string libraryPath = match.Groups[1].Value;
+                        string commonPath = Path.Combine(libraryPath, "steamapps", "common");
+
+                        if (Directory.Exists(commonPath))
+                        {
+                            foundDirectories.Add(commonPath);
+                        }
+                    }
                 }
+            }
+
+            // Add the default steamapps/common directory just in case
+            string defaultCommonPath = Path.Combine(defaultSteamPath, "steamapps", "common");
+            if (Directory.Exists(defaultCommonPath))
+            {
+                foundDirectories.Add(defaultCommonPath);
             }
 
             return foundDirectories;
