@@ -8,8 +8,9 @@
 
 Please keep in mind this is my first time making a program like this. I am not good at this by any means. Your constructive feedback and suggestions would be extremely valuable as I work on refining and enhancing the project.
 
-# Installation Note
-- Ensure that .NET 8 or a later version is installed on your system before running the application.
+# System Requirements
+- NET 8 or higher is required to run this application. You can download that [here](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- This application is only compatible with Windows.
 
 ## How To Use
 
