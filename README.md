@@ -8,6 +8,10 @@
 
 Please keep in mind this is my first time making a program like this. I am not good at this by any means. Your constructive feedback and suggestions would be extremely valuable as I work on refining and enhancing the project.
 
+# System Requirements
+- NET 8 or higher is required to run this application. You can download that [here](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- This application is only compatible with Windows.
+
 ## How To Use
 
 1. **Initial Setup**: When you first open the manager, you might see a message saying "Path not found." Select the appropriate path.
@@ -36,14 +40,29 @@ Please keep in mind this is my first time making a program like this. I am not g
 
 5. **Settings**:
    - Change your settings by clicking the gear icon next to the Thunderstore button.
+  
+### Custom Maps
+
+1. **Install the CustomMultiplayerMaps Mod:**
+   - In the mod manager, click the Thunderstore button and install the `CustomMultiplayerMaps` mod by UlvakSkillz.
+   - After installation, a "Custom Maps" button will appear in the manager.
+
+2. **Download and Install Maps:**
+   - Click the "Custom Maps" button, select a map, and click "Install."
+
+3. **Using Custom Maps:**
+   - For detailed instructions, visit the mod's [Thunderstore page](https://thunderstore.io/c/rumble/p/UlvakSkillz/CustomMultiplayerMaps/).
 
 ## MelonLoader Installation
 
 If this is your first time modding RUMBLE and you don't have MelonLoader installed, don't worry! The mod manager will install it for you. Just follow the instructions carefully:
 
-1. Once MelonLoader is installed, it will launch the game. (*Make sure to read the popup first*).
+1. If you dont have MelonLoader installed, just click the launch button (after finding your path)
+   - After fetching the mods, it should start to install MelonLoader
+
+2. Once MelonLoader is installed, it will launch the game. (*Make sure to read the popup first*).
    - Ensure you see the MelonLoader start screen when the game opens.
    - Wait until the game reaches the T-pose screen (where the RUMBLE man is standing with arms outstretched).
    - Once you see that, close the game, and the mod manager should open.
 
-2. Congratulations! You have successfully modded RUMBLE!
+3. Congratulations! You have successfully modded RUMBLE!
