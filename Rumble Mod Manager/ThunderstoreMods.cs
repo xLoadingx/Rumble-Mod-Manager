@@ -320,7 +320,6 @@ namespace Rumble_Mod_Manager
 
             var modList = new ConcurrentBag<Mod>();
             var pinnedModList = new ConcurrentBag<Mod>();
-            var modNameSet = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
             try
             {
@@ -393,42 +392,43 @@ namespace Rumble_Mod_Manager
                                     string version = latestVersion?.GetValue("version_number")?.ToString();
                                     string lastUpdated = DateUpdated;
 
-                                    var mod = new Mod
-                                    {
-                                        Name = name,
-                                        Description = description,
-                                        Author = author,
-                                        ImageUrl = imageurl,
-                                        Version = version,
-                                        Dependencies = dependencies,
-                                        DateUpdated = lastUpdated,
-                                        ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
-                                        Show = DisplayMod,
-                                        isDeprecated = isDeprecated
-                                    };
-
-                                    // Fetch the mod image
-                                    if (!string.IsNullOrEmpty(mod.ImageUrl))
-                                    {
-                                        string imageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
-
-                                        using (HttpResponseMessage imageResponse = await client.GetAsync(imageUrl))
+                                        var mod = new Mod
                                         {
-                                            imageResponse.EnsureSuccessStatusCode();
-                                            using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
+                                            Name = name,
+                                            Description = description,
+                                            Author = author,
+                                            ImageUrl = imageurl,
+                                            Version = version,
+                                            Dependencies = dependencies,
+                                            DateUpdated = lastUpdated,
+                                            ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
+                                            Show = DisplayMod,
+                                            isDeprecated = isDeprecated
+                                        };
+
+                                        // Fetch the mod image
+                                        if (!string.IsNullOrEmpty(mod.ImageUrl))
+                                        {
+                                            string imageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
+
+                                            using (HttpResponseMessage imageResponse = await client.GetAsync(imageUrl))
                                             {
-                                                mod.ModImage = Image.FromStream(imageStream);
+                                                imageResponse.EnsureSuccessStatusCode();
+                                                using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
+                                                {
+                                                    mod.ModImage = Image.FromStream(imageStream);
+                                                }
                                             }
                                         }
-                                    }
 
-                                    if (modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true")
-                                    {
-                                        pinnedModList.Add(mod);
-                                    }
-                                    else
-                                    {
-                                        modList.Add(mod);
+                                        if (modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true")
+                                        {
+                                            pinnedModList.Add(mod);
+                                        }
+                                        else
+                                        {
+                                            modList.Add(mod);
+                                        }
                                     }
 
                                     // Update progress bar in batches to avoid too frequent UI updates
@@ -436,7 +436,6 @@ namespace Rumble_Mod_Manager
                                     {
                                         progressBar.Invoke(new Action(() => progressBar.Value++));
                                     }
-                                }
                             }
                             catch (Exception ex)
                             {
@@ -454,16 +453,13 @@ namespace Rumble_Mod_Manager
                     // Reverse the order of modList
                     var reversedModList = modList.Reverse().ToList();
 
-                    // Combine pinned mods and reversed mod list for the front page
-                    var combinedModList = pinnedModList.Concat(reversedModList).ToList();
-
                     int pageSize = 26;
-                    int totalPages = (int)Math.Ceiling(combinedModList.Count / (double)pageSize);
+                    int totalPages = (int)Math.Ceiling(reversedModList.Count / (double)pageSize);
 
                     // Create pages in the original order
                     for (int i = 0; i < totalPages; i++)
                     {
-                        var modsForPage = combinedModList.Skip(i * pageSize).Take(pageSize).ToList();
+                        var modsForPage = reversedModList.Skip(i * pageSize).Take(pageSize).ToList();
                         modsForPage.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase)); // Sort each page alphabetically
                         modsByPage[i + 1] = modsForPage;
                     }
