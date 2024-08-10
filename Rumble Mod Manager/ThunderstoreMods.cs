@@ -22,6 +22,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
 using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.FileIO;
+using System.Collections;
 
 namespace Rumble_Mod_Manager
 {
@@ -102,36 +103,39 @@ namespace Rumble_Mod_Manager
             // Loop through each mod and create a panel
             foreach (var mod in mods)
             {
-                // Create a panel for each mod
-                Panel modPanel = new Panel
+                if (mod.Show)
                 {
-                    Width = 140,
-                    Height = 140,
-                    BorderStyle = BorderStyle.Fixed3D,
-                    BackColor = Color.FromArgb(30, 30, 30),
-                    Tag = mod.ModPageUrl
-                };
+                    // Create a panel for each mod
+                    Panel modPanel = new Panel
+                    {
+                        Width = 140,
+                        Height = 140,
+                        BorderStyle = BorderStyle.Fixed3D,
+                        BackColor = Color.FromArgb(30, 30, 30),
+                        Tag = mod.ModPageUrl
+                    };
 
-                Label label = new Label
-                {
-                    Text = mod.Name,
-                    AutoSize = false,
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    ForeColor = Color.White,
-                    Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular), // Adjusted font size
-                    Dock = DockStyle.Fill,
-                    MaximumSize = new Size(140, 0), // Set maximum width and enable word wrap
-                    AutoEllipsis = true // Show ellipsis if text overflows
-                };
+                    Label label = new Label
+                    {
+                        Text = mod.Name,
+                        AutoSize = false,
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        ForeColor = Color.White,
+                        Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular), // Adjusted font size
+                        Dock = DockStyle.Fill,
+                        MaximumSize = new Size(140, 0), // Set maximum width and enable word wrap
+                        AutoEllipsis = true // Show ellipsis if text overflows
+                    };
 
-                label.Click += (s, e) => ModPanel_Click(modPanel, mod);
+                    label.Click += (s, e) => ModPanel_Click(modPanel, mod);
 
-                // Add controls to panel
-                modPanel.Controls.Add(label);
-                modPanel.Click += (s, e) => ModPanel_Click(modPanel, mod);
+                    // Add controls to panel
+                    modPanel.Controls.Add(label);
+                    modPanel.Click += (s, e) => ModPanel_Click(modPanel, mod);
 
-                // Add panel to TableLayoutPanel
-                ModDisplayGrid.Controls.Add(modPanel);
+                    // Add panel to TableLayoutPanel
+                    ModDisplayGrid.Controls.Add(modPanel);
+                }
             }
         }
 
@@ -234,7 +238,7 @@ namespace Rumble_Mod_Manager
                 if (Directory.Exists(userDataSource))
                 {
                     string userDataDest = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
-                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userDataSource, userDataDest);
+                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userDataSource, userDataDest, true);
                 }
 
                 // Copy the entire UserLibs folder if it exists
@@ -242,7 +246,7 @@ namespace Rumble_Mod_Manager
                 if (Directory.Exists(userLibsSource))
                 {
                     string userLibsDest = Path.Combine(Properties.Settings.Default.RumblePath, "UserLibs");
-                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userLibsSource, userLibsDest);
+                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userLibsSource, userLibsDest, true);
                 }
 
                 Directory.Delete(tempDir, true);
@@ -268,6 +272,18 @@ namespace Rumble_Mod_Manager
             catch (IOException ex)
             {
                 MessageBox.Show($"IO error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (ex.Data != null && ex.Data.Count > 0)
+                {
+                    Console.WriteLine("Exception Data:");
+                    foreach (DictionaryEntry entry in ex.Data)
+                    {
+                        MessageBox.Show($"{entry.Key}: {entry.Value}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No additional data available.");
+                }
             }
             catch (Exception ex)
             {
@@ -309,7 +325,7 @@ namespace Rumble_Mod_Manager
                 catch (IOException ex) when (i < maxRetries - 1)
                 {
                     // Wait before retrying
-                    System.Threading.Thread.Sleep(delayMilliseconds);
+                    Thread.Sleep(delayMilliseconds);
                 }
             }
         }
@@ -365,6 +381,8 @@ namespace Rumble_Mod_Manager
                             {
                                 var modName = modDict.GetValueOrDefault("name")?.ToString();
                                 var DateUpdated = modDict.GetValueOrDefault("date_updated")?.ToString();
+
+                                bool DisplayMod = true;
                                 if (modName != null && modName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase))
                                 {
                                     // Skip MelonLoader mods
@@ -381,14 +399,14 @@ namespace Rumble_Mod_Manager
                                     bool isDeprecated = modDict.GetValueOrDefault("is_deprecated")?.ToString().ToLower() == "true";
                                     if (isDeprecated)
                                     {
-                                        return;
+                                        DisplayMod = false;
                                     }
 
                                     // Check for MelonLoader dependency version 0.5.7
                                     var dependencies = latestVersion?.GetValue("dependencies")?.ToObject<List<string>>();
                                     if (dependencies != null && dependencies.Any(dep => dep.Contains("MelonLoader-0.5.7", StringComparison.OrdinalIgnoreCase)))
                                     {
-                                        return;
+                                        DisplayMod = false;
                                     }
 
                                     string name = modName;
@@ -407,7 +425,8 @@ namespace Rumble_Mod_Manager
                                         Version = version,
                                         Dependencies = dependencies,
                                         DateUpdated = lastUpdated,
-                                        ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}"
+                                        ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
+                                        Show = DisplayMod
                                     };
 
                                     // Fetch the mod image
@@ -499,6 +518,7 @@ namespace Rumble_Mod_Manager
             public Image ModImage { get; set; }
             public string DateUpdated { get; set; }
             public List<string> Dependencies { get; set; } = new List<string>();
+            public bool Show { get; set; } = true;
         }
 
         private void BackButton_Click(object sender, EventArgs e)

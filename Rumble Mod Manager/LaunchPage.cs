@@ -19,6 +19,9 @@ namespace Rumble_Mod_Manager
     public partial class LaunchPage : Form
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
+        private static Settings _settingsInstance;
+        private static Credits _creditsInstance;
+        private static RUMBLEModManager _rumbleModManagerInstance;
 
         public LaunchPage()
         {
@@ -51,7 +54,6 @@ namespace Rumble_Mod_Manager
             string tempZipPath = Path.Combine(Path.GetTempPath(), "MelonLoader.zip");
             string gamePath = Path.Combine(Properties.Settings.Default.RumblePath, "RUMBLE.exe");
 
-            // Step 1: Download and install MelonLoader
             using (HttpClientHandler handler = new HttpClientHandler())
             {
                 handler.AllowAutoRedirect = true;
@@ -72,8 +74,6 @@ namespace Rumble_Mod_Manager
 
             MessageBox.Show($"MelonLoader has been installed successfully. The game is about to open, once it reaches the T-POSE screen, please close the game. \n\n Do not click on the console. If you do, please press enter.");
 
-            //Step 2: Launch the game
-            // Ensure the executable exists
             if (!File.Exists(gamePath))
             {
                 Console.WriteLine($"Executable not found at: {gamePath}");
@@ -82,14 +82,10 @@ namespace Rumble_Mod_Manager
 
             label1.Text = "Waiting...";
 
-            // Create a new process start info
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = gamePath;
-
-            // Set the working directory to the game directory
             startInfo.WorkingDirectory = Properties.Settings.Default.RumblePath;
 
-            // Start the process
             Process gameProcess = new Process();
             gameProcess.StartInfo = startInfo;
             gameProcess.Start();
@@ -137,21 +133,18 @@ namespace Rumble_Mod_Manager
 
         static async Task<Dictionary<int, List<CustomMap>>> ManageMaps(ProgressBar progressBar)
         {
-            string repoOwner = "xLoadingx"; // Replace with your GitHub username
-            string repoName = "mod-maps"; // Replace with your repository name
+            string repoOwner = "xLoadingx";
+            string repoName = "mod-maps";
             var maps = new Dictionary<int, List<CustomMap>>();
 
-            // Retrieve the RumblePath from settings
-            string basePath = Properties.Settings.Default.RumblePath; // Assuming RumblePath is set in your settings
+            string basePath = Properties.Settings.Default.RumblePath;
             string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 
-            // Check if the directory exists
             if (!Directory.Exists(targetDirectory))
             {
                 return null;
             }
 
-            // List maps with name, description, author, version, and image
             List<(string name, string description, string author, string version, string imageUrl, string downloadUrl)> mapDetails = new List<(string name, string description, string author, string version, string imageUrl, string downloadUrl)>();
 
             using (HttpClient client = new HttpClient())
@@ -179,7 +172,6 @@ namespace Rumble_Mod_Manager
                     }
                 }
             }
-
 
             int pageIndex = 1;
             int mapCount = 0;
@@ -317,7 +309,6 @@ namespace Rumble_Mod_Manager
 
                 using (HttpClient client = new HttpClient())
                 {
-                    // Ensure the URL is an absolute URI
                     if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute))
                     {
                         MessageBox.Show("The URL is not well-formed: " + imageUrl, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -355,32 +346,29 @@ namespace Rumble_Mod_Manager
                 string basePath = Properties.Settings.Default.RumblePath;
                 string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 
-                label1.Text = "Fetching Maps...";
-                var mapsByPage = await ManageMaps(progressBar1);
-
-                // Retry up to 5 times if no maps are fetched
-                int retryCount = 0;
-                int maxRetries = 5;
-
-                while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
+                if (Directory.Exists(targetDirectory))
                 {
-                    retryCount++;
-                    mapsByPage = await ManageMaps(progressBar1);
-                }
+                    label1.Text = "Fetching Maps...";
+                    var mapsByPage = await ManageMaps(progressBar1);
 
-                // After the loop, check if maps were successfully fetched
-                if (mapsByPage != null && mapsByPage.Any())
-                {
-                    CustomMapsCache.MapsByPage = mapsByPage;
-                }
-                else
-                {
-                    // Handle the case where maps could not be fetched after 5 attempts
-                    MessageBox.Show("Failed to fetch maps after 5 attempts.");
-                }
+                    int retryCount = 0;
+                    int maxRetries = 20;
 
+                    while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
+                    {
+                        retryCount++;
+                        mapsByPage = await ManageMaps(progressBar1);
+                    }
 
-                CustomMapsCache.MapsByPage = mapsByPage;
+                    if (mapsByPage != null && mapsByPage.Any())
+                    {
+                        CustomMapsCache.MapsByPage = mapsByPage;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Failed to fetch maps after {maxRetries} attempts. The manager has probably been opened a lot in a short period of time, if so, please try again later.");
+                    }
+                }
 
                 if (!Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
                 {
@@ -391,11 +379,18 @@ namespace Rumble_Mod_Manager
                 progressBar1.Visible = false;
                 label1.Visible = false;
 
-                RUMBLEModManager rumbleModManager = new RUMBLEModManager();
-                rumbleModManager.Show();
-                this.Hide();
-
-                rumbleModManager.FormClosed += (s, args) => this.Close();
+                if (_rumbleModManagerInstance == null || _rumbleModManagerInstance.IsDisposed)
+                {
+                    _rumbleModManagerInstance = new RUMBLEModManager();
+                    _rumbleModManagerInstance.FormClosed += (s, args) => _rumbleModManagerInstance = null;
+                    _rumbleModManagerInstance.Show();
+                    this.Hide();
+                    _rumbleModManagerInstance.FormClosed += (s, args) => this.Close();
+                }
+                else
+                {
+                    _rumbleModManagerInstance.BringToFront();
+                }
             }
             catch (Exception ex)
             {
@@ -404,7 +399,6 @@ namespace Rumble_Mod_Manager
                 MessageBox.Show(detailedErrorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
         private void LoadCustomFont()
         {
@@ -432,8 +426,16 @@ namespace Rumble_Mod_Manager
 
         private void ManualFindButton_Click(object sender, EventArgs e)
         {
-            Settings settingsForm = new Settings(null, this);
-            settingsForm.Show();
+            if (_settingsInstance == null || _settingsInstance.IsDisposed)
+            {
+                _settingsInstance = new Settings(null, this);
+                _settingsInstance.FormClosed += (s, args) => _settingsInstance = null;
+                _settingsInstance.Show();
+            }
+            else
+            {
+                _settingsInstance.BringToFront();
+            }
         }
 
         private void AutoFindButton_Click(object sender, EventArgs e)
@@ -452,8 +454,17 @@ namespace Rumble_Mod_Manager
                     Properties.Settings.Default.RumblePath = gameDirectory;
                     Properties.Settings.Default.Save();
 
-                    Settings settingsForm = new Settings(null, this);
-                    settingsForm.Show();
+                    if (_settingsInstance == null || _settingsInstance.IsDisposed)
+                    {
+                        _settingsInstance = new Settings(null, this);
+                        _settingsInstance.FormClosed += (s, args) => _settingsInstance = null;
+                        _settingsInstance.Show();
+                    }
+                    else
+                    {
+                        _settingsInstance.BringToFront();
+                    }
+
                     MessageBox.Show("Game Directory Found. Make sure it is the correct path to your game directory!");
                     PathNotFound.Visible = false;
                     AutoFindButton.Visible = false;
@@ -470,8 +481,17 @@ namespace Rumble_Mod_Manager
                         Properties.Settings.Default.RumblePath = gameDirectory;
                         Properties.Settings.Default.Save();
 
-                        Settings settings = new Settings(null, this);
-                        settings.Show();
+                        if (_settingsInstance == null || _settingsInstance.IsDisposed)
+                        {
+                            _settingsInstance = new Settings(null, this);
+                            _settingsInstance.FormClosed += (s, args) => _settingsInstance = null;
+                            _settingsInstance.Show();
+                        }
+                        else
+                        {
+                            _settingsInstance.BringToFront();
+                        }
+
                         MessageBox.Show("Game Directory Found. Make sure it is the correct path to your game directory!");
                         PathNotFound.Visible = false;
                         AutoFindButton.Visible = false;
@@ -482,8 +502,17 @@ namespace Rumble_Mod_Manager
                     }
                     else
                     {
-                        Settings settingsForm = new Settings(null, this);
-                        settingsForm.Show();
+                        if (_settingsInstance == null || _settingsInstance.IsDisposed)
+                        {
+                            _settingsInstance = new Settings(null, this);
+                            _settingsInstance.FormClosed += (s, args) => _settingsInstance = null;
+                            _settingsInstance.Show();
+                        }
+                        else
+                        {
+                            _settingsInstance.BringToFront();
+                        }
+
                         MessageBox.Show("Game directory not found. Please set it manually.");
                     }
                 }
@@ -497,13 +526,13 @@ namespace Rumble_Mod_Manager
         static List<string> FindSteamAppsDirectories()
         {
             List<string> possibleDirectories = new List<string>
-        {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam", "steamapps", "common"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Steam", "steamapps", "common"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "Steam", "steamapps", "common"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Steam", "steamapps", "common"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".local", "share", "Steam", "steamapps", "common")
-        };
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam", "steamapps", "common"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Steam", "steamapps", "common"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "Steam", "steamapps", "common"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Steam", "steamapps", "common"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".local", "share", "Steam", "steamapps", "common")
+            };
 
             possibleDirectories.Add(@"D:\SteamLibrary\steamapps\common");
             possibleDirectories.Add(@"E:\Games\SteamLibrary\steamapps\common");
@@ -524,14 +553,13 @@ namespace Rumble_Mod_Manager
         static List<string> FindOculusSoftwareDirectories()
         {
             List<string> possibleDirectories = new List<string>
-        {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Oculus", "Software", "Software"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Oculus", "Software", "Software"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Oculus", "Software", "Software"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Oculus", "Software", "Software")
-        };
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Oculus", "Software", "Software"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Oculus", "Software", "Software"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Oculus", "Software", "Software"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Oculus", "Software", "Software")
+            };
 
-            // Add custom library folders (example paths, customize as needed)
             possibleDirectories.Add(@"D:\Oculus\Software\Software");
             possibleDirectories.Add(@"E:\OculusLibrary\Software\Software");
 
@@ -564,14 +592,30 @@ namespace Rumble_Mod_Manager
 
         private void SettingsButton_Click(object sender, EventArgs e)
         {
-            Settings settings = new Settings(null, this);
-            settings.Show();
+            if (_settingsInstance == null || _settingsInstance.IsDisposed)
+            {
+                _settingsInstance = new Settings(null, this);
+                _settingsInstance.FormClosed += (s, args) => _settingsInstance = null;
+                _settingsInstance.Show();
+            }
+            else
+            {
+                _settingsInstance.BringToFront();
+            }
         }
 
         private void CreditsButton_Click(object sender, EventArgs e)
         {
-            Credits credits = new Credits();
-            credits.Show();
+            if (_creditsInstance == null || _creditsInstance.IsDisposed)
+            {
+                _creditsInstance = new Credits();
+                _creditsInstance.FormClosed += (s, args) => _creditsInstance = null;
+                _creditsInstance.Show();
+            }
+            else
+            {
+                _creditsInstance.BringToFront();
+            }
         }
     }
 }
