@@ -8,6 +8,9 @@
 
 Please keep in mind this is my first time making a program like this. I am not good at this by any means. Your constructive feedback and suggestions would be extremely valuable as I work on refining and enhancing the project.
 
+# Installation Note
+- Ensure that .NET 8 or a later version is installed on your system before running the application.
+
 ## How To Use
 
 1. **Initial Setup**: When you first open the manager, you might see a message saying "Path not found." Select the appropriate path.
