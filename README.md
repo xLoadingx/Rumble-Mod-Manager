@@ -36,6 +36,18 @@ Please keep in mind this is my first time making a program like this. I am not g
 
 5. **Settings**:
    - Change your settings by clicking the gear icon next to the Thunderstore button.
+  
+### Custom Maps
+
+1. **Install the CustomMultiplayerMaps Mod:**
+   - In the mod manager, click the Thunderstore button and install the `CustomMultiplayerMaps` mod by UlvakSkillz.
+   - After installation, a "Custom Maps" button will appear in the manager.
+
+2. **Download and Install Maps:**
+   - Click the "Custom Maps" button, select a map, and click "Install."
+
+3. **Using Custom Maps:**
+   - For detailed instructions, visit the mod's [Thunderstore page](https://thunderstore.io/c/rumble/p/UlvakSkillz/CustomMultiplayerMaps/).
 
 ## MelonLoader Installation
 
