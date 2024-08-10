@@ -28,7 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RUMBLEModManager));
             panel2 = new Panel();
+            WelcomeLabel = new Label();
             SettingsButton = new PictureBox();
             UpdateButton = new PictureBox();
             DependenciesLabel = new Label();
@@ -46,6 +48,7 @@
             ToggleModLabel = new Button();
             panel1 = new Panel();
             CustomMapsDownloadButton = new Button();
+            panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)SettingsButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)UpdateButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
@@ -58,10 +61,22 @@
             // panel2
             // 
             panel2.BackColor = Color.FromArgb(40, 40, 40);
+            panel2.Controls.Add(WelcomeLabel);
             panel2.Location = new Point(12, 12);
             panel2.Name = "panel2";
             panel2.Size = new Size(592, 420);
             panel2.TabIndex = 2;
+            // 
+            // WelcomeLabel
+            // 
+            WelcomeLabel.Dock = DockStyle.Fill;
+            WelcomeLabel.ForeColor = Color.FromArgb(64, 64, 64);
+            WelcomeLabel.Location = new Point(0, 0);
+            WelcomeLabel.Name = "WelcomeLabel";
+            WelcomeLabel.Size = new Size(592, 420);
+            WelcomeLabel.TabIndex = 0;
+            WelcomeLabel.Text = resources.GetString("WelcomeLabel.Text");
+            WelcomeLabel.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // SettingsButton
             // 
@@ -302,6 +317,7 @@
             MinimumSize = new Size(1049, 483);
             Name = "RUMBLEModManager";
             Text = "Form1";
+            panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)SettingsButton).EndInit();
             ((System.ComponentModel.ISupportInitialize)UpdateButton).EndInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).EndInit();
@@ -332,5 +348,6 @@
         private Button ToggleModLabel;
         private Panel panel1;
         private Button CustomMapsDownloadButton;
+        private Label WelcomeLabel;
     }
 }

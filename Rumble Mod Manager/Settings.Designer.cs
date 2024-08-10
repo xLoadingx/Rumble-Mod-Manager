@@ -32,6 +32,8 @@
             textBox1 = new TextBox();
             button1 = new Button();
             button2 = new Button();
+            BackUp = new Button();
+            Restore = new Button();
             SuspendLayout();
             // 
             // label1
@@ -80,18 +82,48 @@
             button2.UseVisualStyleBackColor = false;
             button2.Click += button2_Click;
             // 
+            // BackUp
+            // 
+            BackUp.AutoSize = true;
+            BackUp.BackColor = Color.FromArgb(128, 255, 128);
+            BackUp.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            BackUp.ForeColor = Color.Green;
+            BackUp.Location = new Point(12, 218);
+            BackUp.Name = "BackUp";
+            BackUp.Size = new Size(168, 39);
+            BackUp.TabIndex = 6;
+            BackUp.Text = "Backup ML Files";
+            BackUp.UseVisualStyleBackColor = false;
+            BackUp.Visible = false;
+            // 
+            // Restore
+            // 
+            Restore.AutoSize = true;
+            Restore.BackColor = Color.FromArgb(192, 0, 0);
+            Restore.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            Restore.ForeColor = Color.Maroon;
+            Restore.Location = new Point(244, 218);
+            Restore.Name = "Restore";
+            Restore.Size = new Size(171, 39);
+            Restore.TabIndex = 7;
+            Restore.Text = "Restore ML Files";
+            Restore.UseVisualStyleBackColor = false;
+            Restore.Visible = false;
+            // 
             // Settings
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 20, 20);
-            ClientSize = new Size(424, 185);
+            ClientSize = new Size(424, 269);
+            Controls.Add(Restore);
+            Controls.Add(BackUp);
             Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(textBox1);
             Controls.Add(label1);
-            MaximumSize = new Size(440, 224);
-            MinimumSize = new Size(440, 224);
+            MaximumSize = new Size(440, 308);
+            MinimumSize = new Size(440, 308);
             Name = "Settings";
             Text = "SettingsForm";
             ResumeLayout(false);
@@ -103,5 +135,7 @@
         private TextBox textBox1;
         private Button button1;
         private Button button2;
+        private Button BackUp;
+        private Button Restore;
     }
 }

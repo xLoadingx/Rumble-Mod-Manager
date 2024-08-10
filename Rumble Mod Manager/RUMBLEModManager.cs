@@ -20,6 +20,7 @@ namespace Rumble_Mod_Manager
         private ThunderstoreMods.Mod CurrentlySelectedMod;
         private string CurrentlySelectedVersion;
         private string CurrentlySelectedName;
+        private bool isLoadingDisplay = false;
 
         public RUMBLEModManager()
         {
@@ -32,6 +33,9 @@ namespace Rumble_Mod_Manager
             UpdateButton.Controls.Add(pictureBox2);
             pictureBox2.Location = new Point(UpdateButton.Width - pictureBox2.PreferredSize.Width - 23, UpdateButton.Height - pictureBox2.PreferredSize.Height - 20);
             pictureBox2.BackColor = Color.Transparent;
+
+            this.KeyPreview = true;
+            this.KeyDown += new KeyEventHandler(ModManager_KeyDown);
 
             LoadCustomFont();
             LoadMods();
@@ -55,6 +59,7 @@ namespace Rumble_Mod_Manager
             UpdateButton.Font = new Font(privateFonts.Families[0], 22.0F, FontStyle.Regular);
             DependenciesLabel.Font = new Font(privateFonts.Families[0], 11.0F, FontStyle.Regular);
             ModDescriptionLabel.Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular);
+            WelcomeLabel.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
         }
 
         private void Settings_Button_Click(object sender, EventArgs e)
@@ -96,8 +101,23 @@ namespace Rumble_Mod_Manager
             }
 
             DisplayMods(Properties.Settings.Default.RumblePath);
+        }
 
-            if (Directory.Exists(Path.Combine(rumblePath, "UserData", "CustomMultiplayerMaps", "Maps")))
+        private void ModManager_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.R && !isLoadingDisplay)
+            {
+                DisplayMods(Properties.Settings.Default.RumblePath);
+            }
+        }
+
+        private void DisplayMods(string rumblePath)
+        {
+            isLoadingDisplay = true;
+
+            // Handle button display logic first
+            var customMapsPath = Path.Combine(rumblePath, "UserData", "CustomMultiplayerMaps", "Maps");
+            if (Directory.Exists(customMapsPath))
             {
                 ThunderstoreButton.Font = new Font(privateFonts.Families[0], 22.0F, FontStyle.Regular);
                 ThunderstoreButton.Size = new Size(161, 48);
@@ -109,129 +129,141 @@ namespace Rumble_Mod_Manager
                 ThunderstoreButton.Size = new Size(326, 48);
                 CustomMapsDownloadButton.Visible = false;
             }
-        }
 
-        private void DisplayMods(string rumblePath)
-        {
             string modsPath = Path.Combine(rumblePath, "Mods");
             string disabledModsPath = Path.Combine(rumblePath, "DisabledMods");
 
-            // Check if DisabledMods folder exists, if not create it
             if (!Directory.Exists(disabledModsPath))
             {
                 Directory.CreateDirectory(disabledModsPath);
             }
 
-            // Get mod files from both Mods and DisabledMods folders
-            string[] enabledModFiles = Directory.GetFiles(modsPath, "*.dll");
-            string[] disabledModFiles = Directory.GetFiles(disabledModsPath, "*.dll");
-            string[] allModFiles = enabledModFiles.Concat(disabledModFiles).ToArray();
+            var enabledModFiles = Directory.GetFiles(modsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
+            var disabledModFiles = Directory.GetFiles(disabledModsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
 
-            // Clear existing controls
+            WelcomeLabel.Visible = enabledModFiles.Length == 0 && disabledModFiles.Length == 0;
+
+            // Clear previous mod panels
             panel2.Controls.Clear();
+            panel2.Controls.Add(WelcomeLabel);
 
-            // Define the number of columns
-            int columnCount = 1;
-            int rowCount = (allModFiles.Length + columnCount - 1) / columnCount;
+            List<ModPanelControl> modPanels = new List<ModPanelControl>();
 
-            // Define the size of each mod panel and margin
-            int panelWidth = panel2.Width / columnCount;
-            int panelHeight = 84; // Set this to the desired height of your mod panels
+            // Parallel processing for enabled mod panels
+            Parallel.ForEach(enabledModFiles, modFile =>
+            {
+                ModPanelControl modPanel = CreateModPanel(modFile, true, rumblePath);
+                lock (modPanels)
+                {
+                    modPanels.Add(modPanel);
+                }
+            });
+
+            // Parallel processing for disabled mod panels
+            Parallel.ForEach(disabledModFiles, modFile =>
+            {
+                ModPanelControl modPanel = CreateModPanel(modFile, false, rumblePath);
+                lock (modPanels)
+                {
+                    modPanels.Add(modPanel);
+                }
+            });
+
+            // Position panels and add them to UI
+            int panelHeight = 84;
             int verticalMargin = 10;
 
-            for (int i = 0; i < allModFiles.Length; i++)
+            for (int i = 0; i < modPanels.Count; i++)
             {
-                string modFile = allModFiles[i];
-                bool isEnabled = enabledModFiles.Contains(modFile);
-                string modVersionStr = GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), Path.GetFileName(modFile));
-                Color color = Color.Lime;
-                Image cloudIcon = null;
-                string toolTip = "Unknown";
-                Image modImage = null;
-                string ModAuthor = null;
-
-                foreach (var kvp in ModCache.ModsByPage)
-                {
-                    foreach (var mod in kvp.Value)
-                    {
-                        if (IsFuzzyMatch(mod.Name.Replace(" ", "").Replace("_", ""), Path.GetFileNameWithoutExtension(modFile)))
-                        {
-                            ModAuthor = mod.Author;
-
-                            modImage = mod.ModImage;
-
-                            if (!string.IsNullOrEmpty(modVersionStr))
-                            {
-                                int modVersion = int.Parse(modVersionStr.Replace(".", ""));
-                                int modVersionCache = int.Parse(mod.Version.Replace(".", ""));
-
-                                if (modVersion < modVersionCache)
-                                {
-                                    color = Color.Red;
-                                    toolTip = "Out of Date";
-                                    cloudIcon = Properties.Resources.UpdateIcon;
-                                }
-                                else if (modVersion == modVersionCache)
-                                {
-                                    color = Color.Lime;
-                                    toolTip = "Up To Date";
-                                }
-                                else
-                                {
-                                    color = Color.Cyan;
-                                    toolTip = "Unreleased version";
-                                }
-                            }
-                            else
-                            {
-                                modVersionStr = mod.Version;
-                                toolTip = "Up To Date";
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                if (string.IsNullOrEmpty(ModAuthor))
-                {
-                    ModAuthor = "Unknown";
-                }
-
-                // Create the mod panel
-                ModPanelControl modPanel = new ModPanelControl
-                {
-                    ModName = Path.GetFileNameWithoutExtension(modFile),
-                    DetailsLabel = $"v{modVersionStr} by {ModAuthor}",
-                    ModLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Bold),
-                    DetailsLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
-                    UpdateNeededImage = cloudIcon,
-                    UpdateColor = color,
-                    toolTip1Text = toolTip,
-                    ModImage = modImage ?? Properties.Resources.UnknownMod,
-                    Tag = Path.GetFileName(modFile),
-                    ModEnabled = isEnabled, // Set the ModEnabled property
-                    Size = new Size(panelWidth, panelHeight), // Adjust size for vertical margin
-                    ModDllPath = modFile
-                };
-
-                // Add click event
-                modPanel.Click += (s, e) => ModPanel_Click(modPanel, e);
-
-                // Calculate position with vertical margin
-                int row = i / columnCount;
-                int column = i % columnCount;
-                modPanel.Location = new Point(column * panelWidth, row * (panelHeight + verticalMargin));
-
-                // Add the mod panel to the parent panel
-                panel2.Controls.Add(modPanel);
+                modPanels[i].Location = new Point(0, i * (panelHeight + verticalMargin));
+                panel2.Controls.Add(modPanels[i]);
             }
 
-            // Make the parent panel scrollable and hide scroll bars
+            // Adjust scroll settings
             panel2.HorizontalScroll.Maximum = 0;
             panel2.AutoScroll = false;
             panel2.VerticalScroll.Maximum = 0;
             panel2.VerticalScroll.Visible = false;
             panel2.AutoScroll = true;
+
+            isLoadingDisplay = false;
+        }
+
+        private ModPanelControl CreateModPanel(string modFile, bool isEnabled, string rumblePath)
+        {
+            string modVersionStr = GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), Path.GetFileNameWithoutExtension(modFile) + ".dll");
+            Color color = Color.Lime;
+            Image cloudIcon = null;
+            string toolTip = "Unknown";
+            Image modImage = null;
+            string ModAuthor = null;
+
+            foreach (var kvp in ModCache.ModsByPage)
+            {
+                foreach (var mod in kvp.Value)
+                {
+                    if (IsFuzzyMatch(mod.Name.Replace(" ", "").Replace("_", ""), Path.GetFileNameWithoutExtension(modFile)))
+                    {
+                        ModAuthor = mod.Author;
+                        modImage = mod.ModImage;
+
+                        if (!string.IsNullOrEmpty(modVersionStr))
+                        {
+                            int modVersion = int.Parse(modVersionStr.Replace(".", ""));
+                            int modVersionCache = int.Parse(mod.Version.Replace(".", ""));
+
+                            if (modVersion < modVersionCache)
+                            {
+                                color = Color.Red;
+                                toolTip = "Out of Date";
+                                cloudIcon = Properties.Resources.UpdateIcon;
+                            }
+                            else if (modVersion == modVersionCache)
+                            {
+                                color = Color.Lime;
+                                toolTip = "Up To Date";
+                            }
+                            else
+                            {
+                                color = Color.Cyan;
+                                toolTip = "Unreleased version";
+                            }
+                        }
+                        else
+                        {
+                            modVersionStr = mod.Version;
+                            toolTip = "Up To Date";
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(ModAuthor))
+            {
+                ModAuthor = "Unknown";
+            }
+
+            ModPanelControl modPanel = new ModPanelControl
+            {
+                ModName = Path.GetFileNameWithoutExtension(modFile),
+                DetailsLabel = $"v{modVersionStr} by {ModAuthor}",
+                ModLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Bold),
+                DetailsLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
+                UpdateNeededImage = cloudIcon,
+                UpdateColor = color,
+                toolTip1Text = toolTip,
+                ModImage = modImage ?? Properties.Resources.UnknownMod,
+                Tag = Path.GetFileName(modFile),
+                ModEnabled = isEnabled,
+                Size = new Size(panel2.Width, 84),
+                ModDllPath = modFile
+            };
+
+            // Add click event
+            modPanel.Click += (s, e) => ModPanel_Click(modPanel, e);
+
+            return modPanel;
         }
 
         private void Uninstall_Button_Click(object sender, EventArgs e)

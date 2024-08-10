@@ -76,6 +76,8 @@
             Controls.Add(label1);
             Controls.Add(CreditsLabel);
             Controls.Add(CrumbleFont);
+            MaximumSize = new Size(450, 489);
+            MinimumSize = new Size(450, 489);
             Name = "Credits";
             Text = "Credits";
             ResumeLayout(false);

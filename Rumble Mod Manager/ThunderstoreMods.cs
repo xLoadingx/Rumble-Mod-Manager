@@ -19,6 +19,9 @@ using System.Runtime.InteropServices;
 using System.Drawing.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Concurrent;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.FileIO;
 
 namespace Rumble_Mod_Manager
 {
@@ -197,7 +200,7 @@ namespace Rumble_Mod_Manager
                     Directory.CreateDirectory(modsFolder);
                 }
 
-                foreach (var item in Directory.EnumerateFiles(tempDir, "*.dll", SearchOption.TopDirectoryOnly))
+                foreach (var item in Directory.EnumerateFiles(tempDir, "*.dll", System.IO.SearchOption.TopDirectoryOnly))
                 {
                     string destFilePath = Path.Combine(modsFolder, Path.GetFileName(item));
 
@@ -212,7 +215,7 @@ namespace Rumble_Mod_Manager
 
                 foreach (var subDir in Directory.EnumerateDirectories(tempDir))
                 {
-                    foreach (var item in Directory.EnumerateFiles(subDir, "*.dll", SearchOption.AllDirectories))
+                    foreach (var item in Directory.EnumerateFiles(subDir, "*.dll", System.IO.SearchOption.AllDirectories))
                     {
                         string destFilePath = Path.Combine(modsFolder, Path.GetFileName(item));
 
@@ -224,6 +227,22 @@ namespace Rumble_Mod_Manager
                         RetryFileOperation(() => File.Copy(item, destFilePath, true));
                         File.Delete(item);
                     }
+                }
+
+                // Copy the entire UserData folder if it exists
+                string userDataSource = Path.Combine(tempDir, "UserData");
+                if (Directory.Exists(userDataSource))
+                {
+                    string userDataDest = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
+                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userDataSource, userDataDest);
+                }
+
+                // Copy the entire UserLibs folder if it exists
+                string userLibsSource = Path.Combine(tempDir, "UserLibs");
+                if (Directory.Exists(userLibsSource))
+                {
+                    string userLibsDest = Path.Combine(Properties.Settings.Default.RumblePath, "UserLibs");
+                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userLibsSource, userLibsDest);
                 }
 
                 Directory.Delete(tempDir, true);
@@ -255,6 +274,8 @@ namespace Rumble_Mod_Manager
                 MessageBox.Show($"Failed to install mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
 
         private static void RetryFileOperation(Action fileOperation)
         {
@@ -303,6 +324,10 @@ namespace Rumble_Mod_Manager
         {
             var modsByPage = new Dictionary<int, List<Mod>>();
 
+            var modList = new ConcurrentBag<Mod>();
+            var pinnedModList = new ConcurrentBag<Mod>();
+            var modNameSet = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
             try
             {
                 string url = "https://thunderstore.io/c/rumble/api/v1/package/?page=1";
@@ -331,103 +356,109 @@ namespace Rumble_Mod_Manager
                     progressBar.Maximum = mods.Count;
                     progressBar.Value = 0;
 
-                    var modList = new List<Mod>();
-                    var pinnedModList = new List<Mod>();
-                    var modNameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                    var tasks = mods.Select(async modDict =>
+                    using (var semaphore = new SemaphoreSlim(5)) // Limit to 5 concurrent tasks
                     {
-                        var modName = modDict.GetValueOrDefault("name")?.ToString();
-                        var DateUpdated = modDict.GetValueOrDefault("date_updated")?.ToString();
-                        if (modName != null && modName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase))
+                        var tasks = mods.Select(async modDict =>
                         {
-                            // Skip MelonLoader mods
-                            return;
-                        }
-
-                        var versions = modDict.GetValueOrDefault("versions") as JArray;
-
-                        if (versions != null && versions.Count > 0)
-                        {
-                            var latestVersion = versions[0] as JObject;
-
-                            // Check if mod is deprecated
-                            bool isDeprecated = modDict.GetValueOrDefault("is_deprecated")?.ToString().ToLower() == "true";
-                            if (isDeprecated)
+                            await semaphore.WaitAsync();
+                            try
                             {
-                                return;
-                            }
-
-                            // Check for MelonLoader dependency version 0.5.7
-                            var dependencies = latestVersion?.GetValue("dependencies")?.ToObject<List<string>>();
-                            if (dependencies != null && dependencies.Any(dep => dep.Contains("MelonLoader-0.5.7", StringComparison.OrdinalIgnoreCase)))
-                            {
-                                return;
-                            }
-
-                            string name = modName;
-                            string description = latestVersion?.GetValue("description")?.ToString();
-                            string author = modDict.GetValueOrDefault("owner")?.ToString();
-                            string imageurl = latestVersion?.GetValue("icon")?.ToString();
-                            string version = latestVersion?.GetValue("version_number")?.ToString();
-                            string lastUpdated = DateUpdated;
-
-                            var mod = new Mod
-                            {
-                                Name = name,
-                                Description = description,
-                                Author = author,
-                                ImageUrl = imageurl,
-                                Version = version,
-                                Dependencies = dependencies,
-                                DateUpdated = lastUpdated,
-                                ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}"
-                            };
-
-                            // Fetch the mod image
-                            if (!string.IsNullOrEmpty(mod.ImageUrl))
-                            {
-                                string imageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
-
-                                using (HttpResponseMessage imageResponse = await client.GetAsync(imageUrl))
+                                var modName = modDict.GetValueOrDefault("name")?.ToString();
+                                var DateUpdated = modDict.GetValueOrDefault("date_updated")?.ToString();
+                                if (modName != null && modName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    imageResponse.EnsureSuccessStatusCode();
-                                    using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
+                                    // Skip MelonLoader mods
+                                    return;
+                                }
+
+                                var versions = modDict.GetValueOrDefault("versions") as JArray;
+
+                                if (versions != null && versions.Count > 0)
+                                {
+                                    var latestVersion = versions[0] as JObject;
+
+                                    // Check if mod is deprecated
+                                    bool isDeprecated = modDict.GetValueOrDefault("is_deprecated")?.ToString().ToLower() == "true";
+                                    if (isDeprecated)
                                     {
-                                        mod.ModImage = Image.FromStream(imageStream);
+                                        return;
+                                    }
+
+                                    // Check for MelonLoader dependency version 0.5.7
+                                    var dependencies = latestVersion?.GetValue("dependencies")?.ToObject<List<string>>();
+                                    if (dependencies != null && dependencies.Any(dep => dep.Contains("MelonLoader-0.5.7", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        return;
+                                    }
+
+                                    string name = modName;
+                                    string description = latestVersion?.GetValue("description")?.ToString();
+                                    string author = modDict.GetValueOrDefault("owner")?.ToString();
+                                    string imageurl = latestVersion?.GetValue("icon")?.ToString();
+                                    string version = latestVersion?.GetValue("version_number")?.ToString();
+                                    string lastUpdated = DateUpdated;
+
+                                    var mod = new Mod
+                                    {
+                                        Name = name,
+                                        Description = description,
+                                        Author = author,
+                                        ImageUrl = imageurl,
+                                        Version = version,
+                                        Dependencies = dependencies,
+                                        DateUpdated = lastUpdated,
+                                        ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}"
+                                    };
+
+                                    // Fetch the mod image
+                                    if (!string.IsNullOrEmpty(mod.ImageUrl))
+                                    {
+                                        string imageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
+
+                                        using (HttpResponseMessage imageResponse = await client.GetAsync(imageUrl))
+                                        {
+                                            imageResponse.EnsureSuccessStatusCode();
+                                            using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
+                                            {
+                                                mod.ModImage = Image.FromStream(imageStream);
+                                            }
+                                        }
+                                    }
+
+                                    if (!modNameSet.TryAdd(name, true))
+                                    {
+                                        // Duplicate name found, skip this mod
+                                        return;
+                                    }
+
+                                    if (modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true")
+                                    {
+                                        pinnedModList.Add(mod);
+                                    }
+                                    else
+                                    {
+                                        modList.Add(mod);
+                                    }
+
+                                    // Update progress bar in batches to avoid too frequent UI updates
+                                    if (progressBar.Value < progressBar.Maximum)
+                                    {
+                                        progressBar.Invoke(new Action(() => progressBar.Value++));
                                     }
                                 }
                             }
-
-                            lock (modNameSet)
+                            catch (Exception ex)
                             {
-                                if (!modNameSet.Add(name))
-                                {
-                                    // Duplicate name found, skip this mod
-                                    return;
-                                }
+                                MessageBox.Show($"An error occurred while processing a mod: {ex.Message}");
                             }
-
-                            if (modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true")
+                            finally
                             {
-                                lock (pinnedModList)
-                                {
-                                    pinnedModList.Add(mod);
-                                    modList.Remove(mod);
-                                }
+                                semaphore.Release();
                             }
-                            else
-                            {
-                                lock (modList)
-                                {
-                                    modList.Add(mod);
-                                }
-                            }
-                            progressBar.Invoke(new Action(() => progressBar.Value++));
-                        }
-                    }).ToArray();
+                        }).ToArray();
 
-                    await Task.WhenAll(tasks);
+                        await Task.WhenAll(tasks);
+                    }
 
                     // Combine pinned mods and regular mods for the front page
                     var combinedModList = pinnedModList.Concat(modList).ToList();
@@ -456,7 +487,6 @@ namespace Rumble_Mod_Manager
 
             return modsByPage;
         }
-
 
         public class Mod
         {

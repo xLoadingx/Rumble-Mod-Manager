@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
+using Timer = System.Threading.Timer;
 
 namespace Rumble_Mod_Manager
 {
@@ -38,6 +41,60 @@ namespace Rumble_Mod_Manager
             {
                 CheckRumblePath();
             }
+        }
+
+        public async Task InstallMelonLoader()
+        {
+            string rumblePath = Properties.Settings.Default.RumblePath;
+
+            string downloadUrl = "https://github.com/LavaGang/MelonLoader/releases/latest/download/MelonLoader.x64.zip";
+            string tempZipPath = Path.Combine(Path.GetTempPath(), "MelonLoader.zip");
+            string gamePath = Path.Combine(Properties.Settings.Default.RumblePath, "RUMBLE.exe");
+
+            // Step 1: Download and install MelonLoader
+            using (HttpClientHandler handler = new HttpClientHandler())
+            {
+                handler.AllowAutoRedirect = true;
+
+                using (HttpClient client = new HttpClient(handler) { BaseAddress = new Uri("https://github.com/") })
+                {
+                    HttpResponseMessage response = await client.GetAsync(downloadUrl);
+                    response.EnsureSuccessStatusCode();
+                    await using (FileStream fs = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        await response.Content.CopyToAsync(fs);
+                    }
+                }
+            }
+
+            ZipFile.ExtractToDirectory(tempZipPath, rumblePath, true);
+            File.Delete(tempZipPath);
+
+            MessageBox.Show($"MelonLoader has been installed successfully. The game is about to open, once it reaches the T-POSE screen, please close the game. \n\n Do not click on the console. If you do, please press enter.");
+
+            //Step 2: Launch the game
+            // Ensure the executable exists
+            if (!File.Exists(gamePath))
+            {
+                Console.WriteLine($"Executable not found at: {gamePath}");
+                return;
+            }
+
+            label1.Text = "Waiting...";
+
+            // Create a new process start info
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = gamePath;
+
+            // Set the working directory to the game directory
+            startInfo.WorkingDirectory = Properties.Settings.Default.RumblePath;
+
+            // Start the process
+            Process gameProcess = new Process();
+            gameProcess.StartInfo = startInfo;
+            gameProcess.Start();
+
+            gameProcess.WaitForExit();
         }
 
         public void CheckRumblePath()
@@ -75,7 +132,7 @@ namespace Rumble_Mod_Manager
             SettingsButton.Visible = false;
             CreditsButton.Visible = false;
 
-            FindThunderstoreMods();
+            LaunchManager();
         }
 
         static async Task<Dictionary<int, List<CustomMap>>> ManageMaps(ProgressBar progressBar)
@@ -91,7 +148,6 @@ namespace Rumble_Mod_Manager
             // Check if the directory exists
             if (!Directory.Exists(targetDirectory))
             {
-                MessageBox.Show($"The directory {targetDirectory} does not exist.", "Directory Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return null;
             }
 
@@ -286,17 +342,52 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private async void FindThunderstoreMods()
+        private async void LaunchManager()
         {
             try
             {
                 label1.Visible = true;
                 label1.Text = "Fetching Mods...";
+
                 var modsByPage = await ThunderstoreMods.FetchThunderstoreMods(progressBar1);
                 ModCache.ModsByPage = modsByPage;
+
+                string basePath = Properties.Settings.Default.RumblePath;
+                string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
+
                 label1.Text = "Fetching Maps...";
                 var mapsByPage = await ManageMaps(progressBar1);
+
+                // Retry up to 5 times if no maps are fetched
+                int retryCount = 0;
+                int maxRetries = 5;
+
+                while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
+                {
+                    retryCount++;
+                    mapsByPage = await ManageMaps(progressBar1);
+                }
+
+                // After the loop, check if maps were successfully fetched
+                if (mapsByPage != null && mapsByPage.Any())
+                {
+                    CustomMapsCache.MapsByPage = mapsByPage;
+                }
+                else
+                {
+                    // Handle the case where maps could not be fetched after 5 attempts
+                    MessageBox.Show("Failed to fetch maps after 5 attempts.");
+                }
+
+
                 CustomMapsCache.MapsByPage = mapsByPage;
+
+                if (!Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
+                {
+                    label1.Text = "Installing MelonLoader...";
+                    await InstallMelonLoader();
+                }
+
                 progressBar1.Visible = false;
                 label1.Visible = false;
 
@@ -388,7 +479,8 @@ namespace Rumble_Mod_Manager
                         LaunchButton.Visible = true;
                         SettingsButton.Visible = true;
                         CreditsButton.Visible = true;
-                    } else
+                    }
+                    else
                     {
                         Settings settingsForm = new Settings(null, this);
                         settingsForm.Show();

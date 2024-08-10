@@ -49,7 +49,7 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                MessageBox.Show("No mods found in cache. Mods were not found when first loaded. (Contact the developer 'error_real_sir' on discord for help");
+                MessageBox.Show("No maps found in cache. Maps were not found when first loaded. (Try restarting the manager)");
             }
 
             ModAuthorLabel.Text = string.Empty;
@@ -362,12 +362,14 @@ namespace Rumble_Mod_Manager
 
                     // Move the downloaded file to the maps directory
                     string finalFilePath = Path.Combine(mapsDirectory, $"{CurrentlySelectedMap.name}.txt");
-                    File.Move(tempFilePath, finalFilePath);
+                    bool isUpdating = File.Exists(finalFilePath);
+
+                    File.Move(tempFilePath, finalFilePath, true);
 
                     // Clean up
                     Directory.Delete(tempDir, true);
 
-                    MessageBox.Show($"Successfully installed {CurrentlySelectedMap.name}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"Successfully {(isUpdating ? "updated" : "installed")} {CurrentlySelectedMap.name}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {

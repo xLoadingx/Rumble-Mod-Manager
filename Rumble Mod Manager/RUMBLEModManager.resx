@@ -117,4 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="WelcomeLabel.Text" xml:space="preserve">
+    <value>Welcome to the Rumble Mod Manager!
+
+To get started, you can click on the "Thunderstore" button and install mods from there.
+
+When clicking on a locally installed mod (they will be here)
+The details of the mod will be shown over to the right, unless the mod could not be found
+
+</value>
+  </data>
 </root>

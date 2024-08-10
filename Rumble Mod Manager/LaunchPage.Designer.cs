@@ -124,13 +124,12 @@
             // 
             // label1
             // 
-            label1.AutoSize = true;
             label1.BackColor = Color.Transparent;
             label1.Font = new Font("Arial", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label1.ForeColor = Color.White;
-            label1.Location = new Point(124, 183);
+            label1.Location = new Point(0, 183);
             label1.Name = "label1";
-            label1.Size = new Size(165, 24);
+            label1.Size = new Size(408, 34);
             label1.TabIndex = 7;
             label1.Text = "Fetching Mods...";
             label1.TextAlign = ContentAlignment.MiddleCenter;
@@ -197,7 +196,6 @@
             Name = "LaunchPage";
             Text = "LaunchPage";
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
@@ -213,5 +211,6 @@
         private Button LaunchButton;
         private Button SettingsButton;
         private Button CreditsButton;
+        private System.Windows.Forms.Timer timer1;
     }
 }
