@@ -56,9 +56,9 @@ If this is your first time modding RUMBLE and you don't have MelonLoader install
 1. If you dont have MelonLoader installed, just click the launch button (after finding your path)
    - After fetching the mods, it should start to install MelonLoader
 
-3. Once MelonLoader is installed, it will launch the game. (*Make sure to read the popup first*).
+2. Once MelonLoader is installed, it will launch the game. (*Make sure to read the popup first*).
    - Ensure you see the MelonLoader start screen when the game opens.
    - Wait until the game reaches the T-pose screen (where the RUMBLE man is standing with arms outstretched).
    - Once you see that, close the game, and the mod manager should open.
 
-4. Congratulations! You have successfully modded RUMBLE!
+3. Congratulations! You have successfully modded RUMBLE!
