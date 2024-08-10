@@ -349,7 +349,7 @@ namespace Rumble_Mod_Manager
                     progressBar.Maximum = mods.Count;
                     progressBar.Value = 0;
 
-                    using (var semaphore = new SemaphoreSlim(5)) // Limit to 5 concurrent tasks
+                    using (var semaphore = new SemaphoreSlim(20))
                     {
                         var tasks = mods.Select(async modDict =>
                         {
