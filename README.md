@@ -1,4 +1,5 @@
 # Rumble-Mod-Manager
+- You can download the latest version [here](https://github.com/xLoadingx/Rumble-Mod-Manager/releases)
 
 ## Important Notes
 
