@@ -233,8 +233,8 @@
             textBox1.ForeColor = Color.White;
             textBox1.Location = new Point(12, 6);
             textBox1.Name = "textBox1";
-            textBox1.PlaceholderText = "Search for mods";
-            textBox1.Size = new Size(253, 21);
+            textBox1.PlaceholderText = "Search for mods via name, author, or description";
+            textBox1.Size = new Size(278, 21);
             textBox1.TabIndex = 4;
             textBox1.TextChanged += textBox1_TextChanged;
             // 

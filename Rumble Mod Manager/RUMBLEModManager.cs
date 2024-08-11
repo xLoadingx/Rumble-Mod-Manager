@@ -242,17 +242,18 @@ namespace Rumble_Mod_Manager
         private ModPanelControl CreateModPanel(string modFile, bool isEnabled, string rumblePath)
         {
             // Extract the mod name from the file name
-            string modFileName = Path.GetFileNameWithoutExtension(modFile);
+            string modFileName = Path.GetFileName(modFile);
 
             // Try to get the mod name from the mapping dictionary
-            modMappings.TryGetValue(modFileName + ".dll", out string modNameFromMapping);
+            modMappings.TryGetValue(modFileName, out string modNameFromMapping);
 
-            string modVersionStr = GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName + ".dll");
+            string modVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName, MelonLoaderModInfoType.Version);
             Color color = Color.Lime;
             Image cloudIcon = null;
             string toolTip = "Unknown";
             Image modImage = null;
             string ModAuthor = null;
+            bool modFound = false;
 
             if (modNameFromMapping != null)
             {
@@ -262,6 +263,7 @@ namespace Rumble_Mod_Manager
                     {
                         if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
                         {
+                            modFound = true;
                             ModAuthor = mod.Author;
                             modImage = mod.ModImage;
 
@@ -300,12 +302,18 @@ namespace Rumble_Mod_Manager
 
             if (string.IsNullOrEmpty(ModAuthor))
             {
-                ModAuthor = "Unknown";
+                ModAuthor = $"By {GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName, MelonLoaderModInfoType.Author)}";
+            }
+
+            if (!modFound)
+            {
+                toolTip = "Not Found / Unreleased";
+                color = Color.Cyan;
             }
 
             ModPanelControl modPanel = new ModPanelControl
             {
-                ModName = modFileName,
+                ModName = Path.GetFileNameWithoutExtension(modFile),
                 DetailsLabel = $"v{modVersionStr} by {ModAuthor}",
                 ModLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Bold),
                 DetailsLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
@@ -354,7 +362,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        public static string GetMelonLoaderModInfo(string path, string dllName, bool getName = false)
+        public static object GetMelonLoaderModInfo(string path, string dllName, MelonLoaderModInfoType modEnum)
         {
             string dllPath = Path.Combine(path, dllName);
 
@@ -392,18 +400,25 @@ namespace Rumble_Mod_Manager
 
                 foreach (var attribute in attributes)
                 {
+                    string attributeName = attribute.GetType().Name;
+
                     // Check if the attribute is of type MelonInfoAttribute
-                    if (attribute.GetType().Name == "MelonInfoAttribute")
+                    if (attributeName == "MelonInfoAttribute")
                     {
                         // Use reflection to get the desired property (Name or Version)
-                        string propertyName = getName ? "Name" : "Version";
-                        var property = attribute.GetType().GetProperty(propertyName);
-                        if (property != null)
+                        switch (modEnum)
                         {
-                            var value = property.GetValue(attribute) as string;
-                            return value;
+                            case MelonLoaderModInfoType.Name:
+                            case MelonLoaderModInfoType.Version:
+                            case MelonLoaderModInfoType.Author:
+                                var property = attribute.GetType().GetProperty(modEnum.ToString());
+                                if (property != null)
+                                {
+                                    return (string)property.GetValue(attribute);
+                                }
+                                break;
                         }
-                    }
+                    } 
                 }
 
                 return null;
@@ -490,7 +505,7 @@ namespace Rumble_Mod_Manager
 
                         modMappings.TryGetValue(selectedPanel.ModName + ".dll", out string modNameFromMapping);
 
-                        string modVersionStr = GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"), selectedPanel.ModName + ".dll");
+                        string modVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"), selectedPanel.ModName + ".dll", MelonLoaderModInfoType.Version);
 
                         bool modFound = false;
 
@@ -567,7 +582,7 @@ namespace Rumble_Mod_Manager
 
                         if (!modFound)
                         {
-                            ModAuthorLabel.Text = "By Unknown";
+                            ModAuthorLabel.Text = $"By {GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"),selectedPanel.ModName + ".dll", MelonLoaderModInfoType.Author)}";
                             ModPictureDisplay.Image = Properties.Resources.UnknownMod;
                             UpdateButton.BackgroundImage = null;
                             ModVersionLabel.Location = new Point(207, 63);
@@ -600,34 +615,6 @@ namespace Rumble_Mod_Manager
                     MessageBox.Show("Panel is null");
                 }
             }
-        }
-
-        public static int LevenshteinDistance(string s, string t)
-        {
-            if (string.IsNullOrEmpty(s)) return string.IsNullOrEmpty(t) ? 0 : t.Length;
-            if (string.IsNullOrEmpty(t)) return s.Length;
-
-            int[,] d = new int[s.Length + 1, t.Length + 1];
-
-            for (int i = 0; i <= s.Length; i++) d[i, 0] = i;
-            for (int j = 0; j <= t.Length; j++) d[0, j] = j;
-
-            for (int i = 1; i <= s.Length; i++)
-            {
-                for (int j = 1; j <= t.Length; j++)
-                {
-                    int cost = t[j - 1] == s[i - 1] ? 0 : 1;
-                    d[i, j] = Math.Min(
-                        Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
-                        d[i - 1, j - 1] + cost);
-                }
-            }
-            return d[s.Length, t.Length];
-        }
-
-        public static bool IsFuzzyMatch(string modName, string localModName, int maxDistance = 3)
-        {
-            return LevenshteinDistance(modName, localModName) <= maxDistance;
         }
 
         private void ThunderstoreButton_Click(object sender, EventArgs e)
@@ -735,5 +722,12 @@ namespace Rumble_Mod_Manager
     public static class ModCache
     {
         public static Dictionary<int, List<ThunderstoreMods.Mod>> ModsByPage { get; set; } = new Dictionary<int, List<ThunderstoreMods.Mod>>();
+    }
+
+    public enum MelonLoaderModInfoType
+    {
+        Name,
+        Version,
+        Author
     }
 }

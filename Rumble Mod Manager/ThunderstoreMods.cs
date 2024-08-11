@@ -121,10 +121,10 @@ namespace Rumble_Mod_Manager
                         AutoSize = false,
                         TextAlign = ContentAlignment.MiddleCenter,
                         ForeColor = Color.White,
-                        Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular), // Adjusted font size
+                        Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
                         Dock = DockStyle.Fill,
-                        MaximumSize = new Size(140, 0), // Set maximum width and enable word wrap
-                        AutoEllipsis = true // Show ellipsis if text overflows
+                        MaximumSize = new Size(140, 0),
+                        AutoEllipsis = true
                     };
 
                     label.Click += (s, e) => ModPanel_Click(modPanel, mod);
@@ -141,35 +141,8 @@ namespace Rumble_Mod_Manager
 
         public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod)
         {
-            string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
-
-            // Ensure the directory exists
-            if (!Directory.Exists(tempDir))
-            {
-                Directory.CreateDirectory(tempDir);
-            }
-
-            string tempZipPath = Path.Combine(tempDir, "temp_mod.zip");
-
             try
             {
-                using (HttpClient client = new HttpClient())
-                {
-                    HttpResponseMessage response = await client.GetAsync(mod.ModPageUrl);
-                    response.EnsureSuccessStatusCode();
-
-                    using (Stream zipStream = await response.Content.ReadAsStreamAsync())
-                    {
-                        using (FileStream fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write))
-                        {
-                            await zipStream.CopyToAsync(fileStream);
-                        }
-                    }
-                }
-
-                // Install the main mod
-                InstallMod(tempZipPath, ModEnabled);
-
                 // Check if the mod has any dependencies
                 if (mod.Dependencies != null && mod.Dependencies.Any(dependency => !dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase)))
                 {
@@ -178,7 +151,6 @@ namespace Rumble_Mod_Manager
 
                     foreach (var dependency in mod.Dependencies)
                     {
-                        // Ignore specific dependencies like LavaGang-MelonLoader silently
                         if (dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase))
                         {
                             continue; // Skip this dependency
@@ -213,6 +185,33 @@ namespace Rumble_Mod_Manager
                     MessageBox.Show(installationMessage.ToString(), "Installing Dependencies", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
+                string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
+
+                // Ensure the directory exists
+                if (!Directory.Exists(tempDir))
+                {
+                    Directory.CreateDirectory(tempDir);
+                }
+
+                string tempZipPath = Path.Combine(tempDir, "temp_mod.zip");
+
+                using (HttpClient client = new HttpClient())
+                {
+                    HttpResponseMessage response = await client.GetAsync(mod.ModPageUrl);
+                    response.EnsureSuccessStatusCode();
+
+                    using (Stream zipStream = await response.Content.ReadAsStreamAsync())
+                    {
+                        using (FileStream fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write))
+                        {
+                            await zipStream.CopyToAsync(fileStream);
+                        }
+                    }
+                }
+
+                // Install the main mod
+                InstallMod(tempZipPath, ModEnabled);
+
                 if (initialMod)
                 {
                     MessageBox.Show("Mod successfully installed", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -227,7 +226,6 @@ namespace Rumble_Mod_Manager
 
         private static Mod FindModByAuthorAndName(string author, string name)
         {
-            // Assuming you have a list of mods cached somewhere, like ModCache.ModsByPage
             foreach (var page in ModCache.ModsByPage.Values)
             {
                 foreach (var mod in page)
@@ -256,68 +254,46 @@ namespace Rumble_Mod_Manager
             try
             {
                 // Ensure temp directory exists
-                if (!Directory.Exists(tempDir))
-                {
-                    Directory.CreateDirectory(tempDir);
-                }
+                Directory.CreateDirectory(tempDir);
 
+                // Extract the ZIP file to the temp directory
                 ZipFile.ExtractToDirectory(zipPath, tempDir);
 
                 string modsFolder = Path.Combine(Properties.Settings.Default.RumblePath, ModEnabled ? "Mods" : "DisabledMods");
 
                 // Ensure mods folder exists
-                if (!Directory.Exists(modsFolder))
-                {
-                    Directory.CreateDirectory(modsFolder);
-                }
+                Directory.CreateDirectory(modsFolder);
 
-                foreach (var item in Directory.EnumerateFiles(tempDir, "*.dll", System.IO.SearchOption.TopDirectoryOnly))
-                {
-                    string destFilePath = Path.Combine(modsFolder, Path.GetFileName(item));
-
-                    if (File.Exists(destFilePath))
-                    {
-                        UpdatingMod = true;
-                    }
-
-                    RetryFileOperation(() => File.Copy(item, destFilePath, true));
-                    File.Delete(item);
-                }
+                // Define the directories we want to process
+                var allowedDirs = new[] { "Mods", "UserLibs", "UserData" };
 
                 foreach (var subDir in Directory.EnumerateDirectories(tempDir))
                 {
-                    foreach (var item in Directory.EnumerateFiles(subDir, "*.dll", System.IO.SearchOption.AllDirectories))
-                    {
-                        string destFilePath = Path.Combine(modsFolder, Path.GetFileName(item));
+                    string directoryName = Path.GetFileName(subDir);
+                    string destinationDir;
 
-                        if (File.Exists(destFilePath))
+                    // Only process allowed directories
+                    if (allowedDirs.Contains(directoryName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        if (directoryName.Equals("UserLibs", StringComparison.OrdinalIgnoreCase))
                         {
-                            UpdatingMod = true;
+                            destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserLibs");
+                        }
+                        else if (directoryName.Equals("UserData", StringComparison.OrdinalIgnoreCase))
+                        {
+                            destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
+                        }
+                        else // "Mods"
+                        {
+                            destinationDir = modsFolder;
                         }
 
-                        RetryFileOperation(() => File.Copy(item, destFilePath, true));
-                        File.Delete(item);
+                        MergeDirectories(subDir, destinationDir, ref UpdatingMod);
                     }
                 }
 
-                // Copy the entire UserData folder if it exists
-                string userDataSource = Path.Combine(tempDir, "UserData");
-                if (Directory.Exists(userDataSource))
-                {
-                    string userDataDest = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
-                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userDataSource, userDataDest, true);
-                }
-
-                // Copy the entire UserLibs folder if it exists
-                string userLibsSource = Path.Combine(tempDir, "UserLibs");
-                if (Directory.Exists(userLibsSource))
-                {
-                    string userLibsDest = Path.Combine(Properties.Settings.Default.RumblePath, "UserLibs");
-                    Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(userLibsSource, userLibsDest, true);
-                }
-
+                // Clean up: Delete the temp directory and the ZIP file
                 Directory.Delete(tempDir, true);
-
                 if (File.Exists(zipPath))
                 {
                     File.Delete(zipPath);
@@ -350,6 +326,37 @@ namespace Rumble_Mod_Manager
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to install mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private static void MergeDirectories(string sourceDir, string targetDir, ref bool updatingMod)
+        {
+            // Create all directories first
+            foreach (var dirPath in Directory.EnumerateDirectories(sourceDir, "*", System.IO.SearchOption.AllDirectories))
+            {
+                string relativePath = Path.GetRelativePath(sourceDir, dirPath);
+                string destDirPath = Path.Combine(targetDir, relativePath);
+
+                if (!Directory.Exists(destDirPath))
+                {
+                    Directory.CreateDirectory(destDirPath);
+                }
+            }
+
+            // Copy all files, overwrite if exists
+            foreach (var filePath in Directory.EnumerateFiles(sourceDir, "*.*", System.IO.SearchOption.AllDirectories))
+            {
+                string relativePath = Path.GetRelativePath(sourceDir, filePath);
+                string destFilePath = Path.Combine(targetDir, relativePath);
+
+                // If the file already exists in the destination, it means we're updating
+                if (File.Exists(destFilePath))
+                {
+                    updatingMod = true;
+                }
+
+                RetryFileOperation(() => File.Copy(filePath, destFilePath, true));
+                File.Delete(filePath);
             }
         }
 
@@ -591,7 +598,7 @@ namespace Rumble_Mod_Manager
             if (ModCache.ModsByPage != null && ModCache.ModsByPage.Count > 0)
             {
                 var allMods = ModCache.ModsByPage.Values.SelectMany(modList => modList).ToList();
-                var filteredMods = allMods.Where(mod => mod.Name.ToLower().Contains(searchText) ||
+                var filteredMods = allMods.Where(mod => mod.Name.ToLower().Contains(searchText.Replace(" ", "_")) ||
                                                         mod.Description.ToLower().Contains(searchText) ||
                                                         mod.Author.ToLower().Contains(searchText)).ToList();
 
