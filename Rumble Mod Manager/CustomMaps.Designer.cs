@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             panel1 = new Panel();
             ModVersionLabel = new Label();
             ModAuthorLabel = new Label();
@@ -39,8 +40,9 @@
             InstallButton = new Button();
             ModDescriptionLabel = new Label();
             textBox1 = new TextBox();
-            ModDisplayGrid = new TableLayoutPanel();
             panel2 = new Panel();
+            guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            guna2Elipse2 = new Guna.UI2.WinForms.Guna2Elipse(components);
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
             SuspendLayout();
@@ -57,7 +59,7 @@
             panel1.Controls.Add(BackButton);
             panel1.Controls.Add(InstallButton);
             panel1.Controls.Add(ModDescriptionLabel);
-            panel1.Location = new Point(621, 1);
+            panel1.Location = new Point(625, 1);
             panel1.Name = "panel1";
             panel1.Size = new Size(406, 442);
             panel1.TabIndex = 5;
@@ -65,32 +67,35 @@
             // ModVersionLabel
             // 
             ModVersionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModVersionLabel.AutoEllipsis = true;
             ModVersionLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModVersionLabel.Font = new Font("Arial Narrow", 26.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModVersionLabel.ForeColor = Color.White;
-            ModVersionLabel.Location = new Point(161, 121);
+            ModVersionLabel.Location = new Point(159, 118);
             ModVersionLabel.Name = "ModVersionLabel";
             ModVersionLabel.Size = new Size(242, 40);
             ModVersionLabel.TabIndex = 14;
             ModVersionLabel.Text = "Version 6.9.4";
-            ModVersionLabel.TextAlign = ContentAlignment.MiddleCenter;
+            ModVersionLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModAuthorLabel
             // 
             ModAuthorLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModAuthorLabel.AutoEllipsis = true;
             ModAuthorLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModAuthorLabel.Font = new Font("Arial Narrow", 24F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModAuthorLabel.ForeColor = Color.White;
-            ModAuthorLabel.Location = new Point(161, 44);
+            ModAuthorLabel.Location = new Point(159, 36);
             ModAuthorLabel.Name = "ModAuthorLabel";
             ModAuthorLabel.Size = new Size(242, 38);
             ModAuthorLabel.TabIndex = 13;
             ModAuthorLabel.Text = "By UlvakSkillz";
-            ModAuthorLabel.TextAlign = ContentAlignment.TopCenter;
+            ModAuthorLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModNameLabel
             // 
             ModNameLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModNameLabel.AutoEllipsis = true;
             ModNameLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModNameLabel.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModNameLabel.ForeColor = Color.White;
@@ -100,7 +105,7 @@
             ModNameLabel.Size = new Size(242, 29);
             ModNameLabel.TabIndex = 12;
             ModNameLabel.Text = "Rumble Modding API";
-            ModNameLabel.TextAlign = ContentAlignment.MiddleCenter;
+            ModNameLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModPictureDisplay
             // 
@@ -123,6 +128,7 @@
             ForwardButton.TabIndex = 10;
             ForwardButton.Text = ">";
             ForwardButton.UseVisualStyleBackColor = false;
+            ForwardButton.Click += ForwardButton_Click;
             // 
             // PageNumberLabel
             // 
@@ -147,6 +153,7 @@
             BackButton.TabIndex = 8;
             BackButton.Text = "<";
             BackButton.UseVisualStyleBackColor = false;
+            BackButton.Click += BackButton_Click;
             // 
             // InstallButton
             // 
@@ -164,8 +171,8 @@
             // ModDescriptionLabel
             // 
             ModDescriptionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            ModDescriptionLabel.AutoEllipsis = true;
             ModDescriptionLabel.BackColor = Color.FromArgb(20, 20, 20);
-            ModDescriptionLabel.BorderStyle = BorderStyle.Fixed3D;
             ModDescriptionLabel.Font = new Font("Arial Narrow", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModDescriptionLabel.ForeColor = Color.White;
             ModDescriptionLabel.Location = new Point(3, 161);
@@ -186,33 +193,6 @@
             textBox1.TabIndex = 8;
             textBox1.TextChanged += textBox1_TextChanged;
             // 
-            // ModDisplayGrid
-            // 
-            ModDisplayGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            ModDisplayGrid.AutoScroll = true;
-            ModDisplayGrid.AutoSize = true;
-            ModDisplayGrid.ColumnCount = 2;
-            ModDisplayGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            ModDisplayGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            ModDisplayGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            ModDisplayGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            ModDisplayGrid.GrowStyle = TableLayoutPanelGrowStyle.FixedSize;
-            ModDisplayGrid.Location = new Point(6, 31);
-            ModDisplayGrid.Name = "ModDisplayGrid";
-            ModDisplayGrid.RowCount = 2;
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            ModDisplayGrid.Size = new Size(592, 405);
-            ModDisplayGrid.TabIndex = 6;
-            // 
             // panel2
             // 
             panel2.BackColor = Color.FromArgb(40, 40, 40);
@@ -220,6 +200,16 @@
             panel2.Name = "panel2";
             panel2.Size = new Size(592, 405);
             panel2.TabIndex = 7;
+            // 
+            // guna2Elipse1
+            // 
+            guna2Elipse1.BorderRadius = 12;
+            guna2Elipse1.TargetControl = ModDescriptionLabel;
+            // 
+            // guna2Elipse2
+            // 
+            guna2Elipse2.BorderRadius = 12;
+            guna2Elipse2.TargetControl = ModPictureDisplay;
             // 
             // CustomMaps
             // 
@@ -229,7 +219,6 @@
             ClientSize = new Size(1033, 444);
             Controls.Add(panel1);
             Controls.Add(textBox1);
-            Controls.Add(ModDisplayGrid);
             Controls.Add(panel2);
             Name = "CustomMaps";
             Text = "CustomMaps";
@@ -247,11 +236,12 @@
         private Button InstallButton;
         private Label ModDescriptionLabel;
         private TextBox textBox1;
-        private TableLayoutPanel ModDisplayGrid;
         private Panel panel2;
         private PictureBox ModPictureDisplay;
         private Label ModNameLabel;
         private Label ModAuthorLabel;
         private Label ModVersionLabel;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse2;
     }
 }

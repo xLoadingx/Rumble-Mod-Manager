@@ -22,60 +22,61 @@ namespace Rumble_Mod_Manager
             InitializeComponent();
         }
 
-        public string ModName
+        public string ModNameLabel
         {
-            get { return ModAuthorLabel.Text; }
-            set { ModAuthorLabel.Text = value; }
+            get { return ModName.Text; }
+            set { ModName.Text = value; }
         }
 
         public string DetailsLabel
         {
-            get { return Details.Text; }
-            set { Details.Text = value; }
+            get { return label2.Text; }
+            set { label2.Text = value; }
         }
 
         public Font ModLabelFont
         {
-            get { return ModAuthorLabel.Font; }
-            set { ModAuthorLabel.Font = value; }
+            get { return ModName.Font; }
+            set { ModName.Font = value; }
         }
 
         public Font DetailsLabelFont
         {
-            get { return Details.Font; }
-            set { Details.Font = value; }
+            get { return label2.Font; }
+            set { label2.Font = value; }
         }
 
         public Image UpdateNeededImage
         {
-            get { return UpdateIcon.BackgroundImage; }
-            set { UpdateIcon.BackgroundImage = value; }
+            get { return ImageButton.Image; }
+            set { ImageButton.Image = value; }
         }
 
         public Color UpdateColor
         {
-            get { return Updated.ForeColor; }
-            set { Updated.BackColor = value; }
+            get { return ImageButton.ForeColor; }
+            set { ImageButton.BackColor = value; }
         }
 
-        public string toolTip1Text
-        {
-            get { return toolTip1.GetToolTip(ModAuthorLabel); }
-            set { toolTip1.SetToolTip(ModAuthorLabel, value); toolTip1.SetToolTip(pictureBox1, value); }
-        }
+        //public string toolTip1Text
+        //{
+        //    get { return toolTip1.GetToolTip(Details); }
+        //    set { toolTip1.SetToolTip(Details, value); toolTip1.SetToolTip(pictureBox1, value); }
+        //}
 
         public Image ModImage
         {
-            get { return pictureBox1.BackgroundImage; }
-            set { pictureBox1.BackgroundImage = value; }
+            get { return guna2PictureBox1.Image; }
+            set { guna2PictureBox1.Image = value; }
         }
 
         public bool ModEnabled
         {
             get { return _modEnabled; }
-            set { 
+            set
+            {
                 _modEnabled = value;
-                this.ForeColor = _modEnabled ? Color.White : Color.Maroon; this.BackColor = value == true ? Color.FromArgb(255, 30, 30, 30) : Color.FromArgb(255, 192, 0, 0); 
+                this.ForeColor = _modEnabled ? Color.White : Color.Maroon; this.BackColor = value == true ? Color.FromArgb(255, 30, 30, 30) : Color.FromArgb(255, 192, 0, 0);
             }
         }
 
@@ -84,7 +85,5 @@ namespace Rumble_Mod_Manager
             get { return _modDLLPath; }
             set { _modDLLPath = value; }
         }
-
-        public event EventHandler PanelClicked;
     }
 }

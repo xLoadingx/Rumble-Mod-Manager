@@ -29,97 +29,112 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            Updated = new Panel();
-            UpdateIcon = new PictureBox();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             toolTip1 = new ToolTip(components);
-            pictureBox1 = new PictureBox();
-            ModAuthorLabel = new Label();
-            Details = new Label();
-            Updated.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)UpdateIcon).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            guna2PictureBox1 = new Guna.UI2.WinForms.Guna2PictureBox();
+            ModName = new Label();
+            label2 = new Label();
+            guna2Elipse3 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            ImageButton = new Guna.UI2.WinForms.Guna2ImageButton();
+            guna2Elipse4 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            ((System.ComponentModel.ISupportInitialize)guna2PictureBox1).BeginInit();
             SuspendLayout();
-            // 
-            // Updated
-            // 
-            Updated.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            Updated.AutoSize = true;
-            Updated.BackColor = Color.Lime;
-            Updated.BorderStyle = BorderStyle.Fixed3D;
-            Updated.Controls.Add(UpdateIcon);
-            Updated.Location = new Point(560, 53);
-            Updated.Name = "Updated";
-            Updated.Size = new Size(34, 33);
-            Updated.TabIndex = 1;
-            // 
-            // UpdateIcon
-            // 
-            UpdateIcon.BackgroundImage = Properties.Resources.UpdateIcon;
-            UpdateIcon.BackgroundImageLayout = ImageLayout.Zoom;
-            UpdateIcon.Location = new Point(0, 0);
-            UpdateIcon.Name = "UpdateIcon";
-            UpdateIcon.Size = new Size(27, 26);
-            UpdateIcon.TabIndex = 6;
-            UpdateIcon.TabStop = false;
             // 
             // toolTip1
             // 
             toolTip1.ShowAlways = true;
             // 
-            // pictureBox1
+            // guna2PictureBox1
             // 
-            pictureBox1.BackgroundImageLayout = ImageLayout.Stretch;
-            pictureBox1.Location = new Point(13, 13);
-            pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(57, 57);
-            pictureBox1.TabIndex = 3;
-            pictureBox1.TabStop = false;
+            guna2PictureBox1.BackColor = Color.Transparent;
+            guna2PictureBox1.BorderRadius = 12;
+            guna2PictureBox1.CustomizableEdges = customizableEdges1;
+            guna2PictureBox1.ImageRotate = 0F;
+            guna2PictureBox1.Location = new Point(7, 9);
+            guna2PictureBox1.Name = "guna2PictureBox1";
+            guna2PictureBox1.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            guna2PictureBox1.Size = new Size(65, 65);
+            guna2PictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+            guna2PictureBox1.TabIndex = 0;
+            guna2PictureBox1.TabStop = false;
             // 
-            // ModAuthorLabel
+            // ModName
             // 
-            ModAuthorLabel.AutoSize = true;
-            ModAuthorLabel.ForeColor = Color.White;
-            ModAuthorLabel.Location = new Point(76, 13);
-            ModAuthorLabel.Name = "ModAuthorLabel";
-            ModAuthorLabel.Size = new Size(41, 15);
-            ModAuthorLabel.TabIndex = 4;
-            ModAuthorLabel.Text = "label1";
+            ModName.AutoSize = true;
+            ModName.ForeColor = Color.White;
+            ModName.Location = new Point(78, 19);
+            ModName.Name = "ModName";
+            ModName.Size = new Size(41, 15);
+            ModName.TabIndex = 1;
+            ModName.Text = "label1";
             // 
-            // Details
+            // label2
             // 
-            Details.AutoSize = true;
-            Details.ForeColor = Color.White;
-            Details.Location = new Point(76, 41);
-            Details.Name = "Details";
-            Details.Size = new Size(41, 15);
-            Details.TabIndex = 5;
-            Details.Text = "label1";
+            label2.AutoSize = true;
+            label2.ForeColor = Color.White;
+            label2.Location = new Point(78, 45);
+            label2.Name = "label2";
+            label2.Size = new Size(41, 15);
+            label2.TabIndex = 2;
+            label2.Text = "label2";
+            // 
+            // guna2Elipse3
+            // 
+            guna2Elipse3.BorderRadius = 24;
+            guna2Elipse3.TargetControl = this;
+            // 
+            // ImageButton
+            // 
+            ImageButton.CheckedState.ImageSize = new Size(64, 64);
+            ImageButton.HoverState.ImageSize = new Size(35, 24);
+            ImageButton.Image = Properties.Resources.UpdateIcon;
+            ImageButton.ImageOffset = new Point(0, 0);
+            ImageButton.ImageRotate = 0F;
+            ImageButton.ImageSize = new Size(35, 24);
+            ImageButton.Location = new Point(545, 0);
+            ImageButton.Name = "ImageButton";
+            ImageButton.PressedState.ImageSize = new Size(35, 24);
+            ImageButton.ShadowDecoration.CustomizableEdges = customizableEdges3;
+            ImageButton.Size = new Size(35, 35);
+            ImageButton.TabIndex = 3;
+            // 
+            // guna2Elipse4
+            // 
+            guna2Elipse4.BorderRadius = 24;
+            guna2Elipse4.TargetControl = ImageButton;
             // 
             // ModPanelControl
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
-            BorderStyle = BorderStyle.Fixed3D;
-            Controls.Add(Details);
-            Controls.Add(ModAuthorLabel);
-            Controls.Add(Updated);
-            Controls.Add(pictureBox1);
+            Controls.Add(ImageButton);
+            Controls.Add(label2);
+            Controls.Add(ModName);
+            Controls.Add(guna2PictureBox1);
             Name = "ModPanelControl";
-            Size = new Size(592, 84);
-            Updated.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)UpdateIcon).EndInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            Size = new Size(580, 80);
+            ((System.ComponentModel.ISupportInitialize)guna2PictureBox1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-        private Panel Updated;
         private ToolTip toolTip1;
-        private PictureBox pictureBox1;
-        private Label ModAuthorLabel;
-        private Label Details;
-        private PictureBox UpdateIcon;
+        private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
+        private Guna.UI2.WinForms.Guna2PictureBox pictureBox1;
+        private Guna.UI2.WinForms.Guna2ImageButton Updated;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse2;
+        private Guna.UI2.WinForms.Guna2HtmlLabel ModAuthorLabel;
+        private Guna.UI2.WinForms.Guna2PictureBox guna2PictureBox1;
+        private Guna.UI2.WinForms.Guna2HtmlLabel Details;
+        private Label ModName;
+        private Label label2;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse3;
+        private Guna.UI2.WinForms.Guna2ImageButton ImageButton;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse4;
     }
 }

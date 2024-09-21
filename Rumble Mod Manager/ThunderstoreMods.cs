@@ -30,7 +30,7 @@ namespace Rumble_Mod_Manager
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
         private static readonly HttpClient client = new HttpClient();
-        private Panel selectedPanel;
+        private ThunderstoreModDisplay selectedPanel;
         private Mod CurrentlySelectedMod;
         private int CurrentPage = 1;
         RUMBLEModManager RumbleManager;
@@ -69,9 +69,9 @@ namespace Rumble_Mod_Manager
             {
                 privateFonts.AddFontFile(fs.Name);
             }
-            ModNameLabel.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
-            ModAuthorLabel.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Regular);
-            ModVersionLabel.Font = new Font(privateFonts.Families[0], 26.0F, FontStyle.Regular);
+            ModNameLabel.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Bold);
+            ModAuthorLabel.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
+            ModVersionLabel.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Regular);
             DependenciesLabel.Font = new Font(privateFonts.Families[0], 11.0F, FontStyle.Regular);
             ModDescriptionLabel.Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular);
             InstallButton.Font = new Font(privateFonts.Families[0], 27.0F, FontStyle.Regular);
@@ -82,61 +82,75 @@ namespace Rumble_Mod_Manager
 
         private void DisplayMods(List<Mod> mods)
         {
-            ModDisplayGrid.Controls.Clear();
-            ModDisplayGrid.ColumnCount = 4;
-            ModDisplayGrid.RowCount = (mods.Count + 3) / 4;
+            panel2.Controls.Clear();
 
-            // Set styles for rows and columns
-            ModDisplayGrid.RowStyles.Clear();
-            ModDisplayGrid.ColumnStyles.Clear();
+            List<ThunderstoreModDisplay> modPanels = new List<ThunderstoreModDisplay>();
 
-            for (int i = 0; i < ModDisplayGrid.RowCount; i++)
-            {
-                ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / ModDisplayGrid.RowCount));
-            }
-
-            for (int i = 0; i < ModDisplayGrid.ColumnCount; i++)
-            {
-                ModDisplayGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / ModDisplayGrid.ColumnCount));
-            }
-
-            // Loop through each mod and create a panel
             foreach (var mod in mods)
             {
-                if (mod.Show)
-                {
-                    // Create a panel for each mod
-                    Panel modPanel = new Panel
-                    {
-                        Width = 140,
-                        Height = 140,
-                        BorderStyle = BorderStyle.Fixed3D,
-                        BackColor = Color.FromArgb(30, 30, 30),
-                        Tag = mod.ModPageUrl
-                    };
-
-                    Label label = new Label
-                    {
-                        Text = mod.Name,
-                        AutoSize = false,
-                        TextAlign = ContentAlignment.MiddleCenter,
-                        ForeColor = Color.White,
-                        Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
-                        Dock = DockStyle.Fill,
-                        MaximumSize = new Size(140, 0),
-                        AutoEllipsis = true
-                    };
-
-                    label.Click += (s, e) => ModPanel_Click(modPanel, mod);
-
-                    // Add controls to panel
-                    modPanel.Controls.Add(label);
-                    modPanel.Click += (s, e) => ModPanel_Click(modPanel, mod);
-
-                    // Add panel to TableLayoutPanel
-                    ModDisplayGrid.Controls.Add(modPanel);
-                }
+                ThunderstoreModDisplay modPanel = CreateModPanel(mod);
+                modPanels.Add(modPanel);
             }
+
+            int panelWidth = 171;
+            int panelHeight = 265;
+            int ceilingMargin = 10; // Space between the top of panel2 and the first row
+            int wallMargin = 10; // Wall margin for both sides
+
+            int availableWidth = panel2.ClientSize.Width - 2 * wallMargin;
+            int panelsPerRow = Math.Max(1, availableWidth / panelWidth);
+
+            // Calculate the total space left after fitting panels
+            int totalPanelWidth = panelsPerRow * panelWidth;
+            int remainingSpace = availableWidth - totalPanelWidth;
+
+            // Distribute the remaining space as padding between panels
+            int horizontalSpacing = panelsPerRow > 1 ? remainingSpace / (panelsPerRow - 1) : 0;
+
+            for (int i = 0; i < modPanels.Count; i++)
+            {
+                int row = i / panelsPerRow;
+                int col = i % panelsPerRow;
+
+                // Calculate the X and Y positions for each panel
+                int x = wallMargin + col * (panelWidth + horizontalSpacing);
+                int y = ceilingMargin + row * (panelHeight + ceilingMargin);
+
+                modPanels[i].Size = new Size(panelWidth, panelHeight);
+                modPanels[i].Location = new Point(x, y);
+                panel2.Controls.Add(modPanels[i]);
+            }
+
+            // Set auto scroll options
+            panel2.HorizontalScroll.Maximum = 0;
+            panel2.AutoScroll = false;
+            panel2.VerticalScroll.Maximum = 0;
+            panel2.VerticalScroll.Visible = false;
+            panel2.AutoScroll = true;
+
+        }
+
+        private ThunderstoreModDisplay CreateModPanel(Mod mod)
+        {
+            ThunderstoreModDisplay modPanel = new ThunderstoreModDisplay
+            {
+                ModImage = mod.ModImage,
+                ModNameLabel = mod.Name,
+                DescriptionLabel = mod.Description,
+                CreditsLabel = $"By {mod.Author}",
+                DescriptionFont = new Font(privateFonts.Families[0], 10.0f, FontStyle.Regular),
+                ModLabelFont = new Font(privateFonts.Families[0], 12.0f, FontStyle.Bold),
+                CreditsFont = new Font(privateFonts.Families[0], 10.0f, FontStyle.Regular)
+            };
+
+            modPanel.Click += (s, e) => ModPanel_Click(modPanel, mod);
+
+            foreach (Control control in modPanel.Controls)
+            {
+                control.Click += (s, e) => ModPanel_Click(modPanel, mod);
+            }
+
+            return modPanel;
         }
 
         public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod)
@@ -383,7 +397,7 @@ namespace Rumble_Mod_Manager
             settingsForm.Show();
         }
 
-        public static async Task<Dictionary<int, List<Mod>>> FetchThunderstoreMods(ProgressBar progressBar)
+        public static async Task<Dictionary<int, List<Mod>>> FetchThunderstoreMods(Guna.UI2.WinForms.Guna2CircleProgressBar progressBar)
         {
             var modsByPage = new Dictionary<int, List<Mod>>();
 
@@ -624,7 +638,6 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    ModDisplayGrid.Controls.Clear();
                     PageNumberLabel.Text = "No mods found";
                     BackButton.Enabled = false;
                     ForwardButton.Enabled = false;
@@ -634,7 +647,7 @@ namespace Rumble_Mod_Manager
 
         private void ModPanel_Click(object sender, Mod mod)
         {
-            Panel panel = sender as Panel;
+            ThunderstoreModDisplay panel = sender as ThunderstoreModDisplay;
 
             CurrentlySelectedMod = mod;
             if (panel != null)

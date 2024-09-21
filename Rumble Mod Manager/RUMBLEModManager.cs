@@ -6,6 +6,7 @@ namespace Rumble_Mod_Manager
     using System;
     using System.Diagnostics;
     using System.Drawing.Text;
+    using System.Globalization;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
@@ -37,10 +38,6 @@ namespace Rumble_Mod_Manager
             SettingsButton.Controls.Add(pictureBox1);
             pictureBox1.Location = new Point(SettingsButton.Width - pictureBox1.PreferredSize.Width - 23, SettingsButton.Height - pictureBox1.PreferredSize.Height - 20);
             pictureBox1.BackColor = Color.Transparent;
-
-            UpdateButton.Controls.Add(pictureBox2);
-            pictureBox2.Location = new Point(UpdateButton.Width - pictureBox2.PreferredSize.Width - 23, UpdateButton.Height - pictureBox2.PreferredSize.Height - 20);
-            pictureBox2.BackColor = Color.Transparent;
 
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(ModManager_KeyDown);
@@ -96,7 +93,6 @@ namespace Rumble_Mod_Manager
             ModVersionLabel.Font = new Font(privateFonts.Families[0], 26.0F, FontStyle.Regular);
             DateUpdated.Font = new Font(privateFonts.Families[0], 16.0F, FontStyle.Regular);
             ModAuthorLabel.Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular);
-            UpdateButton.Font = new Font(privateFonts.Families[0], 22.0F, FontStyle.Regular);
             DependenciesLabel.Font = new Font(privateFonts.Families[0], 11.0F, FontStyle.Regular);
             ModDescriptionLabel.Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular);
             WelcomeLabel.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
@@ -124,7 +120,6 @@ namespace Rumble_Mod_Manager
             ModNameLabel.Visible = false;
             ModVersionLabel.Visible = false;
             ModAuthorLabel.Visible = false;
-            UpdateButton.Visible = false;
             ModDescriptionLabel.Visible = false;
             DependenciesLabel.Visible = false;
             DateUpdated.Visible = false;
@@ -165,7 +160,6 @@ namespace Rumble_Mod_Manager
         {
             isLoadingDisplay = true;
 
-            // Handle button display logic first
             var customMapsPath = Path.Combine(rumblePath, "UserData", "CustomMultiplayerMaps", "Maps");
             if (Directory.Exists(customMapsPath) && CustomMapsCache.MapsByPage.Count > 0)
             {
@@ -193,43 +187,38 @@ namespace Rumble_Mod_Manager
 
             WelcomeLabel.Visible = enabledModFiles.Length == 0 && disabledModFiles.Length == 0;
 
-            // Clear previous mod panels
             panel2.Controls.Clear();
             panel2.Controls.Add(WelcomeLabel);
 
             List<ModPanelControl> modPanels = new List<ModPanelControl>();
 
-            // Parallel processing for enabled mod panels
-            Parallel.ForEach(enabledModFiles, modFile =>
+            foreach (var modFile in enabledModFiles)
             {
                 ModPanelControl modPanel = CreateModPanel(modFile, true, rumblePath);
-                lock (modPanels)
-                {
-                    modPanels.Add(modPanel);
-                }
-            });
+                modPanels.Add(modPanel);
+            }
 
-            // Parallel processing for disabled mod panels
-            Parallel.ForEach(disabledModFiles, modFile =>
+            foreach (var modFile in disabledModFiles)
             {
                 ModPanelControl modPanel = CreateModPanel(modFile, false, rumblePath);
-                lock (modPanels)
-                {
-                    modPanels.Add(modPanel);
-                }
-            });
+                modPanels.Add(modPanel);
+            }
 
-            // Position panels and add them to UI
+            int panelWidth = 580;
             int panelHeight = 84;
             int verticalMargin = 10;
 
+            int panel2Width = panel2.ClientSize.Width;
+            int totalPanelsWidth = panelWidth;
+            int startX = (panel2Width - totalPanelsWidth) / 2;
+
             for (int i = 0; i < modPanels.Count; i++)
             {
-                modPanels[i].Location = new Point(0, i * (panelHeight + verticalMargin));
+                modPanels[i].Size = new Size(panelWidth, panelHeight);
+                modPanels[i].Location = new Point(startX, verticalMargin + i * (panelHeight + verticalMargin));
                 panel2.Controls.Add(modPanels[i]);
             }
 
-            // Adjust scroll settings
             panel2.HorizontalScroll.Maximum = 0;
             panel2.AutoScroll = false;
             panel2.VerticalScroll.Maximum = 0;
@@ -313,22 +302,38 @@ namespace Rumble_Mod_Manager
 
             ModPanelControl modPanel = new ModPanelControl
             {
-                ModName = Path.GetFileNameWithoutExtension(modFile),
+                ModNameLabel = Path.GetFileNameWithoutExtension(modFile),
                 DetailsLabel = $"v{modVersionStr} by {ModAuthor}",
                 ModLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Bold),
                 DetailsLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
                 UpdateNeededImage = cloudIcon,
                 UpdateColor = color,
-                toolTip1Text = toolTip,
+                //toolTip1Text = toolTip,
                 ModImage = modImage ?? Properties.Resources.UnknownMod,
                 Tag = Path.GetFileName(modFile),
                 ModEnabled = isEnabled,
-                Size = new Size(panel2.Width, 84),
                 ModDllPath = modFile
             };
 
             // Add click event
             modPanel.Click += (s, e) => ModPanel_Click(modPanel, e);
+
+            Guna.UI2.WinForms.Guna2ImageButton updateButton = modPanel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
+
+            if (updateButton != null)
+            {
+                updateButton.Click += async (s, e) =>
+                {
+                    ModPanel_Click(modPanel, e);
+
+                    while (selectedPanel == null)
+                    {
+                        await Task.Delay(10);
+                    }
+
+                    button1_Click(modPanel, e);
+                };
+            }
 
             return modPanel;
         }
@@ -488,7 +493,6 @@ namespace Rumble_Mod_Manager
                         ModVersionLabel.Visible = true;
                         ModAuthorLabel.Visible = true;
                         ModNameLabel.Visible = true;
-                        UpdateButton.Visible = true;
                         ModDescriptionLabel.Visible = true;
                         DateUpdated.Visible = true;
                         DependenciesLabel.Visible = true;
@@ -500,12 +504,12 @@ namespace Rumble_Mod_Manager
                         ToggleModLabel.BackColor = selectedPanel.ModEnabled ? Color.FromArgb(128, 255, 128) : Color.FromArgb(192, 0, 0);
                         ToggleModLabel.ForeColor = selectedPanel.ModEnabled ? Color.Green : Color.Maroon;
                         selectedPanel.BackColor = Color.LightBlue;
-                        ModNameLabel.Text = selectedPanel.ModName;
+                        ModNameLabel.Text = selectedPanel.ModNameLabel;
                         AdjustFontSizeToFit(ModNameLabel);
 
-                        modMappings.TryGetValue(selectedPanel.ModName + ".dll", out string modNameFromMapping);
+                        modMappings.TryGetValue(selectedPanel.ModNameLabel + ".dll", out string modNameFromMapping);
 
-                        string modVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"), selectedPanel.ModName + ".dll", MelonLoaderModInfoType.Version);
+                        string modVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"), selectedPanel.ModNameLabel + ".dll", MelonLoaderModInfoType.Version);
 
                         bool modFound = false;
 
@@ -518,15 +522,34 @@ namespace Rumble_Mod_Manager
                                     if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
                                     {
                                         modVersionStr = modVersionStr ?? mod.Version;
-                                        CurrentlySelectedName = selectedPanel.ModName;
+                                        CurrentlySelectedName = selectedPanel.ModNameLabel;
                                         ModPictureDisplay.Image = mod.ModImage;
                                         CurrentlySelectedMod = mod;
                                         ModNameLabel.Text = mod.Name;
                                         DateUpdated.Text = mod.DateUpdated;
+
                                         var cleanedDependencies = CurrentlySelectedMod.Dependencies
-                                        .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
-                                        .Select(d => d.Replace(" icon", "").Trim())
-                                        .ToList();
+                                            .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
+                                            .Select(d =>
+                                            {
+                                                var parts = d.Split('-').ToList();
+                                                if (parts.Count == 2)
+                                                {
+                                                    var name = parts[0];
+                                                    var version = parts[1];
+                                                    return $"{name} v{version}";
+                                                }
+                                                else if (parts.Count > 2)
+                                                {
+                                                    var name = string.Join(" ", parts.Skip(1).Take(parts.Count - 2));
+                                                    var version = parts.Last();
+                                                    return $"{name} v{version}";
+                                                }
+                                                return d; // In case it doesn't follow the expected format
+                                            })
+                                            .Where(d => !d.Contains("MelonLoader", StringComparison.OrdinalIgnoreCase)) // Double check after cleaning
+                                            .ToList();
+
 
                                         DependenciesLabel.Text = $"Dependencies:\n{string.Join("\n", cleanedDependencies)}";
                                         AdjustFontSizeToFit(ModNameLabel);
@@ -541,34 +564,20 @@ namespace Rumble_Mod_Manager
 
                                             if (modVersion > modVersionCache)
                                             {
-                                                UpdateButton.BackgroundImage = Properties.Resources.blue;
-                                                ModVersionLabel.Location = new Point(207, 63);
-                                                UpdateButton.Visible = false;
                                                 ModVersionLabel.ForeColor = Color.Cyan;
-                                                pictureBox2.Visible = false;
                                             }
                                             else if (modVersion == modVersionCache)
                                             {
-                                                UpdateButton.BackgroundImage = Properties.Resources.green;
-                                                ModVersionLabel.Location = new Point(207, 63);
-                                                UpdateButton.Visible = false;
                                                 ModVersionLabel.ForeColor = Color.Lime;
-                                                pictureBox2.Visible = false;
                                             }
                                             else
                                             {
-                                                ModVersionLabel.Location = new Point(229, 65);
-                                                UpdateButton.BackgroundImage = Properties.Resources.red;
-                                                UpdateButton.Visible = true;
                                                 ModVersionLabel.ForeColor = Color.Red;
-                                                pictureBox2.Visible = true;
                                             }
                                         }
                                         else
                                         {
-                                            UpdateButton.BackgroundImage = Properties.Resources.green;
                                             ModVersionLabel.ForeColor = Color.Lime;
-                                            pictureBox2.Visible = false;
                                         }
 
                                         modFound = true;
@@ -582,11 +591,8 @@ namespace Rumble_Mod_Manager
 
                         if (!modFound)
                         {
-                            ModAuthorLabel.Text = $"By {GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"),selectedPanel.ModName + ".dll", MelonLoaderModInfoType.Author)}";
+                            ModAuthorLabel.Text = $"By {GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"), selectedPanel.ModNameLabel + ".dll", MelonLoaderModInfoType.Author)}";
                             ModPictureDisplay.Image = Properties.Resources.UnknownMod;
-                            UpdateButton.BackgroundImage = null;
-                            ModVersionLabel.Location = new Point(207, 63);
-                            pictureBox2.Visible = false;
                             ModVersionLabel.ForeColor = Color.Cyan;
                             DateUpdated.Text = "Unkown Last Date Updated";
                             DependenciesLabel.Text = "Dependencies:";
@@ -602,7 +608,6 @@ namespace Rumble_Mod_Manager
                         ModDescriptionLabel.Visible = false;
                         DateUpdated.Visible = false;
                         DependenciesLabel.Visible = false;
-                        UpdateButton.Visible = false;
                         ModPictureDisplay.Image = null;
                         ModPictureDisplay.Visible = false;
                         ToggleModButton.Visible = false;
@@ -642,7 +647,7 @@ namespace Rumble_Mod_Manager
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            if (CurrentlySelectedVersion != CurrentlySelectedMod.Version)
+            if (int.Parse(CurrentlySelectedVersion.Replace(".", ""), CultureInfo.InvariantCulture) < int.Parse(CurrentlySelectedMod.Version.Replace(".", ""), CultureInfo.InvariantCulture))
             {
                 await ThunderstoreMods.DownloadModFromInternet(CurrentlySelectedMod, this, selectedPanel.ModEnabled, true);
             }

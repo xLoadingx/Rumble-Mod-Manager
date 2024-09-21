@@ -28,11 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RUMBLEModManager));
             panel2 = new Panel();
             WelcomeLabel = new Label();
             SettingsButton = new PictureBox();
-            UpdateButton = new PictureBox();
             DependenciesLabel = new Label();
             ModAuthorLabel = new Label();
             ModNameLabel = new Label();
@@ -44,17 +44,18 @@
             DateUpdated = new Label();
             pictureBox1 = new PictureBox();
             ToggleModButton = new PictureBox();
-            pictureBox2 = new PictureBox();
             ToggleModLabel = new Button();
             panel1 = new Panel();
             CustomMapsDownloadButton = new Button();
+            guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            guna2Elipse2 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            guna2Elipse3 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            guna2Elipse4 = new Guna.UI2.WinForms.Guna2Elipse(components);
             panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)SettingsButton).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)UpdateButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ToggleModButton).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -90,27 +91,14 @@
             SettingsButton.TabStop = false;
             SettingsButton.Click += Settings_Button_Click;
             // 
-            // UpdateButton
-            // 
-            UpdateButton.BackColor = Color.Transparent;
-            UpdateButton.BackgroundImage = Properties.Resources.blue;
-            UpdateButton.BackgroundImageLayout = ImageLayout.Zoom;
-            UpdateButton.Location = new Point(161, 55);
-            UpdateButton.Name = "UpdateButton";
-            UpdateButton.Size = new Size(67, 66);
-            UpdateButton.TabIndex = 19;
-            UpdateButton.TabStop = false;
-            UpdateButton.Click += button1_Click;
-            // 
             // DependenciesLabel
             // 
             DependenciesLabel.BackColor = Color.FromArgb(20, 20, 20);
-            DependenciesLabel.BorderStyle = BorderStyle.Fixed3D;
             DependenciesLabel.Font = new Font("Arial Narrow", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             DependenciesLabel.ForeColor = Color.White;
-            DependenciesLabel.Location = new Point(161, 158);
+            DependenciesLabel.Location = new Point(176, 158);
             DependenciesLabel.Name = "DependenciesLabel";
-            DependenciesLabel.Size = new Size(243, 162);
+            DependenciesLabel.Size = new Size(217, 153);
             DependenciesLabel.TabIndex = 12;
             DependenciesLabel.Text = "Dependencies:\r\nLavaGang-MelonLoader-0.6.3\r\nUlvakSkillz-Rumble-Additional_Sounds-2.2.0\r\n";
             DependenciesLabel.TextAlign = ContentAlignment.TopCenter;
@@ -121,12 +109,12 @@
             ModAuthorLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModAuthorLabel.Font = new Font("Arial Narrow", 15F);
             ModAuthorLabel.ForeColor = Color.White;
-            ModAuthorLabel.Location = new Point(161, 39);
+            ModAuthorLabel.Location = new Point(152, 42);
             ModAuthorLabel.Name = "ModAuthorLabel";
-            ModAuthorLabel.Size = new Size(242, 24);
+            ModAuthorLabel.Size = new Size(252, 25);
             ModAuthorLabel.TabIndex = 7;
             ModAuthorLabel.Text = "By UlvakSkillz";
-            ModAuthorLabel.TextAlign = ContentAlignment.MiddleCenter;
+            ModAuthorLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModNameLabel
             // 
@@ -135,23 +123,22 @@
             ModNameLabel.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModNameLabel.ForeColor = Color.White;
             ModNameLabel.ImageAlign = ContentAlignment.MiddleLeft;
-            ModNameLabel.Location = new Point(162, 10);
+            ModNameLabel.Location = new Point(151, 13);
             ModNameLabel.Name = "ModNameLabel";
-            ModNameLabel.Size = new Size(242, 29);
+            ModNameLabel.Size = new Size(255, 30);
             ModNameLabel.TabIndex = 8;
             ModNameLabel.Text = "Rumble Modding API";
-            ModNameLabel.TextAlign = ContentAlignment.MiddleCenter;
+            ModNameLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModDescriptionLabel
             // 
             ModDescriptionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             ModDescriptionLabel.BackColor = Color.FromArgb(20, 20, 20);
-            ModDescriptionLabel.BorderStyle = BorderStyle.Fixed3D;
             ModDescriptionLabel.Font = new Font("Arial Narrow", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModDescriptionLabel.ForeColor = Color.White;
-            ModDescriptionLabel.Location = new Point(0, 158);
+            ModDescriptionLabel.Location = new Point(17, 158);
             ModDescriptionLabel.Name = "ModDescriptionLabel";
-            ModDescriptionLabel.Size = new Size(155, 162);
+            ModDescriptionLabel.Size = new Size(153, 153);
             ModDescriptionLabel.TabIndex = 4;
             ModDescriptionLabel.Text = "API to Help Modders Get Started and to remove the necessity of GameObject.Find";
             ModDescriptionLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -162,9 +149,9 @@
             ModVersionLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModVersionLabel.Font = new Font("Arial Narrow", 26.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModVersionLabel.ForeColor = Color.White;
-            ModVersionLabel.Location = new Point(229, 65);
+            ModVersionLabel.Location = new Point(148, 86);
             ModVersionLabel.Name = "ModVersionLabel";
-            ModVersionLabel.Size = new Size(174, 42);
+            ModVersionLabel.Size = new Size(253, 42);
             ModVersionLabel.TabIndex = 9;
             ModVersionLabel.Text = "Version 6.9.4";
             ModVersionLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -174,9 +161,9 @@
             ModPictureDisplay.Anchor = AnchorStyles.None;
             ModPictureDisplay.BackgroundImage = Properties.Resources.UnknownMod;
             ModPictureDisplay.BackgroundImageLayout = ImageLayout.Zoom;
-            ModPictureDisplay.Location = new Point(0, 3);
+            ModPictureDisplay.Location = new Point(17, 13);
             ModPictureDisplay.Name = "ModPictureDisplay";
-            ModPictureDisplay.Size = new Size(155, 155);
+            ModPictureDisplay.Size = new Size(134, 138);
             ModPictureDisplay.SizeMode = PictureBoxSizeMode.StretchImage;
             ModPictureDisplay.TabIndex = 13;
             ModPictureDisplay.TabStop = false;
@@ -212,12 +199,12 @@
             DateUpdated.BackColor = Color.FromArgb(40, 40, 40);
             DateUpdated.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             DateUpdated.ForeColor = Color.White;
-            DateUpdated.Location = new Point(162, 119);
+            DateUpdated.Location = new Point(151, 119);
             DateUpdated.Name = "DateUpdated";
-            DateUpdated.Size = new Size(242, 39);
+            DateUpdated.Size = new Size(255, 33);
             DateUpdated.TabIndex = 18;
             DateUpdated.Text = "Version 6.9.4";
-            DateUpdated.TextAlign = ContentAlignment.MiddleCenter;
+            DateUpdated.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // pictureBox1
             // 
@@ -243,18 +230,6 @@
             ToggleModButton.TabStop = false;
             ToggleModButton.Click += ToggleModButton_Click;
             // 
-            // pictureBox2
-            // 
-            pictureBox2.BackColor = Color.Transparent;
-            pictureBox2.BackgroundImage = Properties.Resources.UpdateIcon;
-            pictureBox2.BackgroundImageLayout = ImageLayout.Zoom;
-            pictureBox2.Location = new Point(178, 80);
-            pictureBox2.Name = "pictureBox2";
-            pictureBox2.Size = new Size(27, 27);
-            pictureBox2.TabIndex = 24;
-            pictureBox2.TabStop = false;
-            pictureBox2.Click += button1_Click;
-            // 
             // ToggleModLabel
             // 
             ToggleModLabel.BackColor = Color.FromArgb(192, 0, 0);
@@ -273,7 +248,6 @@
             panel1.BackColor = Color.FromArgb(40, 40, 40);
             panel1.Controls.Add(CustomMapsDownloadButton);
             panel1.Controls.Add(ToggleModLabel);
-            panel1.Controls.Add(pictureBox2);
             panel1.Controls.Add(ToggleModButton);
             panel1.Controls.Add(pictureBox1);
             panel1.Controls.Add(DateUpdated);
@@ -285,11 +259,10 @@
             panel1.Controls.Add(ModNameLabel);
             panel1.Controls.Add(ModAuthorLabel);
             panel1.Controls.Add(DependenciesLabel);
-            panel1.Controls.Add(UpdateButton);
             panel1.Controls.Add(SettingsButton);
-            panel1.Location = new Point(628, -1);
+            panel1.Location = new Point(628, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(406, 446);
+            panel1.Size = new Size(406, 447);
             panel1.TabIndex = 2;
             // 
             // CustomMapsDownloadButton
@@ -304,6 +277,26 @@
             CustomMapsDownloadButton.UseVisualStyleBackColor = false;
             CustomMapsDownloadButton.Click += CustomMapsDownloadButton_Click;
             // 
+            // guna2Elipse1
+            // 
+            guna2Elipse1.BorderRadius = 12;
+            guna2Elipse1.TargetControl = panel2;
+            // 
+            // guna2Elipse2
+            // 
+            guna2Elipse2.BorderRadius = 12;
+            guna2Elipse2.TargetControl = ModDescriptionLabel;
+            // 
+            // guna2Elipse3
+            // 
+            guna2Elipse3.BorderRadius = 12;
+            guna2Elipse3.TargetControl = DependenciesLabel;
+            // 
+            // guna2Elipse4
+            // 
+            guna2Elipse4.BorderRadius = 12;
+            guna2Elipse4.TargetControl = ModPictureDisplay;
+            // 
             // RUMBLEModManager
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -312,6 +305,7 @@
             ClientSize = new Size(1033, 444);
             Controls.Add(panel1);
             Controls.Add(panel2);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             MaximumSize = new Size(1049, 483);
             MinimumSize = new Size(1049, 483);
@@ -319,11 +313,9 @@
             Text = "Form1";
             panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)SettingsButton).EndInit();
-            ((System.ComponentModel.ISupportInitialize)UpdateButton).EndInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ((System.ComponentModel.ISupportInitialize)ToggleModButton).EndInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             panel1.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -332,7 +324,6 @@
 
         private Panel panel2;
         private PictureBox SettingsButton;
-        private PictureBox UpdateButton;
         private Label DependenciesLabel;
         private Label ModAuthorLabel;
         private Label ModNameLabel;
@@ -344,10 +335,13 @@
         private Label DateUpdated;
         private PictureBox pictureBox1;
         private PictureBox ToggleModButton;
-        private PictureBox pictureBox2;
         private Button ToggleModLabel;
         private Panel panel1;
         private Button CustomMapsDownloadButton;
         private Label WelcomeLabel;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse2;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse3;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse4;
     }
 }

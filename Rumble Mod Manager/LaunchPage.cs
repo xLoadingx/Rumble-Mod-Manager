@@ -11,7 +11,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Guna.UI2.WinForms;
 using Newtonsoft.Json.Linq;
+using TheArtOfDevHtmlRenderer.Adapters;
 using static Rumble_Mod_Manager.ThunderstoreMods;
 using Timer = System.Threading.Timer;
 
@@ -118,25 +120,85 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private void Continue(object sender, EventArgs e)
+        private async void Continue(object sender, EventArgs e)
         {
-            PathNotFound.Visible = false;
-            AutoFindButton.Visible = false;
-            ManualFindButton.Visible = false;
+            // Start the swipe animations with shorter delays
+            SwipeControlOut(LaunchButton, 0);
+            SwipeControlOut(SettingsButton, 100); // 250ms delay after the first button
+            SwipeControlOut(CreditsButton, 200); // 250ms delay after the second button
+
+            await Task.Delay(250);
+
+            // Show the progress bar and label
             progressBar1.Visible = true;
             label1.Visible = true;
-            LaunchButton.Visible = false;
-            SettingsButton.Visible = false;
-            CreditsButton.Visible = false;
+
+            // Animate the progress bar and label to slide in from left to right
+            AnimateControlIn(progressBar1, progressBar1.Location.X);
+            await AnimateControlIn(label1, label1.Location.X);
 
             LaunchManager();
         }
 
-        static async Task<Dictionary<int, List<CustomMap>>> ManageMaps(ProgressBar progressBar)
+        private async Task SwipeControlOut(Control control, int delay)
+        {
+            control.Enabled = false;
+            await Task.Delay(delay);
+
+            int targetX = -control.Width; // Target X position (completely out of view to the left)
+            int initialPosition = control.Left;
+            int distance = initialPosition - targetX;
+
+            for (int i = 0; i <= 50; i++)
+            {
+                double t = i / 50.0;
+                double easeInValue = t * t; // Ease-in quadratic formula
+
+                int newLeft = initialPosition - (int)(easeInValue * distance);
+
+                // Ensure UI updates are done on the main thread
+                control.Invoke((Action)(() =>
+                {
+                    control.Left = newLeft;
+                    control.Invalidate(); // Force a redraw to prevent artifacts
+                }));
+
+                await Task.Delay(10); // Adjust this value to control the smoothness
+            }
+
+            // Ensure it ends exactly at the target position
+            control.Invoke((Action)(() =>
+            {
+                control.Left = targetX;
+                control.Visible = false;
+            }));
+        }
+
+        private async Task AnimateControlIn(Control control, int targetX)
+        {
+            int initialPosition = this.Width; // Start off-screen to the right
+            control.Left = initialPosition;
+
+            // Manually animate the control to slide in with ease-out
+            for (int i = 0; i <= 100; i++)
+            {
+                double t = i / 100.0;
+                double easeOutValue = 1 - (1 - t) * (1 - t); // Ease-out quadratic formula
+
+                control.Left = (int)(initialPosition + easeOutValue * (targetX - initialPosition));
+                await Task.Delay(10); // Adjust this value to control the smoothness
+            }
+
+            control.Left = targetX; // Ensure it ends exactly at the target position
+        }
+
+        static async Task<Dictionary<int, List<CustomMap>>> ManageMaps(Guna.UI2.WinForms.Guna2CircleProgressBar progressBar)
         {
             string repoOwner = "xLoadingx";
             string repoName = "mod-maps";
             var maps = new Dictionary<int, List<CustomMap>>();
+
+            progressBar.Value = 0;
 
             string basePath = Properties.Settings.Default.RumblePath;
             string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
@@ -428,6 +490,7 @@ namespace Rumble_Mod_Manager
             LaunchButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
             SettingsButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
             CreditsButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
+            progressBar1.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
         }
 
         private void ManualFindButton_Click(object sender, EventArgs e)

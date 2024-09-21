@@ -26,7 +26,7 @@ namespace Rumble_Mod_Manager
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
         private static readonly HttpClient client = new HttpClient();
-        private Panel selectedPanel;
+        private ThunderstoreModDisplay selectedPanel;
         private CustomMap CurrentlySelectedMap;
         private int CurrentPage = 1;
         RUMBLEModManager RumbleManager;
@@ -76,64 +76,76 @@ namespace Rumble_Mod_Manager
 
         private void DisplayMaps(List<CustomMap> maps)
         {
-            ModDisplayGrid.Controls.Clear();
-            ModDisplayGrid.ColumnCount = 4;
-            ModDisplayGrid.RowCount = (maps.Count + 3) / 4;
-
-            // Set styles for rows and columns
-            ModDisplayGrid.RowStyles.Clear();
-            ModDisplayGrid.ColumnStyles.Clear();
-
             if (selectedPanel != null)
             {
                 selectedPanel.BackColor = Color.FromArgb(30, 30, 30);
                 selectedPanel = null;
             }
 
-            for (int i = 0; i < ModDisplayGrid.RowCount; i++)
-            {
-                ModDisplayGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / ModDisplayGrid.RowCount));
-            }
-
-            for (int i = 0; i < ModDisplayGrid.ColumnCount; i++)
-            {
-                ModDisplayGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / ModDisplayGrid.ColumnCount));
-            }
+            var mapPanels = new List<ThunderstoreModDisplay>();
 
             // Loop through each mod and create a panel
             foreach (var map in maps)
             {
                 // Create a panel for each mod
-                Panel modPanel = new Panel
+                ThunderstoreModDisplay modPanel = new ThunderstoreModDisplay
                 {
-                    Width = 140,
-                    Height = 140,
-                    BorderStyle = BorderStyle.Fixed3D,
                     BackColor = Color.FromArgb(30, 30, 30),
-                    Tag = map.downloadLink
+                    Tag = map.downloadLink,
+                    ModNameLabel = map.name,
+                    CreditsLabel = $"By {map.author}",
+                    ModLabelFont = new Font(privateFonts.Families[0], 12.0f, FontStyle.Bold),
+                    CreditsFont = new Font(privateFonts.Families[0], 10.0f, FontStyle.Bold),
+                    DescriptionFont = new Font(privateFonts.Families[0], 10.0f, FontStyle.Bold),
+                    ModImage = map.mapImage,
+                    DescriptionLabel = map.description
                 };
 
-                Label label = new Label
-                {
-                    Text = map.name,
-                    AutoSize = false,
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    ForeColor = Color.White,
-                    Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular), // Adjusted font size
-                    Dock = DockStyle.Fill,
-                    MaximumSize = new Size(140, 0), // Set maximum width and enable word wrap
-                    AutoEllipsis = true // Show ellipsis if text overflows
-                };
-
-                label.Click += (s, e) => ModPanel_Click(modPanel, map);
-
-                // Add controls to panel
-                modPanel.Controls.Add(label);
                 modPanel.Click += (s, e) => ModPanel_Click(modPanel, map);
 
-                // Add panel to TableLayoutPanel
-                ModDisplayGrid.Controls.Add(modPanel);
+                foreach (Control control in modPanel.Controls)
+                {
+                    control.Click += (s, e) => ModPanel_Click(modPanel, map);
+                }
+
+                mapPanels.Add(modPanel);
             }
+
+            int panelWidth = 171;
+            int panelHeight = 265;
+            int ceilingMargin = 10; // Space between the top of panel2 and the first row
+            int wallMargin = 10; // Wall margin for both sides
+
+            int availableWidth = panel2.ClientSize.Width - 2 * wallMargin;
+            int panelsPerRow = Math.Max(1, availableWidth / panelWidth);
+
+            // Calculate the total space left after fitting panels
+            int totalPanelWidth = panelsPerRow * panelWidth;
+            int remainingSpace = availableWidth - totalPanelWidth;
+
+            // Distribute the remaining space as padding between panels
+            int horizontalSpacing = panelsPerRow > 1 ? remainingSpace / (panelsPerRow - 1) : 0;
+
+            for (int i = 0; i < mapPanels.Count; i++)
+            {
+                int row = i / panelsPerRow;
+                int col = i % panelsPerRow;
+
+                // Calculate the X and Y positions for each panel
+                int x = wallMargin + col * (panelWidth + horizontalSpacing);
+                int y = ceilingMargin + row * (panelHeight + ceilingMargin);
+
+                mapPanels[i].Size = new Size(panelWidth, panelHeight);
+                mapPanels[i].Location = new Point(x, y);
+                panel2.Controls.Add(mapPanels[i]);
+            }
+
+            // Set auto scroll options
+            panel2.HorizontalScroll.Maximum = 0;
+            panel2.AutoScroll = false;
+            panel2.VerticalScroll.Maximum = 0;
+            panel2.VerticalScroll.Visible = false;
+            panel2.AutoScroll = true;
         }
 
         public static async Task DownloadMapFromInternet(string ModPageUrl, RUMBLEModManager form1, bool ModEnabled)
@@ -216,7 +228,7 @@ namespace Rumble_Mod_Manager
 
         private void ModPanel_Click(object sender, CustomMap map)
         {
-            Panel panel = sender as Panel;
+            ThunderstoreModDisplay panel = sender as ThunderstoreModDisplay;
 
             CurrentlySelectedMap = map;
             if (panel != null)
@@ -329,7 +341,6 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    ModDisplayGrid.Controls.Clear();
                     PageNumberLabel.Text = "No mods found";
                     BackButton.Enabled = false;
                     ForwardButton.Enabled = false;

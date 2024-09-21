@@ -28,17 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             RUMBLELabel = new Label();
             ModManagerLabel = new Label();
             Credits = new Label();
             PathNotFound = new Label();
             AutoFindButton = new Button();
             ManualFindButton = new Button();
-            progressBar1 = new ProgressBar();
             label1 = new Label();
-            LaunchButton = new Button();
-            SettingsButton = new Button();
-            CreditsButton = new Button();
+            LaunchButton = new Guna.UI2.WinForms.Guna2Button();
+            SettingsButton = new Guna.UI2.WinForms.Guna2Button();
+            CreditsButton = new Guna.UI2.WinForms.Guna2Button();
+            progressBar1 = new Guna.UI2.WinForms.Guna2CircleProgressBar();
             SuspendLayout();
             // 
             // RUMBLELabel
@@ -115,19 +122,12 @@
             ManualFindButton.UseVisualStyleBackColor = false;
             ManualFindButton.Click += ManualFindButton_Click;
             // 
-            // progressBar1
-            // 
-            progressBar1.Location = new Point(115, 220);
-            progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(184, 23);
-            progressBar1.TabIndex = 6;
-            // 
             // label1
             // 
             label1.BackColor = Color.Transparent;
             label1.Font = new Font("Arial", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label1.ForeColor = Color.White;
-            label1.Location = new Point(0, 183);
+            label1.Location = new Point(0, 302);
             label1.Name = "label1";
             label1.Size = new Size(408, 34);
             label1.TabIndex = 7;
@@ -136,42 +136,88 @@
             // 
             // LaunchButton
             // 
-            LaunchButton.BackColor = Color.FromArgb(128, 255, 128);
-            LaunchButton.Font = new Font("Arial", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            LaunchButton.ForeColor = Color.Green;
+            LaunchButton.BorderColor = Color.White;
+            LaunchButton.BorderRadius = 10;
+            LaunchButton.BorderThickness = 3;
+            LaunchButton.CustomizableEdges = customizableEdges1;
+            LaunchButton.DisabledState.BorderColor = Color.White;
+            LaunchButton.DisabledState.CustomBorderColor = Color.White;
+            LaunchButton.DisabledState.FillColor = Color.FromArgb(128, 255, 128);
+            LaunchButton.DisabledState.ForeColor = Color.FromArgb(22, 149, 12);
+            LaunchButton.FillColor = Color.FromArgb(128, 255, 128);
+            LaunchButton.Font = new Font("Arial", 14.25F);
+            LaunchButton.ForeColor = Color.FromArgb(22, 149, 12);
             LaunchButton.Location = new Point(124, 192);
             LaunchButton.Name = "LaunchButton";
+            LaunchButton.ShadowDecoration.CustomizableEdges = customizableEdges2;
             LaunchButton.Size = new Size(165, 61);
-            LaunchButton.TabIndex = 8;
+            LaunchButton.TabIndex = 12;
             LaunchButton.Text = "Launch";
-            LaunchButton.UseVisualStyleBackColor = false;
             LaunchButton.Click += Continue;
             // 
             // SettingsButton
             // 
-            SettingsButton.BackColor = Color.FromArgb(60, 60, 60);
-            SettingsButton.Font = new Font("Arial", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            SettingsButton.ForeColor = Color.FromArgb(40, 40, 40);
+            SettingsButton.BorderColor = Color.White;
+            SettingsButton.BorderRadius = 10;
+            SettingsButton.BorderThickness = 3;
+            SettingsButton.CustomizableEdges = customizableEdges3;
+            SettingsButton.DisabledState.BorderColor = Color.White;
+            SettingsButton.DisabledState.CustomBorderColor = Color.White;
+            SettingsButton.DisabledState.FillColor = Color.FromArgb(60, 60, 60);
+            SettingsButton.DisabledState.ForeColor = Color.FromArgb(36, 37, 38);
+            SettingsButton.FillColor = Color.FromArgb(60, 60, 60);
+            SettingsButton.Font = new Font("Arial", 14.25F);
+            SettingsButton.ForeColor = Color.FromArgb(36, 37, 38);
             SettingsButton.Location = new Point(124, 259);
             SettingsButton.Name = "SettingsButton";
+            SettingsButton.ShadowDecoration.CustomizableEdges = customizableEdges4;
             SettingsButton.Size = new Size(165, 61);
-            SettingsButton.TabIndex = 10;
+            SettingsButton.TabIndex = 13;
             SettingsButton.Text = "Settings";
-            SettingsButton.UseVisualStyleBackColor = false;
             SettingsButton.Click += SettingsButton_Click;
             // 
             // CreditsButton
             // 
-            CreditsButton.BackColor = Color.SlateBlue;
-            CreditsButton.Font = new Font("Arial", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            CreditsButton.ForeColor = Color.DarkSlateBlue;
+            CreditsButton.BorderColor = Color.White;
+            CreditsButton.BorderRadius = 10;
+            CreditsButton.BorderThickness = 3;
+            CreditsButton.CustomizableEdges = customizableEdges5;
+            CreditsButton.DisabledState.BorderColor = Color.White;
+            CreditsButton.DisabledState.CustomBorderColor = Color.White;
+            CreditsButton.DisabledState.FillColor = Color.SlateBlue;
+            CreditsButton.DisabledState.ForeColor = Color.FromArgb(63, 54, 150);
+            CreditsButton.FillColor = Color.SlateBlue;
+            CreditsButton.Font = new Font("Arial", 14.25F);
+            CreditsButton.ForeColor = Color.FromArgb(63, 54, 150);
             CreditsButton.Location = new Point(124, 326);
             CreditsButton.Name = "CreditsButton";
+            CreditsButton.ShadowDecoration.CustomizableEdges = customizableEdges6;
             CreditsButton.Size = new Size(165, 61);
-            CreditsButton.TabIndex = 11;
+            CreditsButton.TabIndex = 14;
             CreditsButton.Text = "Credits";
-            CreditsButton.UseVisualStyleBackColor = false;
             CreditsButton.Click += CreditsButton_Click;
+            // 
+            // progressBar1
+            // 
+            progressBar1.Animated = true;
+            progressBar1.AnimationSpeed = 0.5F;
+            progressBar1.FillColor = Color.FromArgb(64, 64, 64);
+            progressBar1.Font = new Font("Segoe UI", 12F);
+            progressBar1.ForeColor = Color.White;
+            progressBar1.Location = new Point(139, 166);
+            progressBar1.Minimum = 0;
+            progressBar1.Name = "progressBar1";
+            progressBar1.ProgressColor = Color.FromArgb(0, 192, 0);
+            progressBar1.ProgressColor2 = Color.Green;
+            progressBar1.ProgressEndCap = System.Drawing.Drawing2D.LineCap.Round;
+            progressBar1.ProgressStartCap = System.Drawing.Drawing2D.LineCap.Round;
+            progressBar1.ShadowDecoration.BorderRadius = 10;
+            progressBar1.ShadowDecoration.CustomizableEdges = customizableEdges7;
+            progressBar1.ShadowDecoration.Mode = Guna.UI2.WinForms.Enums.ShadowMode.Circle;
+            progressBar1.ShowText = true;
+            progressBar1.Size = new Size(130, 130);
+            progressBar1.TabIndex = 15;
+            progressBar1.Text = "guna2CircleProgressBar1";
             // 
             // LaunchPage
             // 
@@ -179,11 +225,11 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
             ClientSize = new Size(407, 450);
-            Controls.Add(CreditsButton);
             Controls.Add(SettingsButton);
             Controls.Add(LaunchButton);
-            Controls.Add(label1);
             Controls.Add(progressBar1);
+            Controls.Add(CreditsButton);
+            Controls.Add(label1);
             Controls.Add(ManualFindButton);
             Controls.Add(AutoFindButton);
             Controls.Add(Credits);
@@ -206,11 +252,14 @@
         private Label PathNotFound;
         private Button AutoFindButton;
         private Button ManualFindButton;
-        private ProgressBar progressBar1;
         private Label label1;
-        private Button LaunchButton;
-        private Button SettingsButton;
-        private Button CreditsButton;
         private System.Windows.Forms.Timer timer1;
+        private Guna.UI2.WinForms.Guna2Button LaunchButton;
+        private Guna.UI2.WinForms.Guna2Button guna2Button1;
+        private Guna.UI2.WinForms.Guna2Button guna2Button2;
+        private Guna.UI2.WinForms.Guna2Button SettingsButton;
+        private Guna.UI2.WinForms.Guna2Button CreditsButton;
+        private Guna.UI2.WinForms.Guna2CircleProgressBar guna2CircleProgressBar1;
+        private Guna.UI2.WinForms.Guna2CircleProgressBar progressBar1;
     }
 }
