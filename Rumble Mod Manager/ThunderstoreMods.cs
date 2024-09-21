@@ -88,8 +88,11 @@ namespace Rumble_Mod_Manager
 
             foreach (var mod in mods)
             {
-                ThunderstoreModDisplay modPanel = CreateModPanel(mod);
-                modPanels.Add(modPanel);
+                if (!(mod.isOutdated || mod.isDeprecated))
+                {
+                    ThunderstoreModDisplay modPanel = CreateModPanel(mod);
+                    modPanels.Add(modPanel);
+                }
             }
 
             int panelWidth = 171;
@@ -442,10 +445,9 @@ namespace Rumble_Mod_Manager
                                 var modName = modDict.GetValueOrDefault("name")?.ToString();
                                 var DateUpdated = modDict.GetValueOrDefault("date_updated")?.ToString();
 
-                                bool DisplayMod = true;
                                 if (modName != null && modName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    // Skip MelonLoader mods
+                                    // Skip MelonLoader
                                     return;
                                 }
 
@@ -457,16 +459,9 @@ namespace Rumble_Mod_Manager
 
                                     // Check if mod is deprecated
                                     bool isDeprecated = modDict.GetValueOrDefault("is_deprecated")?.ToString().ToLower() == "true";
-                                    if (isDeprecated)
-                                    {
-                                        DisplayMod = false;
-                                    }
 
                                     var dependencies = latestVersion?.GetValue("dependencies")?.ToObject<List<string>>();
-                                    if (dependencies != null && dependencies.Any(dep => dep.Contains("MelonLoader-0.5.7", StringComparison.OrdinalIgnoreCase)))
-                                    {
-                                        DisplayMod = false;
-                                    }
+                                    bool isOutdated = dependencies != null && dependencies.Any(dep => dep.Contains("MelonLoader-0.5.7", StringComparison.OrdinalIgnoreCase));
 
                                     string name = modName;
                                     string description = latestVersion?.GetValue("description")?.ToString();
@@ -475,50 +470,50 @@ namespace Rumble_Mod_Manager
                                     string version = latestVersion?.GetValue("version_number")?.ToString();
                                     string lastUpdated = DateUpdated;
 
-                                        var mod = new Mod
-                                        {
-                                            Name = name,
-                                            Description = description,
-                                            Author = author,
-                                            ImageUrl = imageurl,
-                                            Version = version,
-                                            Dependencies = dependencies,
-                                            DateUpdated = lastUpdated,
-                                            ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
-                                            Show = DisplayMod,
-                                            isDeprecated = isDeprecated
-                                        };
+                                    var mod = new Mod
+                                    {
+                                        Name = name,
+                                        Description = description,
+                                        Author = author,
+                                        ImageUrl = imageurl,
+                                        Version = version,
+                                        Dependencies = dependencies,
+                                        DateUpdated = lastUpdated,
+                                        ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
+                                        isOutdated = isOutdated,
+                                        isDeprecated = isDeprecated
+                                    };
 
-                                        // Fetch the mod image
-                                        if (!string.IsNullOrEmpty(mod.ImageUrl))
-                                        {
-                                            string imageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
+                                    // Fetch the mod image
+                                    if (!string.IsNullOrEmpty(mod.ImageUrl))
+                                    {
+                                        string imageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
 
-                                            using (HttpResponseMessage imageResponse = await client.GetAsync(imageUrl))
+                                        using (HttpResponseMessage imageResponse = await client.GetAsync(imageUrl))
+                                        {
+                                            imageResponse.EnsureSuccessStatusCode();
+                                            using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
                                             {
-                                                imageResponse.EnsureSuccessStatusCode();
-                                                using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
-                                                {
-                                                    mod.ModImage = Image.FromStream(imageStream);
-                                                }
+                                                mod.ModImage = Image.FromStream(imageStream);
                                             }
                                         }
-
-                                        if (modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true")
-                                        {
-                                            pinnedModList.Add(mod);
-                                        }
-                                        else
-                                        {
-                                            modList.Add(mod);
-                                        }
                                     }
 
-                                    // Update progress bar in batches to avoid too frequent UI updates
-                                    if (progressBar.Value < progressBar.Maximum)
+                                    if (modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true")
                                     {
-                                        progressBar.Invoke(new Action(() => progressBar.Value++));
+                                        pinnedModList.Add(mod);
                                     }
+                                    else
+                                    {
+                                        modList.Add(mod);
+                                    }
+                                }
+
+                                // Update progress bar in batches to avoid too frequent UI updates
+                                if (progressBar.Value < progressBar.Maximum)
+                                {
+                                    progressBar.Invoke(new Action(() => progressBar.Value++));
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -535,6 +530,7 @@ namespace Rumble_Mod_Manager
 
                     // Reverse the order of modList
                     var reversedModList = modList.Reverse().ToList();
+                    reversedModList.RemoveAll(mod => mod.isOutdated || mod.isDeprecated);
 
                     int pageSize = 26;
                     int totalPages = (int)Math.Ceiling(reversedModList.Count / (double)pageSize);
@@ -573,7 +569,7 @@ namespace Rumble_Mod_Manager
             public Image ModImage { get; set; }
             public string DateUpdated { get; set; }
             public List<string> Dependencies { get; set; } = new List<string>();
-            public bool Show { get; set; } = true;
+            public bool isOutdated { get; set; } = true;
             public bool isDeprecated { get; set; } = false;
         }
 
@@ -614,6 +610,8 @@ namespace Rumble_Mod_Manager
                 var allMods = ModCache.ModsByPage.Values.SelectMany(modList => modList).ToList();
                 var filteredMods = allMods.Where(mod => mod.Name.ToLower().Contains(searchText.Replace(" ", "_")) ||
                                                         mod.Description.ToLower().Contains(searchText) ||
+                                                        mod.isOutdated ||
+                                                        mod.isDeprecated ||
                                                         mod.Author.ToLower().Contains(searchText)).ToList();
 
                 // Paginate filtered results
