@@ -43,9 +43,9 @@
             label1.ForeColor = Color.White;
             label1.Location = new Point(48, 9);
             label1.Name = "label1";
-            label1.Size = new Size(464, 33);
+            label1.Size = new Size(435, 33);
             label1.TabIndex = 0;
-            label1.Text = "Are you sure you want to uninstall?";
+            label1.Text = "Are you sure you want to delete?";
             // 
             // button2
             // 
@@ -56,7 +56,7 @@
             button2.Name = "button2";
             button2.Size = new Size(147, 61);
             button2.TabIndex = 6;
-            button2.Text = "Uninstall";
+            button2.Text = "Delete";
             button2.UseVisualStyleBackColor = false;
             button2.Click += button2_Click;
             // 

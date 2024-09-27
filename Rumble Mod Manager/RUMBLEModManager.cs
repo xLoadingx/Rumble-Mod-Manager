@@ -27,7 +27,6 @@ namespace Rumble_Mod_Manager
         private static CustomMaps _customMapsInstance;
         private static ThunderstoreMods _thunderstoreModsInstance;
         private static Settings _settingsInstance;
-        private static Uninstall _uninstallInstance;
 
         Dictionary<string, string> modMappings = new Dictionary<string, string>();
 
@@ -52,6 +51,103 @@ namespace Rumble_Mod_Manager
 
             LoadCustomFont();
             LoadMods();
+
+            panel2.AllowDrop = true;
+            panel2.DragEnter += new DragEventHandler(panel2_DragEnter);
+            panel2.DragDrop += new DragEventHandler(panel2_DragDrop);
+        }
+
+        private void panel2_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0 && files[0].EndsWith(".zip"))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                    return;
+                }
+            }
+
+            if (e.Data.GetDataPresent(DataFormats.Text) || e.Data.GetDataPresent(DataFormats.UnicodeText) || e.Data.GetDataPresent(DataFormats.Html))
+            {
+                string url = (string)e.Data.GetData(DataFormats.Text)
+                            ?? (string)e.Data.GetData(DataFormats.UnicodeText)
+                            ?? (string)e.Data.GetData(DataFormats.Html);
+
+                // Check if it's a valid URL
+                if (!string.IsNullOrEmpty(url) && url.Contains("thunderstore.io/package/download/"))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                    return;
+                }
+            }
+
+            e.Effect = DragDropEffects.None;
+        }
+
+        private async void panel2_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (string file in files)
+                {
+                    if (file.EndsWith(".zip"))
+                    {
+                        InstallMod(file, true);
+                        MessageBox.Show($"Mod '{Path.GetFileName(file)}' installed successfully!");
+                    }
+                }
+            }
+            else if (e.Data.GetDataPresent(DataFormats.Text))
+            {
+                string url = (string)e.Data.GetData(DataFormats.Text);
+                if (Uri.IsWellFormedUriString(url, UriKind.Absolute) && url.Contains("thunderstore.io/package/download/"))
+                {
+                    await DownloadModFromURL(url);
+                }
+                else
+                {
+                    MessageBox.Show("Invalid link or unsupported file type. Please drop a valid Thunderstore link or a .zip file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            LoadMods();
+        }
+
+        private async Task DownloadModFromURL(string url)
+        {
+            string tempZipPath = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod.zip");
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+
+                    using (var fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write))
+                    {
+                        await response.Content.CopyToAsync(fileStream);
+                    }
+
+                    InstallMod(tempZipPath, true);
+
+                    MessageBox.Show("Mod downloaded and installed successfully from URL!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred while downloading or installing the mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                if (File.Exists(tempZipPath))
+                {
+                    File.Delete(tempZipPath);
+                }
+            }
         }
 
         public static async Task<Dictionary<string, string>> GetModMappingsAsync(string url)
@@ -154,6 +250,20 @@ namespace Rumble_Mod_Manager
             {
                 DisplayMods(Properties.Settings.Default.RumblePath);
             }
+
+            if (e.Control && e.KeyCode == Keys.S)
+            {
+                using (UserInput inputForm = new UserInput("Profile Name:"))
+                {
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        string userInput = inputForm.InputString;
+
+                        SaveProfile(userInput);
+                    }
+                }
+                e.SuppressKeyPress = true;
+            }
         }
 
         private void DisplayMods(string rumblePath)
@@ -243,6 +353,7 @@ namespace Rumble_Mod_Manager
             Image modImage = null;
             string ModAuthor = null;
             bool modFound = false;
+            bool outdated = false;
 
             if (modNameFromMapping != null)
             {
@@ -266,22 +377,26 @@ namespace Rumble_Mod_Manager
                                     color = Color.Red;
                                     toolTip = "Out of Date";
                                     cloudIcon = Properties.Resources.UpdateIcon;
+                                    outdated = true;
                                 }
                                 else if (modVersion == modVersionCache)
                                 {
                                     color = Color.Lime;
                                     toolTip = "Up To Date";
+                                    outdated = false;
                                 }
                                 else
                                 {
                                     color = Color.Cyan;
                                     toolTip = "Unreleased version";
+                                    outdated = false;
                                 }
                             }
                             else
                             {
                                 modVersionStr = mod.Version;
                                 toolTip = "Up To Date";
+                                outdated = false;
                             }
                             break;
                         }
@@ -308,6 +423,7 @@ namespace Rumble_Mod_Manager
                 DetailsLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
                 UpdateNeededImage = cloudIcon,
                 UpdateColor = color,
+                Outdated = outdated,
                 //toolTip1Text = toolTip,
                 ModImage = modImage ?? Properties.Resources.UnknownMod,
                 Tag = Path.GetFileName(modFile),
@@ -352,17 +468,13 @@ namespace Rumble_Mod_Manager
                     return;
                 }
 
-                // Check if the instance already exists and is still open
-                if (_uninstallInstance == null || _uninstallInstance.IsDisposed)
+                using (Uninstall form = new Uninstall(modName, modFilePath))
                 {
-                    _uninstallInstance = new Uninstall(modName, modFilePath, this);
-                    _uninstallInstance.FormClosed += (s, args) => _uninstallInstance = null; // Clear the instance when the form is closed
-                    _uninstallInstance.Show();
-                }
-                else
-                {
-                    // Optionally, bring the existing form to the front
-                    _uninstallInstance.BringToFront();
+                    if (form.ShowDialog() == DialogResult.OK)
+                    {
+                        File.Delete(modFilePath);
+                        LoadMods();
+                    }
                 }
             }
         }
@@ -423,7 +535,7 @@ namespace Rumble_Mod_Manager
                                 }
                                 break;
                         }
-                    } 
+                    }
                 }
 
                 return null;
@@ -472,6 +584,113 @@ namespace Rumble_Mod_Manager
             }
         }
 
+        private void SaveProfile(string profileName)
+        {
+            var profile = new ModProfile
+            {
+                ProfileName = profileName,
+                enabledMods = new List<ModState>(),
+                disabledMods = new List<ModState>()
+            };
+
+            foreach (ModPanelControl modPanel in panel2.Controls.OfType<ModPanelControl>())
+            {
+                ModState state = new ModState
+                {
+                    ModName = modPanel.ModNameLabel,
+                    Outdated = modPanel.Outdated
+                };
+
+                if (modPanel.ModEnabled)
+                {
+                    profile.enabledMods.Add(state);
+                }
+                else
+                {
+                    profile.disabledMods.Add(state);
+                }
+            }
+
+            string profileDirectory = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles");
+
+            if (!Directory.Exists(profileDirectory))
+            {
+                Directory.CreateDirectory(profileDirectory);
+            }
+
+            string profilePath = Path.Combine(profileDirectory, $"{profileName}_profile.json");
+
+            Properties.Settings.Default.PreviousLoadedProfile = Properties.Settings.Default.LastLoadedProfile;
+            Properties.Settings.Default.LastLoadedProfile = profileName;
+            Properties.Settings.Default.Save();
+
+            string json = JsonConvert.SerializeObject(profile, Formatting.Indented);
+            File.WriteAllText(profilePath, json);
+
+            MessageBox.Show($"Profile '{profileName}' successfully saved!");
+        }
+
+        public static void LoadProfile(string profileName, RUMBLEModManager modManagerInstance)
+        {
+            string modsPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mods");
+            string disabledModsPath = Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods");
+            string inactiveModsPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", "InactiveMods");
+
+            if (!Directory.Exists(inactiveModsPath))
+            {
+                Directory.CreateDirectory(inactiveModsPath);
+            }
+
+            MoveAllFiles(modsPath, inactiveModsPath);
+            MoveAllFiles(disabledModsPath, inactiveModsPath);
+
+            string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{profileName}_profile.json");
+            string json = File.ReadAllText(profilePath);
+            var profile = JsonConvert.DeserializeObject<ModProfile>(json);
+
+            Properties.Settings.Default.LastLoadedProfile = profileName;
+            Properties.Settings.Default.Save();
+
+            foreach (var mod in profile.enabledMods)
+            {
+                string modFilePath = Path.Combine(inactiveModsPath, $"{mod.ModName}.dll");
+                if (File.Exists(modFilePath))
+                {
+                    File.Move(modFilePath, Path.Combine(modsPath, $"{mod.ModName}.dll"));
+                }
+            }
+
+            foreach (var mod in profile.disabledMods)
+            {
+                string modFilePath = Path.Combine(inactiveModsPath, $"{mod.ModName}.dll");
+                if (File.Exists(modFilePath))
+                {
+                    File.Move(modFilePath, Path.Combine(disabledModsPath, $"{mod.ModName}.dll"));
+                }
+            }
+
+            if (modManagerInstance != null)
+            {
+                modManagerInstance.LoadMods();
+            }
+        }
+
+        private static void MoveAllFiles(string sourceDir, string targetDir)
+        {
+            var files = Directory.GetFiles(sourceDir, "*.dll");
+            foreach (var file in files)
+            {
+                string fileName = Path.GetFileName(file);
+                string destinationFile = Path.Combine(targetDir, fileName);
+
+                if (File.Exists(destinationFile))
+                {
+                    File.Delete(destinationFile);
+                }
+
+                File.Move(file, destinationFile);
+            }
+        }
 
         private void ModPanel_Click(object sender, EventArgs e)
         {
@@ -734,5 +953,18 @@ namespace Rumble_Mod_Manager
         Name,
         Version,
         Author
+    }
+
+    public class ModState
+    {
+        public string ModName { get; set; }
+        public bool Outdated { get; set; }
+    }
+
+    public class ModProfile
+    {
+        public string ProfileName { get; set; }
+        public List<ModState> enabledMods { get; set; }
+        public List<ModState> disabledMods { get; set; }
     }
 }

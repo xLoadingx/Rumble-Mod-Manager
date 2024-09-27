@@ -15,21 +15,20 @@ namespace Rumble_Mod_Manager
     public partial class Uninstall : Form
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
-        private RUMBLEModManager form1;
-        string modPath = string.Empty;
+        public string modPath = string.Empty;
 
-        public Uninstall(string modName, string modPath, RUMBLEModManager form1)
+        public Uninstall(string modName, string modPath)
         {
             InitializeComponent();
             LoadCustomFont();
             this.Text = "Uninstall";
             label2.Text = modName;
             this.modPath = modPath;
-            this.form1 = form1;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
+            this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
         private void LoadCustomFont()
@@ -44,16 +43,8 @@ namespace Rumble_Mod_Manager
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (File.Exists(modPath))
-            {
-                File.Delete(modPath);
-                MessageBox.Show("Mod Uninstalled Succesfully!");
-                form1.LoadMods();
-                this.Close();
-            } else
-            {
-                MessageBox.Show("Something went wrong. File path does not exist.");
-            }
+            this.DialogResult = DialogResult.OK;
+            this.Close();
         }
     }
 }

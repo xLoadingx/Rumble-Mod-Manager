@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Guna.UI2.WinForms;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using TheArtOfDevHtmlRenderer.Adapters;
 using static Rumble_Mod_Manager.ThunderstoreMods;
@@ -412,31 +413,31 @@ namespace Rumble_Mod_Manager
                 ModCache.ModsByPage = modsByPage;
 
                 string basePath = Properties.Settings.Default.RumblePath;
-                string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
+                //string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 
-                if (Directory.Exists(targetDirectory))
-                {
-                    label1.Text = "Fetching Maps...";
-                    var mapsByPage = await ManageMaps(progressBar1);
+                //if (Directory.Exists(targetDirectory))
+                //{
+                //    label1.Text = "Fetching Maps...";
+                //    var mapsByPage = await ManageMaps(progressBar1);
 
-                    int retryCount = 0;
-                    int maxRetries = 20;
+                //    int retryCount = 0;
+                //    int maxRetries = 20;
 
-                    while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
-                    {
-                        retryCount++;
-                        mapsByPage = await ManageMaps(progressBar1);
-                    }
+                //    while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
+                //    {
+                //        retryCount++;
+                //        mapsByPage = await ManageMaps(progressBar1);
+                //    }
 
-                    if (mapsByPage != null && mapsByPage.Any())
-                    {
-                        CustomMapsCache.MapsByPage = mapsByPage;
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Failed to fetch maps after {maxRetries} attempts. The manager has probably been opened a lot in a short period of time, if so, please try again later.");
-                    }
-                }
+                //    if (mapsByPage != null && mapsByPage.Any())
+                //    {
+                //        CustomMapsCache.MapsByPage = mapsByPage;
+                //    }
+                //    else
+                //    {
+                //        MessageBox.Show($"Failed to fetch maps after {maxRetries} attempts. The manager has probably been opened a lot in a short period of time, if so, please try again later.");
+                //    }
+                //}
 
                 if (!Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
                 {
@@ -507,6 +508,94 @@ namespace Rumble_Mod_Manager
             }
         }
 
+        public string FindRumblePath()
+        {
+            string rumbleExe = "RUMBLE.exe";
+            string rumblePath = null;
+            int rumbleAppId = 890550;
+
+            string steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
+
+            if (steamInstallPath == null)
+            {
+                steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) as string;
+            }
+
+            if (steamInstallPath != null)
+            {
+                string rumblePathInDefault = Path.Combine(steamInstallPath, "steamapps", "common", "RUMBLE");
+                if (Directory.Exists(rumblePathInDefault) && File.Exists(Path.Combine(rumblePathInDefault, rumbleExe)))
+                {
+                    return rumblePathInDefault;
+                }
+            }
+
+            // Check custom library paths from the libraryfolders.vdf
+            string configPath = Path.Combine(steamInstallPath, "steamapps", "libraryfolders.vdf");
+            if (File.Exists(configPath))
+            {
+                var lines = File.ReadAllLines(configPath);
+                foreach (string line in lines)
+                {
+                    if (line.Contains("path"))
+                    {
+                        var parts = line.Split('"');
+                        if (parts.Length > 3)
+                        {
+                            string libraryPath = parts[3].Trim();
+
+                            string rumblePathInLibrary = Path.Combine(libraryPath, "steamapps", "common", "RUMBLE");
+                            if (Directory.Exists(rumblePathInLibrary) && File.Exists(Path.Combine(rumblePathInLibrary, rumbleExe)))
+                            {
+                                return rumblePathInLibrary;
+                            }
+
+                            string appIdPath = Path.Combine(libraryPath, "steamapps", $"{rumbleAppId}.acf");
+                            if (File.Exists(appIdPath))
+                            {
+                                if (Directory.Exists(rumblePathInLibrary))
+                                {
+                                    return rumblePathInLibrary;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return "RUMBLE folder not found.";
+        }
+
+        public string FindRumbleOculusPath()
+        {
+            string oculusPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Oculus VR, LLC\Oculus", "Base", null) as string;
+
+            if (oculusPath == null)
+            {
+                oculusPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Oculus VR, LLC\Oculus", "Base", null) as string;
+            }
+
+            if (oculusPath == null)
+            {
+                return null;
+            } else
+            {
+                string gamesPath = Path.Combine(oculusPath, "Software", "Software");
+
+                if (Directory.Exists(gamesPath))
+                {
+                    string gameFullPath = Path.Combine(gamesPath, "kung-fu-magic-the-game");
+
+                    if (Directory.Exists(gameFullPath))
+                    {
+                        return gameFullPath;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         private void AutoFindButton_Click(object sender, EventArgs e)
         {
             try
@@ -514,10 +603,12 @@ namespace Rumble_Mod_Manager
                 string steamGameFolderName = "RUMBLE";
                 string oculusGameFolderName = "kung-fu-magic-the-game";
 
-                List<string> steamDirectories = FindSteamAppsDirectories();
-                List<string> oculusDirectories = FindOculusSoftwareDirectories();
-
-                string gameDirectory = FindGameDirectory(steamDirectories, steamGameFolderName);
+                string gameDirectory = FindRumblePath();
+                if (gameDirectory == null)
+                {
+                    gameDirectory = FindRumbleOculusPath();
+                }
+                
                 if (gameDirectory != null)
                 {
                     Properties.Settings.Default.RumblePath = gameDirectory;
@@ -542,134 +633,11 @@ namespace Rumble_Mod_Manager
                     SettingsButton.Visible = true;
                     CreditsButton.Visible = true;
                 }
-                else
-                {
-                    string oculusGameDirectory = FindGameDirectory(oculusDirectories, oculusGameFolderName);
-                    if (oculusGameDirectory != null)
-                    {
-                        Properties.Settings.Default.RumblePath = gameDirectory;
-                        Properties.Settings.Default.Save();
-
-                        if (_settingsInstance == null || _settingsInstance.IsDisposed)
-                        {
-                            _settingsInstance = new Settings(null, this);
-                            _settingsInstance.FormClosed += (s, args) => _settingsInstance = null;
-                            _settingsInstance.Show();
-                        }
-                        else
-                        {
-                            _settingsInstance.BringToFront();
-                        }
-
-                        MessageBox.Show("Game Directory Found. Make sure it is the correct path to your game directory!");
-                        PathNotFound.Visible = false;
-                        AutoFindButton.Visible = false;
-                        ManualFindButton.Visible = false;
-                        LaunchButton.Visible = true;
-                        SettingsButton.Visible = true;
-                        CreditsButton.Visible = true;
-                    }
-                    else
-                    {
-                        if (_settingsInstance == null || _settingsInstance.IsDisposed)
-                        {
-                            _settingsInstance = new Settings(null, this);
-                            _settingsInstance.FormClosed += (s, args) => _settingsInstance = null;
-                            _settingsInstance.Show();
-                        }
-                        else
-                        {
-                            _settingsInstance.BringToFront();
-                        }
-
-                        MessageBox.Show("Game directory not found. Please set it manually.");
-                    }
-                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        static List<string> FindSteamAppsDirectories()
-        {
-            List<string> foundDirectories = new List<string>();
-
-            // Default Steam installation path
-            string defaultSteamPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam");
-            string libraryFoldersFile = Path.Combine(defaultSteamPath, "steamapps", "libraryfolders.vdf");
-
-            if (File.Exists(libraryFoldersFile))
-            {
-                // Read and parse the libraryfolders.vdf file
-                string[] lines = File.ReadAllLines(libraryFoldersFile);
-                Regex pathRegex = new Regex(@"\""path\""\s*\""(.*?)\""");
-
-                foreach (var line in lines)
-                {
-                    var match = pathRegex.Match(line);
-                    if (match.Success)
-                    {
-                        string libraryPath = match.Groups[1].Value;
-                        string commonPath = Path.Combine(libraryPath, "steamapps", "common");
-
-                        if (Directory.Exists(commonPath))
-                        {
-                            foundDirectories.Add(commonPath);
-                        }
-                    }
-                }
-            }
-
-            // Add the default steamapps/common directory just in case
-            string defaultCommonPath = Path.Combine(defaultSteamPath, "steamapps", "common");
-            if (Directory.Exists(defaultCommonPath))
-            {
-                foundDirectories.Add(defaultCommonPath);
-            }
-
-            return foundDirectories;
-        }
-
-        static List<string> FindOculusSoftwareDirectories()
-        {
-            List<string> possibleDirectories = new List<string>
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Oculus", "Software", "Software"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Oculus", "Software", "Software"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Oculus", "Software", "Software"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Oculus", "Software", "Software")
-            };
-
-            possibleDirectories.Add(@"D:\Oculus\Software\Software");
-            possibleDirectories.Add(@"E:\OculusLibrary\Software\Software");
-
-            List<string> foundDirectories = new List<string>();
-
-            foreach (var dir in possibleDirectories)
-            {
-                if (Directory.Exists(dir))
-                {
-                    foundDirectories.Add(dir);
-                }
-            }
-
-            return foundDirectories;
-        }
-
-        static string FindGameDirectory(List<string> directories, string gameFolderName)
-        {
-            foreach (var dir in directories)
-            {
-                string gamePath = Path.Combine(dir, gameFolderName);
-                if (Directory.Exists(gamePath))
-                {
-                    return gamePath;
-                }
-            }
-
-            return null;
         }
 
         private void SettingsButton_Click(object sender, EventArgs e)

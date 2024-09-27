@@ -263,6 +263,15 @@ namespace Rumble_Mod_Manager
             await DownloadModFromInternet(CurrentlySelectedMod, RumbleManager, true, true);
         }
 
+        private static bool IsValidMod(string extractedDir)
+        {
+            bool hasDll = Directory.GetFiles(extractedDir, "*.dll", System.IO.SearchOption.AllDirectories).Any();
+            bool hasManifest = Directory.GetFiles(extractedDir, "manifest.json", System.IO.SearchOption.AllDirectories).Any();
+
+            return hasDll && hasManifest;
+        }
+
+
         public static void InstallMod(string zipPath, bool ModEnabled)
         {
             bool UpdatingMod = false;
@@ -276,40 +285,45 @@ namespace Rumble_Mod_Manager
                 // Extract the ZIP file to the temp directory
                 ZipFile.ExtractToDirectory(zipPath, tempDir);
 
-                string modsFolder = Path.Combine(Properties.Settings.Default.RumblePath, ModEnabled ? "Mods" : "DisabledMods");
-
-                // Ensure mods folder exists
-                Directory.CreateDirectory(modsFolder);
-
-                // Define the directories we want to process
-                var allowedDirs = new[] { "Mods", "UserLibs", "UserData" };
-
-                foreach (var subDir in Directory.EnumerateDirectories(tempDir))
+                if (IsValidMod(tempDir))
                 {
-                    string directoryName = Path.GetFileName(subDir);
-                    string destinationDir;
+                    string modsFolder = Path.Combine(Properties.Settings.Default.RumblePath, ModEnabled ? "Mods" : "DisabledMods");
 
-                    // Only process allowed directories
-                    if (allowedDirs.Contains(directoryName, StringComparer.OrdinalIgnoreCase))
+                    // Ensure mods folder exists
+                    Directory.CreateDirectory(modsFolder);
+
+                    // Define the directories we want to process
+                    var allowedDirs = new[] { "Mods", "UserLibs", "UserData" };
+
+                    foreach (var subDir in Directory.EnumerateDirectories(tempDir))
                     {
-                        if (directoryName.Equals("UserLibs", StringComparison.OrdinalIgnoreCase))
-                        {
-                            destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserLibs");
-                        }
-                        else if (directoryName.Equals("UserData", StringComparison.OrdinalIgnoreCase))
-                        {
-                            destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
-                        }
-                        else // "Mods"
-                        {
-                            destinationDir = modsFolder;
-                        }
+                        string directoryName = Path.GetFileName(subDir);
+                        string destinationDir;
 
-                        MergeDirectories(subDir, destinationDir, ref UpdatingMod);
+                        // Only process allowed directories
+                        if (allowedDirs.Contains(directoryName, StringComparer.OrdinalIgnoreCase))
+                        {
+                            if (directoryName.Equals("UserLibs", StringComparison.OrdinalIgnoreCase))
+                            {
+                                destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserLibs");
+                            }
+                            else if (directoryName.Equals("UserData", StringComparison.OrdinalIgnoreCase))
+                            {
+                                destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
+                            }
+                            else // "Mods"
+                            {
+                                destinationDir = modsFolder;
+                            }
+
+                            MergeDirectories(subDir, destinationDir, ref UpdatingMod);
+                        }
                     }
+                } else
+                {
+                    MessageBox.Show("This ZIP file does not contain a valid mod.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
-                // Clean up: Delete the temp directory and the ZIP file
                 Directory.Delete(tempDir, true);
                 if (File.Exists(zipPath))
                 {

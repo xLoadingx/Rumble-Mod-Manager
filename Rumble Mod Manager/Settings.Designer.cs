@@ -32,8 +32,7 @@
             textBox1 = new TextBox();
             button1 = new Button();
             button2 = new Button();
-            BackUp = new Button();
-            Restore = new Button();
+            SwitchProfile = new Button();
             SuspendLayout();
             // 
             // label1
@@ -49,9 +48,12 @@
             // 
             // textBox1
             // 
+            textBox1.BackColor = Color.FromArgb(30, 30, 30);
+            textBox1.BorderStyle = BorderStyle.None;
+            textBox1.ForeColor = Color.White;
             textBox1.Location = new Point(12, 52);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(400, 21);
+            textBox1.Size = new Size(400, 14);
             textBox1.TabIndex = 3;
             // 
             // button1
@@ -82,33 +84,19 @@
             button2.UseVisualStyleBackColor = false;
             button2.Click += button2_Click;
             // 
-            // BackUp
+            // SwitchProfile
             // 
-            BackUp.AutoSize = true;
-            BackUp.BackColor = Color.FromArgb(128, 255, 128);
-            BackUp.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            BackUp.ForeColor = Color.Green;
-            BackUp.Location = new Point(12, 218);
-            BackUp.Name = "BackUp";
-            BackUp.Size = new Size(168, 39);
-            BackUp.TabIndex = 6;
-            BackUp.Text = "Backup ML Files";
-            BackUp.UseVisualStyleBackColor = false;
-            BackUp.Visible = false;
-            // 
-            // Restore
-            // 
-            Restore.AutoSize = true;
-            Restore.BackColor = Color.FromArgb(192, 0, 0);
-            Restore.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            Restore.ForeColor = Color.Maroon;
-            Restore.Location = new Point(244, 218);
-            Restore.Name = "Restore";
-            Restore.Size = new Size(171, 39);
-            Restore.TabIndex = 7;
-            Restore.Text = "Restore ML Files";
-            Restore.UseVisualStyleBackColor = false;
-            Restore.Visible = false;
+            SwitchProfile.AutoSize = true;
+            SwitchProfile.BackColor = Color.SteelBlue;
+            SwitchProfile.Font = new Font("Arial Narrow", 20.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            SwitchProfile.ForeColor = Color.GhostWhite;
+            SwitchProfile.Location = new Point(143, 216);
+            SwitchProfile.Name = "SwitchProfile";
+            SwitchProfile.Size = new Size(157, 41);
+            SwitchProfile.TabIndex = 6;
+            SwitchProfile.Text = "Switch Profile";
+            SwitchProfile.UseVisualStyleBackColor = false;
+            SwitchProfile.Click += SwitchProfile_Click;
             // 
             // Settings
             // 
@@ -116,8 +104,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 20, 20);
             ClientSize = new Size(424, 269);
-            Controls.Add(Restore);
-            Controls.Add(BackUp);
+            Controls.Add(SwitchProfile);
             Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(textBox1);
@@ -135,7 +122,6 @@
         private TextBox textBox1;
         private Button button1;
         private Button button2;
-        private Button BackUp;
-        private Button Restore;
+        private Button SwitchProfile;
     }
 }

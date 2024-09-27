@@ -34,5 +34,29 @@ namespace Rumble_Mod_Manager.Properties {
                 this["RumblePath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastLoadedProfile {
+            get {
+                return ((string)(this["LastLoadedProfile"]));
+            }
+            set {
+                this["LastLoadedProfile"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PreviousLoadedProfile {
+            get {
+                return ((string)(this["PreviousLoadedProfile"]));
+            }
+            set {
+                this["PreviousLoadedProfile"] = value;
+            }
+        }
     }
 }

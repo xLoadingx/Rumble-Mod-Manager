@@ -13,6 +13,7 @@ namespace Rumble_Mod_Manager
     public partial class ModPanelControl : UserControl
     {
         private bool _modEnabled = true;
+        private bool _outdated = false;
         private string _modDLLPath = string.Empty;
         public ThunderstoreMods.Mod Mod { get; set; }
 
@@ -56,6 +57,12 @@ namespace Rumble_Mod_Manager
         {
             get { return ImageButton.ForeColor; }
             set { ImageButton.BackColor = value; }
+        }
+
+        public bool Outdated
+        {
+            get { return _outdated; }
+            set { _outdated = value; }
         }
 
         //public string toolTip1Text
