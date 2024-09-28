@@ -542,18 +542,22 @@ namespace Rumble_Mod_Manager
                         await Task.WhenAll(tasks);
                     }
 
-                    // Reverse the order of modList
+                    // Reverse and filter the list
                     var reversedModList = modList.Reverse().ToList();
                     reversedModList.RemoveAll(mod => mod.isOutdated || mod.isDeprecated);
 
-                    int pageSize = 26;
+                    int pageSize = 24;
                     int totalPages = (int)Math.Ceiling(reversedModList.Count / (double)pageSize);
 
-                    // Create pages in the original order
+                    // Sort the entire list by DateUpdated
+                    var sortedModList = reversedModList
+                        .OrderByDescending(mod => DateTime.Parse(mod.DateUpdated))
+                        .ToList();
+
+                    // Create pages from the sorted list
                     for (int i = 0; i < totalPages; i++)
                     {
-                        var modsForPage = reversedModList.Skip(i * pageSize).Take(pageSize).ToList();
-                        modsForPage.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase)); // Sort each page alphabetically
+                        var modsForPage = sortedModList.Skip(i * pageSize).Take(pageSize).ToList();
                         modsByPage[i + 1] = modsForPage;
                     }
 
