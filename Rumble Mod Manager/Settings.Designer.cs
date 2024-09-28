@@ -50,10 +50,11 @@
             // 
             textBox1.BackColor = Color.FromArgb(30, 30, 30);
             textBox1.BorderStyle = BorderStyle.None;
+            textBox1.Font = new Font("Arial", 18F);
             textBox1.ForeColor = Color.White;
             textBox1.Location = new Point(12, 52);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(400, 14);
+            textBox1.Size = new Size(400, 28);
             textBox1.TabIndex = 3;
             // 
             // button1
@@ -62,7 +63,7 @@
             button1.BackColor = Color.SteelBlue;
             button1.Font = new Font("Arial Narrow", 20.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button1.ForeColor = Color.GhostWhite;
-            button1.Location = new Point(163, 79);
+            button1.Location = new Point(163, 99);
             button1.Name = "button1";
             button1.Size = new Size(104, 41);
             button1.TabIndex = 4;
@@ -76,7 +77,7 @@
             button2.BackColor = Color.FromArgb(128, 255, 128);
             button2.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button2.ForeColor = Color.Green;
-            button2.Location = new Point(163, 137);
+            button2.Location = new Point(163, 157);
             button2.Name = "button2";
             button2.Size = new Size(104, 39);
             button2.TabIndex = 5;
@@ -90,7 +91,7 @@
             SwitchProfile.BackColor = Color.SteelBlue;
             SwitchProfile.Font = new Font("Arial Narrow", 20.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             SwitchProfile.ForeColor = Color.GhostWhite;
-            SwitchProfile.Location = new Point(143, 216);
+            SwitchProfile.Location = new Point(137, 216);
             SwitchProfile.Name = "SwitchProfile";
             SwitchProfile.Size = new Size(157, 41);
             SwitchProfile.TabIndex = 6;

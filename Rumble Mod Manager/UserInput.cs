@@ -34,6 +34,10 @@ namespace Rumble_Mod_Manager
             {
                 button2_Click(sender, e);
                 e.SuppressKeyPress = true;
+            } else if (e.KeyCode == Keys.Escape)
+            {
+                button1_Click(sender, e);
+                e.SuppressKeyPress = true;
             }
         }
 

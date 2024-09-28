@@ -30,6 +30,7 @@
         {
             components = new System.ComponentModel.Container();
             panel1 = new Panel();
+            linkLabel1 = new LinkLabel();
             ForwardButton = new Button();
             PageNumberLabel = new Button();
             BackButton = new Button();
@@ -52,6 +53,7 @@
             // panel1
             // 
             panel1.BackColor = Color.FromArgb(40, 40, 40);
+            panel1.Controls.Add(linkLabel1);
             panel1.Controls.Add(ForwardButton);
             panel1.Controls.Add(PageNumberLabel);
             panel1.Controls.Add(BackButton);
@@ -66,6 +68,18 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(406, 442);
             panel1.TabIndex = 1;
+            // 
+            // linkLabel1
+            // 
+            linkLabel1.AutoSize = true;
+            linkLabel1.LinkColor = Color.ForestGreen;
+            linkLabel1.Location = new Point(164, 80);
+            linkLabel1.Name = "linkLabel1";
+            linkLabel1.Size = new Size(151, 15);
+            linkLabel1.TabIndex = 13;
+            linkLabel1.TabStop = true;
+            linkLabel1.Text = "See Mod On Thunderstore";
+            linkLabel1.VisitedLinkColor = Color.ForestGreen;
             // 
             // ForwardButton
             // 
@@ -154,7 +168,7 @@
             ModAuthorLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModAuthorLabel.Font = new Font("Arial Narrow", 24F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModAuthorLabel.ForeColor = Color.White;
-            ModAuthorLabel.Location = new Point(161, 37);
+            ModAuthorLabel.Location = new Point(158, 37);
             ModAuthorLabel.Name = "ModAuthorLabel";
             ModAuthorLabel.Size = new Size(242, 38);
             ModAuthorLabel.TabIndex = 3;
@@ -246,6 +260,7 @@
             Name = "ThunderstoreMods";
             Text = "a";
             panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -268,5 +283,6 @@
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse2;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse3;
+        private LinkLabel linkLabel1;
     }
 }

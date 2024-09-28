@@ -46,6 +46,7 @@ namespace Rumble_Mod_Manager
             InstallButton.Visible = false;
             DependenciesLabel.Visible = false;
             ModDescriptionLabel.Visible = false;
+            linkLabel1.Visible = false;
             BackButton.Enabled = CurrentPage > 1;
             ForwardButton.Enabled = ModCache.ModsByPage.ContainsKey(CurrentPage + 1);
 
@@ -73,6 +74,7 @@ namespace Rumble_Mod_Manager
             ModNameLabel.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Bold);
             ModAuthorLabel.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             ModVersionLabel.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Regular);
+            linkLabel1.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             DependenciesLabel.Font = new Font(privateFonts.Families[0], 11.0F, FontStyle.Regular);
             ModDescriptionLabel.Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular);
             InstallButton.Font = new Font(privateFonts.Families[0], 27.0F, FontStyle.Regular);
@@ -144,7 +146,8 @@ namespace Rumble_Mod_Manager
                 CreditsLabel = $"By {mod.Author}",
                 DescriptionFont = new Font(privateFonts.Families[0], 10.0f, FontStyle.Regular),
                 ModLabelFont = new Font(privateFonts.Families[0], 12.0f, FontStyle.Bold),
-                CreditsFont = new Font(privateFonts.Families[0], 10.0f, FontStyle.Regular)
+                CreditsFont = new Font(privateFonts.Families[0], 10.0f, FontStyle.Regular),
+                OnlineModLink = mod.OnlinePageUrl
             };
 
             modPanel.Click += (s, e) => ModPanel_Click(modPanel, mod);
@@ -159,6 +162,9 @@ namespace Rumble_Mod_Manager
 
         public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null)
         {
+            string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
+            string tempZipPath = Path.Combine(tempDir, "temp_mod.zip");
+
             try
             {
                 // Only create a new form if one doesn't already exist (e.g., the first call)
@@ -170,6 +176,7 @@ namespace Rumble_Mod_Manager
 
                 installingMessage.UpdateStatusMessage($"Starting installation for '{mod.Name}'");
 
+                // Handle dependencies
                 if (mod.Dependencies != null && mod.Dependencies.Any(dependency => !dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase)))
                 {
                     installingMessage.UpdateStatusMessage($"Starting installation of dependencies for '{mod.Name}'");
@@ -206,14 +213,11 @@ namespace Rumble_Mod_Manager
                     installingMessage.UpdateStatusMessage("Dependency installation process completed");
                 }
 
-                string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
-
+                // Create temp directory if it doesn't exist
                 if (!Directory.Exists(tempDir))
                 {
                     Directory.CreateDirectory(tempDir);
                 }
-
-                string tempZipPath = Path.Combine(tempDir, "temp_mod.zip");
 
                 using (HttpClient client = new HttpClient())
                 {
@@ -242,6 +246,26 @@ namespace Rumble_Mod_Manager
             catch (Exception ex)
             {
                 MessageBox.Show($"An error occurred while downloading or extracting the mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // Cleanup: delete the temp files and folder
+                try
+                {
+                    if (File.Exists(tempZipPath))
+                    {
+                        File.Delete(tempZipPath);
+                    }
+
+                    if (Directory.Exists(tempDir) && Directory.GetFiles(tempDir).Length == 0)
+                    {
+                        Directory.Delete(tempDir);
+                    }
+                }
+                catch (Exception cleanupEx)
+                {
+                    MessageBox.Show($"An error occurred during cleanup: {cleanupEx.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
         }
 
@@ -498,6 +522,7 @@ namespace Rumble_Mod_Manager
                                         Dependencies = dependencies,
                                         DateUpdated = lastUpdated,
                                         ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
+                                        OnlinePageUrl = $"https://thunderstore.io/c/rumble/p/{author}/{name}",
                                         isOutdated = isOutdated,
                                         isDeprecated = isDeprecated
                                     };
@@ -586,6 +611,7 @@ namespace Rumble_Mod_Manager
             public string Description { get; set; }
             public string Author { get; set; }
             public string ModPageUrl { get; set; }
+            public string OnlinePageUrl { get; set; }
             public string ImageUrl { get; set; }
             public string Version { get; set; }
             public Image ModImage { get; set; }
@@ -692,6 +718,16 @@ namespace Rumble_Mod_Manager
                     InstallButton.Visible = true;
                     ModDescriptionLabel.Visible = true;
                     DependenciesLabel.Visible = true;
+                    linkLabel1.Visible = true;
+
+                    linkLabel1.Click += (sender, e) =>
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = selectedPanel.OnlineModLink,
+                            UseShellExecute = true
+                        });
+                    };
 
                     var cleanedDependencies = CurrentlySelectedMod.Dependencies
                         .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
@@ -711,6 +747,7 @@ namespace Rumble_Mod_Manager
                     InstallButton.Visible = false;
                     DependenciesLabel.Visible = false;
                     ModDescriptionLabel.Visible = false;
+                    linkLabel1.Visible = false;
                     DependenciesLabel.Text = string.Empty;
                 }
             }

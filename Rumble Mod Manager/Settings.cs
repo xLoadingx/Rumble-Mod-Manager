@@ -34,12 +34,10 @@ namespace Rumble_Mod_Manager
         {
             privateFonts.AddFontFile("GoodDogPlain.ttf");
             label1.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
-            textBox1.Font = new Font(privateFonts.Families[0], 9.0F, FontStyle.Regular);
+            textBox1.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             button1.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
             SwitchProfile.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
             button2.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
-            //BackUp.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
-            //Restore.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
         }
 
         private void button1_Click(object sender, EventArgs e)

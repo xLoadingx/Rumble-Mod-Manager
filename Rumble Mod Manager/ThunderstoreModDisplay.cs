@@ -13,6 +13,8 @@ namespace Rumble_Mod_Manager
 {
     public partial class ThunderstoreModDisplay : UserControl
     {
+        private string _onlineModLink;
+
         public ThunderstoreModDisplay()
         {
             InitializeComponent();
@@ -28,6 +30,12 @@ namespace Rumble_Mod_Manager
         {
             get { return ModName.Text; }
             set { ModName.Text = value; }
+        }
+
+        public string OnlineModLink
+        {
+            get { return _onlineModLink; }
+            set { _onlineModLink = value; }
         }
 
         public string DescriptionLabel
