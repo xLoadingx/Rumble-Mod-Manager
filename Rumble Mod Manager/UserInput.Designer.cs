@@ -40,7 +40,7 @@
             button2.BackColor = Color.FromArgb(128, 255, 128);
             button2.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button2.ForeColor = Color.Green;
-            button2.Location = new Point(94, 84);
+            button2.Location = new Point(94, 102);
             button2.Name = "button2";
             button2.Size = new Size(104, 39);
             button2.TabIndex = 10;
@@ -52,10 +52,11 @@
             // 
             textBox1.BackColor = Color.FromArgb(20, 20, 20);
             textBox1.BorderStyle = BorderStyle.None;
+            textBox1.Font = new Font("Arial", 18F);
             textBox1.ForeColor = Color.White;
             textBox1.Location = new Point(12, 53);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(400, 14);
+            textBox1.Size = new Size(400, 28);
             textBox1.TabIndex = 8;
             // 
             // label1
@@ -76,7 +77,7 @@
             button1.BackColor = Color.Red;
             button1.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button1.ForeColor = Color.FromArgb(192, 0, 0);
-            button1.Location = new Point(230, 84);
+            button1.Location = new Point(230, 102);
             button1.Name = "button1";
             button1.Size = new Size(104, 39);
             button1.TabIndex = 11;
@@ -89,7 +90,7 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
-            ClientSize = new Size(424, 135);
+            ClientSize = new Size(424, 159);
             Controls.Add(button1);
             Controls.Add(button2);
             Controls.Add(textBox1);

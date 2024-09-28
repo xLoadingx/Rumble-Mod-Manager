@@ -23,6 +23,7 @@ using System.Collections.Concurrent;
 using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.FileIO;
 using System.Collections;
+using System.Xml.Linq;
 
 namespace Rumble_Mod_Manager
 {
@@ -156,55 +157,57 @@ namespace Rumble_Mod_Manager
             return modPanel;
         }
 
-        public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod)
+        public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null)
         {
             try
             {
-                // Check if the mod has any dependencies
+                // Only create a new form if one doesn't already exist (e.g., the first call)
+                if (installingMessage == null)
+                {
+                    installingMessage = new UserMessage(string.Empty, false);
+                    installingMessage.Show();
+                }
+
+                installingMessage.UpdateStatusMessage($"Starting installation for '{mod.Name}'");
+
                 if (mod.Dependencies != null && mod.Dependencies.Any(dependency => !dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase)))
                 {
-                    StringBuilder installationMessage = new StringBuilder();
-                    installationMessage.AppendLine("Starting installation of dependencies for the mod:");
+                    installingMessage.UpdateStatusMessage($"Starting installation of dependencies for '{mod.Name}'");
 
                     foreach (var dependency in mod.Dependencies)
                     {
                         if (dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase))
                         {
-                            continue; // Skip this dependency
+                            continue;
                         }
 
-                        // Parse the dependency "author-name-version"
                         var parts = dependency.Split('-');
                         if (parts.Length >= 2)
                         {
                             string author = parts[0];
                             string name = parts[1];
 
-                            // Add to the combined installation message
-                            installationMessage.AppendLine($"Attempting to install dependency: {author}-{name}...");
+                            installingMessage.UpdateStatusMessage($"Attempting to install dependency: {author}-{name}");
 
-                            // Find the ModPageUrl for this dependency by matching the author and name
                             var dependentMod = FindModByAuthorAndName(author, name);
                             if (dependentMod != null)
                             {
-                                // Recursively download and install each dependency
-                                await DownloadModFromInternet(dependentMod, form1, ModEnabled, false);
-                                installationMessage.AppendLine($"Successfully installed: {author}-{name}");
+                                // Pass the same installingMessage form to the recursive call
+                                await DownloadModFromInternet(dependentMod, form1, ModEnabled, false, installingMessage);
+                                installingMessage.UpdateStatusMessage($"Successfully installed: {author}-{name}");
                             }
                             else
                             {
-                                installationMessage.AppendLine($"Dependency {author}-{name} not found.");
+                                installingMessage.UpdateStatusMessage($"Dependency {author}-{name} not found.");
                             }
                         }
                     }
 
-                    installationMessage.AppendLine("Dependency installation process completed.");
-                    MessageBox.Show(installationMessage.ToString(), "Installing Dependencies", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    installingMessage.UpdateStatusMessage("Dependency installation process completed");
                 }
 
                 string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
 
-                // Ensure the directory exists
                 if (!Directory.Exists(tempDir))
                 {
                     Directory.CreateDirectory(tempDir);
@@ -231,7 +234,8 @@ namespace Rumble_Mod_Manager
 
                 if (initialMod)
                 {
-                    MessageBox.Show("Mod successfully installed", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    installingMessage.UpdateStatusMessage($"'{mod.Name}' successfully installed");
+                    installingMessage.ShowCloseButton(true);
                     form1.LoadMods();
                 }
             }

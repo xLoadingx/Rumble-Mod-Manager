@@ -108,7 +108,7 @@ namespace Rumble_Mod_Manager
                 ModNameLabel = profile.ProfileName,
                 ModLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Bold), // Customize fonts as needed
                 DetailsLabelFont = new Font(privateFonts.Families[0], 13.0F, FontStyle.Regular),
-                DetailsLabel = $"Mods: {totalMods} ({totalEnabledMods} Enabled, {totalDisabledMods} Disabled",
+                DetailsLabel = $"Mods: {totalMods} ({totalEnabledMods} Enabled, {totalDisabledMods} Disabled)",
                 BackColor = (profile.ProfileName == Properties.Settings.Default.LastLoadedProfile) ? System.Drawing.Color.Green : System.Drawing.Color.FromArgb(30, 30, 30),
                 ModImage = Properties.Resources.UnknownMod,
                 Tag = profile.ProfileName
@@ -178,6 +178,56 @@ namespace Rumble_Mod_Manager
                         }
 
                         LoadProfiles();
+                    }
+                }
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (selectedPanel != null)
+            {
+                using (UserInput inputForm = new UserInput("Enter the new profile name:", selectedPanel.ModNameLabel))
+                {
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        string newProfileName = inputForm.InputString;
+
+                        if (!string.IsNullOrEmpty(newProfileName))
+                        {
+                            string profilesPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles");
+                            string oldProfilePath = Path.Combine(profilesPath, $"{selectedPanel.ModNameLabel}_profile.json");
+                            string newProfilePath = Path.Combine(profilesPath, $"{newProfileName}_profile.json");
+
+                            if (File.Exists(newProfilePath))
+                            {
+                                UserMessage errorMessage = new UserMessage("A profile with this name already exists. Please choose a different name.", true);
+                                errorMessage.ShowDialog();
+                                return;
+                            }
+
+                            try
+                            {
+                                File.Move(oldProfilePath, newProfilePath);
+
+                                if (Properties.Settings.Default.LastLoadedProfile == selectedPanel.ModNameLabel)
+                                {
+                                    Properties.Settings.Default.LastLoadedProfile = newProfileName;
+                                    Properties.Settings.Default.Save();
+                                }
+
+                                selectedPanel.ModNameLabel = newProfileName;
+                            }
+                            catch (Exception ex)
+                            {
+                                UserMessage errorMessage = new UserMessage($"Failed to rename the profile. Error: {ex.Message}", true);
+                                errorMessage.ShowDialog();
+                            }
+                        } else
+                        {
+                            UserMessage errorMessage = new UserMessage($"Profile name cannot be empty.", true);
+                            errorMessage.ShowDialog();
+                        }
                     }
                 }
             }

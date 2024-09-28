@@ -17,19 +17,31 @@ namespace Rumble_Mod_Manager
 
         public string InputString { get; private set; }
 
-        public UserInput(string TitleText)
+        public UserInput(string TitleText, string TextBoxText = null)
         {
             InitializeComponent();
             label1.Text = TitleText;
+            textBox1.Text = TextBoxText;
 
             LoadCustomFont();
+
+            textBox1.KeyDown += new KeyEventHandler(textBox1_KeyDown);
+        }
+
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                button2_Click(sender, e);
+                e.SuppressKeyPress = true;
+            }
         }
 
         private void LoadCustomFont()
         {
             privateFonts.AddFontFile("GoodDogPlain.ttf");
             label1.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
-            textBox1.Font = new Font(privateFonts.Families[0], 9.0F, FontStyle.Regular);
+            textBox1.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             button2.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             button1.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
         }
