@@ -49,7 +49,8 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                MessageBox.Show("No maps found in cache. Maps were not found when first loaded. (Try restarting the manager)");
+                UserMessage errorMessage = new UserMessage("No maps found in cache. Maps were not found when first loaded. (Try restarting the manager)", true);
+                errorMessage.Show();
             }
 
             ModAuthorLabel.Text = string.Empty;
@@ -173,7 +174,8 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred while downloading or extracting the mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage($"An error occurred while downloading or extracting the mod: {ex.Message}", true);
+                errorMessage.Show();
                 return;
             }
         }
@@ -358,7 +360,8 @@ namespace Rumble_Mod_Manager
 
                 if (!Directory.Exists(mapsDirectory))
                 {
-                    MessageBox.Show("The CustomMultiplayerMaps/Maps directory does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UserMessage errorMessage = new UserMessage("The CustomMultiplayerMaps/Maps directory does not exist.", true);
+                    errorMessage.Show();
                     return;
                 }
 
@@ -399,17 +402,20 @@ namespace Rumble_Mod_Manager
                     // Clean up
                     Directory.Delete(tempDir, true);
 
-                    MessageBox.Show($"Successfully {(isUpdating ? "updated" : "installed")} {CurrentlySelectedMap.name}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    UserMessage successMessage = new UserMessage($"Successfully {(isUpdating ? "updated" : "installed")} {CurrentlySelectedMap.name}.", true);
+                    successMessage.Show();
                     DisplayMaps(CustomMapsCache.MapsByPage[CurrentPage]);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"An error occurred while installing the map: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UserMessage errorMessage = new UserMessage($"An error occurred while installing the map: {ex.Message}", true);
+                    errorMessage.Show();
                 }
             }
             else
             {
-                MessageBox.Show("No map selected for installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage("No map selected for installation.", true);
+                errorMessage.Show();
             }
         }
     }

@@ -76,7 +76,8 @@ namespace Rumble_Mod_Manager
             ZipFile.ExtractToDirectory(tempZipPath, rumblePath, true);
             File.Delete(tempZipPath);
 
-            MessageBox.Show($"MelonLoader has been installed successfully. The game is about to open, once it reaches the T-POSE screen, please close the game. \n\n Do not click on the console. If you do, please press enter.");
+            UserMessage errorMessage = new UserMessage($"MelonLoader has been installed successfully. The game is about to open, once it reaches the T-POSE screen, please close the game. \n\n Do not click on the console. If you do, please press enter.", true);
+            errorMessage.Show();
 
             if (!File.Exists(gamePath))
             {
@@ -380,7 +381,8 @@ namespace Rumble_Mod_Manager
                 {
                     if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute))
                     {
-                        MessageBox.Show("The URL is not well-formed: " + imageUrl, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        UserMessage errorMessage = new UserMessage("The URL is not well-formed: " + imageUrl, true);
+                        errorMessage.Show();
                         return null;
                     }
 
@@ -397,7 +399,8 @@ namespace Rumble_Mod_Manager
             {
                 string detailedErrorMessage = $"An error occurred while downloading image: {ex.Message}\n\n" +
                                               $"Stack Trace:\n{ex.StackTrace}";
-                MessageBox.Show(detailedErrorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage(detailedErrorMessage, true);
+                errorMessage.Show();
                 return null;
             }
         }
@@ -413,31 +416,32 @@ namespace Rumble_Mod_Manager
                 ModCache.ModsByPage = modsByPage;
 
                 string basePath = Properties.Settings.Default.RumblePath;
-                //string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
+                string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 
-                //if (Directory.Exists(targetDirectory))
-                //{
-                //    label1.Text = "Fetching Maps...";
-                //    var mapsByPage = await ManageMaps(progressBar1);
+                if (Directory.Exists(targetDirectory))
+                {
+                    label1.Text = "Fetching Maps...";
+                    var mapsByPage = await ManageMaps(progressBar1);
 
-                //    int retryCount = 0;
-                //    int maxRetries = 20;
+                    int retryCount = 0;
+                    int maxRetries = 20;
 
-                //    while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
-                //    {
-                //        retryCount++;
-                //        mapsByPage = await ManageMaps(progressBar1);
-                //    }
+                    while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
+                    {
+                        retryCount++;
+                        mapsByPage = await ManageMaps(progressBar1);
+                    }
 
-                //    if (mapsByPage != null && mapsByPage.Any())
-                //    {
-                //        CustomMapsCache.MapsByPage = mapsByPage;
-                //    }
-                //    else
-                //    {
-                //        MessageBox.Show($"Failed to fetch maps after {maxRetries} attempts. The manager has probably been opened a lot in a short period of time, if so, please try again later.");
-                //    }
-                //}
+                    if (mapsByPage != null && mapsByPage.Any())
+                    {
+                        CustomMapsCache.MapsByPage = mapsByPage;
+                    }
+                    else
+                    {
+                        UserMessage errorMessage = new UserMessage($"Failed to fetch maps after {maxRetries} attempts. The manager has probably been opened a lot in a short period of time, if so, please try again later.", true);
+                        errorMessage.Show();
+                    }
+                }
 
                 if (!Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
                 {
@@ -465,7 +469,8 @@ namespace Rumble_Mod_Manager
             {
                 string detailedErrorMessage = $"An error occurred while fetching mods from Thunderstore: {ex.Message}\n\n" +
                                               $"Stack Trace:\n{ex.StackTrace}";
-                MessageBox.Show(detailedErrorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage(detailedErrorMessage, true);
+                errorMessage.Show();
             }
         }
 
@@ -625,7 +630,8 @@ namespace Rumble_Mod_Manager
                         _settingsInstance.BringToFront();
                     }
 
-                    MessageBox.Show("Game Directory Found. Make sure it is the correct path to your game directory!");
+                    UserMessage successMessage = new UserMessage("Game Directory Found. Make sure it is the correct path to your game directory!", true);
+                    successMessage.Show();
                     PathNotFound.Visible = false;
                     AutoFindButton.Visible = false;
                     ManualFindButton.Visible = false;
@@ -636,7 +642,8 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage($"Error: {ex.Message}", true);
+                errorMessage.Show();
             }
         }
 

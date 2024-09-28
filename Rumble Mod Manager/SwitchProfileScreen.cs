@@ -44,27 +44,21 @@ namespace Rumble_Mod_Manager
 
         private void LoadProfiles()
         {
-            // Set the path to the profiles
             string profilesPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles");
 
-            // Ensure the directory exists
             if (!Directory.Exists(profilesPath))
             {
                 Directory.CreateDirectory(profilesPath);
             }
 
-            // Get the JSON files (profiles) in the directory
             var modProfiles = Directory.GetFiles(profilesPath, "*.json")
                                        .OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant())
                                        .ToArray();
 
-            // Clear the panel and start fresh
             panel2.Controls.Clear();
 
-            // List to hold all the created mod panel controls
             List<ModPanelControl> modPanels = new List<ModPanelControl>();
 
-            // Iterate over profiles and create corresponding panels
             foreach (var profile in modProfiles)
             {
                 ModPanelControl modPanel = CreateProfilePanel(File.ReadAllText(profile));
@@ -86,7 +80,6 @@ namespace Rumble_Mod_Manager
                 panel2.Controls.Add(modPanels[i]);
             }
 
-            // Configure scrolling behavior (similar to DisplayMods)
             panel2.HorizontalScroll.Maximum = 0;
             panel2.AutoScroll = false;
             panel2.VerticalScroll.Maximum = 0;
@@ -102,7 +95,6 @@ namespace Rumble_Mod_Manager
             int totalDisabledMods = profile.disabledMods.Count;
             int totalMods = totalEnabledMods + totalDisabledMods;
 
-            // Configure the mod panel for the profile
             ModPanelControl modPanel = new ModPanelControl
             {
                 ModNameLabel = profile.ProfileName,
@@ -128,7 +120,12 @@ namespace Rumble_Mod_Manager
         {
             if (selectedPanel != null)
             {
+                Properties.Settings.Default.PreviousLoadedProfile = Properties.Settings.Default.LastLoadedProfile;
+
                 RUMBLEModManager.LoadProfile(selectedPanel.ModNameLabel, manager);
+                Properties.Settings.Default.LastLoadedProfile = selectedPanel.ModNameLabel;
+                Properties.Settings.Default.Save();
+
                 LoadProfiles();
             }
         }
@@ -138,7 +135,6 @@ namespace Rumble_Mod_Manager
             ModPanelControl panel = sender as ModPanelControl;
             if (panel != null)
             {
-                // Deselect the previous panel
                 if (selectedPanel != null)
                 {
                     selectedPanel.BackColor = (selectedPanel.ModNameLabel == Properties.Settings.Default.LastLoadedProfile) ? System.Drawing.Color.Green : System.Drawing.Color.FromArgb(30, 30, 30);
@@ -193,7 +189,7 @@ namespace Rumble_Mod_Manager
                     {
                         string newProfileName = inputForm.InputString;
 
-                        if (!string.IsNullOrEmpty(newProfileName))
+                        if (!string.IsNullOrEmpty(newProfileName) && IsValidFileName(newProfileName))
                         {
                             string profilesPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles");
                             string oldProfilePath = Path.Combine(profilesPath, $"{selectedPanel.ModNameLabel}_profile.json");
@@ -208,7 +204,12 @@ namespace Rumble_Mod_Manager
 
                             try
                             {
-                                File.Move(oldProfilePath, newProfilePath);
+                                string jsonContent = File.ReadAllText(oldProfilePath);
+                                ModProfile profile = JsonSerializer.Deserialize<ModProfile>(jsonContent);
+                                profile.ProfileName = newProfileName;
+                                string updatedJson = JsonSerializer.Serialize(profile);
+                                File.WriteAllText(newProfilePath, updatedJson);
+                                File.Delete(oldProfilePath);
 
                                 if (Properties.Settings.Default.LastLoadedProfile == selectedPanel.ModNameLabel)
                                 {
@@ -223,14 +224,21 @@ namespace Rumble_Mod_Manager
                                 UserMessage errorMessage = new UserMessage($"Failed to rename the profile. Error: {ex.Message}", true);
                                 errorMessage.ShowDialog();
                             }
-                        } else
+                        }
+                        else
                         {
-                            UserMessage errorMessage = new UserMessage($"Profile name cannot be empty.", true);
+                            UserMessage errorMessage = new UserMessage("Profile name is invalid or contains special characters that are not allowed.", true);
                             errorMessage.ShowDialog();
                         }
                     }
                 }
             }
+        }
+
+        private bool IsValidFileName(string fileName)
+        {
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            return !fileName.Any(ch => invalidChars.Contains(ch));
         }
     }
 }

@@ -96,7 +96,8 @@ namespace Rumble_Mod_Manager
                     if (file.EndsWith(".zip"))
                     {
                         InstallMod(file, true);
-                        MessageBox.Show($"Mod '{Path.GetFileName(file)}' installed successfully!");
+                        UserMessage successMessage = new UserMessage($"Mod '{Path.GetFileName(file)}' installed successfully!", true);
+                        successMessage.Show();
                     }
                 }
             }
@@ -109,7 +110,8 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    MessageBox.Show("Invalid link or unsupported file type. Please drop a valid Thunderstore link or a .zip file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UserMessage errorMessage = new UserMessage("Invalid link or unsupported file type. Please drop a valid Thunderstore link or a .zip file.", true);
+                    errorMessage.Show();
                 }
             }
 
@@ -133,13 +135,12 @@ namespace Rumble_Mod_Manager
                     }
 
                     InstallMod(tempZipPath, true);
-
-                    MessageBox.Show("Mod downloaded and installed successfully from URL!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    UserMessage successMessage = new UserMessage("Mod downloaded and installed successfully from URL!", true);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred while downloading or installing the mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage($"An error occurred while downloading or installing the mod: {ex.Message}", true);
             }
             finally
             {
@@ -169,7 +170,8 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}");
+                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
+                errorMessage.Show();
                 return null;
             }
         }
@@ -230,14 +232,16 @@ namespace Rumble_Mod_Manager
             string rumblePath = Properties.Settings.Default.RumblePath;
             if (string.IsNullOrEmpty(rumblePath))
             {
-                MessageBox.Show("Rumble path is not set. Please set it in the settings.");
+                UserMessage errorMessage = new UserMessage("Rumble path is not set. Please set it in the settings.", true);
+                errorMessage.Show();
                 return;
             }
 
             string modsPath = Path.Combine(rumblePath, "Mods");
             if (!Directory.Exists(modsPath))
             {
-                MessageBox.Show("Mods folder not found in the specified Rumble path. Please ensure that MelonLoader is installed correctly and you have run the game once (to the T-Pose screen) without any mods installed.");
+                UserMessage errorMessage = new UserMessage("Mods folder not found in the specified Rumble path. Please ensure that MelonLoader is installed correctly and you have run the game once (to the T-Pose screen) without any mods installed.", true);
+                errorMessage.Show();
                 return;
             }
 
@@ -464,7 +468,8 @@ namespace Rumble_Mod_Manager
 
                 if (modFilePath == null)
                 {
-                    MessageBox.Show("Something went wrong. File path does not exist.");
+                    UserMessage errorMessage = new UserMessage("Something went wrong. File path does not exist.", true);
+                    errorMessage.Show();
                     return;
                 }
 
@@ -627,7 +632,8 @@ namespace Rumble_Mod_Manager
             string json = JsonConvert.SerializeObject(profile, Formatting.Indented);
             File.WriteAllText(profilePath, json);
 
-            MessageBox.Show($"Profile '{profileName}' successfully saved!");
+            UserMessage successMessage = new UserMessage($"Profile '{profileName}' successfully saved!", true);
+            successMessage.Show();
         }
 
         public static void LoadProfile(string profileName, RUMBLEModManager modManagerInstance)
@@ -836,7 +842,8 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    MessageBox.Show("Panel is null");
+                    UserMessage errorMessage = new UserMessage("Panel is null", true);
+                    errorMessage.Show();
                 }
             }
         }
@@ -860,7 +867,8 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                MessageBox.Show("Please wait for mods to finish loading before accessing the Thunderstore mod page.");
+                UserMessage errorMessage = new UserMessage("Please wait for mods to finish loading before accessing the Thunderstore mod page.", true);
+                errorMessage.Show();
             }
         }
 
@@ -907,7 +915,8 @@ namespace Rumble_Mod_Manager
                     // Check if the destination file exists and delete it if it does
                     if (File.Exists(destinationFilePath))
                     {
-                        MessageBox.Show("Destination file already exists. Deleting...");
+                        UserMessage message = new UserMessage("Destination file already exists. Deleting...", true);
+                        message.Show();
                         File.Delete(destinationFilePath);
                     }
 
@@ -917,12 +926,14 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    MessageBox.Show("Source file does not exist.");
+                    UserMessage errorMessage = new UserMessage("Source file does not exist.", true);
+                    errorMessage.Show();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}");
+                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
+                errorMessage.Show();
             }
         }
 

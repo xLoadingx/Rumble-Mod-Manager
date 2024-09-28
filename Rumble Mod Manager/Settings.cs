@@ -52,7 +52,8 @@ namespace Rumble_Mod_Manager
         {
             Properties.Settings.Default.RumblePath = textBox1.Text;
             Properties.Settings.Default.Save();
-            MessageBox.Show("Settings saved succesfully!");
+            UserMessage errorMessage = new UserMessage("Settings saved succesfully!", true);
+            errorMessage.Show();
 
             if (ModMangager != null)
             {

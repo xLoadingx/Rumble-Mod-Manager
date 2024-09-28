@@ -56,7 +56,8 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                MessageBox.Show("No mods found in cache. Mods were not found when first loaded. (Contact the developer 'error_real_sir' on discord for help");
+                UserMessage errorMessage = new UserMessage("No mods found in cache. Mods were not found when first loaded. (Contact the developer 'error_real_sir' on discord for help)", true);
+                errorMessage.Show();
             }
 
             ModAuthorLabel.Text = string.Empty;
@@ -245,7 +246,8 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred while downloading or extracting the mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage($"An error occurred while downloading or extracting the mod: {ex.Message}", true);
+                errorMessage.Show();
             }
             finally
             {
@@ -264,7 +266,8 @@ namespace Rumble_Mod_Manager
                 }
                 catch (Exception cleanupEx)
                 {
-                    MessageBox.Show($"An error occurred during cleanup: {cleanupEx.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    UserMessage errorMessage = new UserMessage($"An error occurred during cleanup: {cleanupEx.Message}", true);
+                    errorMessage.Show();
                 }
             }
         }
@@ -349,7 +352,8 @@ namespace Rumble_Mod_Manager
                     }
                 } else
                 {
-                    MessageBox.Show("This ZIP file does not contain a valid mod.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UserMessage errorMessage = new UserMessage("This ZIP file does not contain a valid mod.", true);
+                    errorMessage.ShowDialog();
                 }
 
                 Directory.Delete(tempDir, true);
@@ -360,31 +364,23 @@ namespace Rumble_Mod_Manager
             }
             catch (UnauthorizedAccessException ex)
             {
-                MessageBox.Show($"Access denied: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage($"Access denied: {ex.Message}", true);
+                errorMessage.Show();
             }
             catch (DirectoryNotFoundException ex)
             {
-                MessageBox.Show($"Directory not found: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage($"Directory not found: {ex.Message}", true);
+                errorMessage.Show();
             }
             catch (IOException ex)
             {
-                MessageBox.Show($"IO error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                if (ex.Data != null && ex.Data.Count > 0)
-                {
-                    Console.WriteLine("Exception Data:");
-                    foreach (DictionaryEntry entry in ex.Data)
-                    {
-                        MessageBox.Show($"{entry.Key}: {entry.Value}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("No additional data available.");
-                }
+                UserMessage errorMessage = new UserMessage($"IO error: {ex.Message}", true);
+                errorMessage.Show();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to install mod: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserMessage errorMessage = new UserMessage($"Failed to install mod: {ex.Message}", true);
+                errorMessage.Show();
             }
         }
 
@@ -560,7 +556,8 @@ namespace Rumble_Mod_Manager
                             }
                             catch (Exception ex)
                             {
-                                MessageBox.Show($"An error occurred while processing a mod: {ex.Message}");
+                                UserMessage errorMessage = new UserMessage($"An error occurred while processing a mod: {ex.Message}", true);
+                                errorMessage.Show();
                             }
                             finally
                             {
@@ -599,7 +596,8 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}");
+                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
+                errorMessage.Show();
             }
 
             return modsByPage;
