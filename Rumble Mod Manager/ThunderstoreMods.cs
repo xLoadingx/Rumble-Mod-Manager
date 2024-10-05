@@ -24,6 +24,8 @@ using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.FileIO;
 using System.Collections;
 using System.Xml.Linq;
+using System.Globalization;
+using static System.Windows.Forms.DataFormats;
 
 namespace Rumble_Mod_Manager
 {
@@ -235,7 +237,7 @@ namespace Rumble_Mod_Manager
                 }
 
                 // Install the main mod
-                InstallMod(tempZipPath, ModEnabled);
+                InstallMod(tempZipPath, ModEnabled, form1, installingMessage);
 
                 if (initialMod)
                 {
@@ -299,7 +301,7 @@ namespace Rumble_Mod_Manager
             return Directory.GetFiles(extractedDir, "*.dll", System.IO.SearchOption.AllDirectories).Any();
         }
 
-        public static void InstallMod(string zipPath, bool ModEnabled)
+        public static void InstallMod(string zipPath, bool ModEnabled, RUMBLEModManager form1 = null, UserMessage message = null)
         {
             bool UpdatingMod = false;
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
@@ -322,12 +324,29 @@ namespace Rumble_Mod_Manager
                     // Define the directories we want to process
                     var allowedDirs = new[] { "Mods", "UserLibs", "UserData" };
 
+                    string dllFilePath = Directory.GetFiles(Path.Combine(tempDir, "Mods"))[0];
+                    string modPath = Path.Combine(modsFolder, Path.GetFileName(dllFilePath));
+
+                    if (form1 != null)
+                    {
+                        foreach (var panel in form1.preloadedModPanels)
+                        {
+                            if (string.Equals(Path.GetFileNameWithoutExtension(dllFilePath), panel.ModNameLabel, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (message != null)
+                                {
+                                    message.UpdateStatusMessage("Mod already installed. Skipping.");
+                                }
+                                return;
+                            }
+                        }
+                    }
+
                     foreach (var subDir in Directory.EnumerateDirectories(tempDir))
                     {
                         string directoryName = Path.GetFileName(subDir);
                         string destinationDir;
 
-                        // Only process allowed directories
                         if (allowedDirs.Contains(directoryName, StringComparer.OrdinalIgnoreCase))
                         {
                             if (directoryName.Equals("UserLibs", StringComparison.OrdinalIgnoreCase))
@@ -338,7 +357,7 @@ namespace Rumble_Mod_Manager
                             {
                                 destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
                             }
-                            else // "Mods"
+                            else 
                             {
                                 destinationDir = modsFolder;
                             }
@@ -346,6 +365,14 @@ namespace Rumble_Mod_Manager
                             MergeDirectories(subDir, destinationDir, ref UpdatingMod);
                         }
                     }
+
+                    if (form1 != null)
+                    {
+                        ModPanelControl newModPanel = LaunchPage.CreateModPanel(modPath, ModEnabled, Properties.Settings.Default.RumblePath);
+
+                        form1.preloadedModPanels.Add(newModPanel);
+                    }
+
                 } else
                 {
                     UserMessage errorMessage = new UserMessage("This ZIP file does not contain a valid mod.", true);
@@ -500,12 +527,6 @@ namespace Rumble_Mod_Manager
                                     string author = modDict.GetValueOrDefault("owner")?.ToString();
                                     string imageUrl = latestVersion?.GetValue("icon")?.ToString();
                                     string version = latestVersion?.GetValue("version_number")?.ToString();
-                                    DateTime lastUpdated;
-
-                                    if (!DateTime.TryParse(dateUpdated, out lastUpdated))
-                                    {
-                                        lastUpdated = DateTime.MinValue; // Or another fallback value
-                                    }
 
                                     var mod = new Mod
                                     {
@@ -515,7 +536,7 @@ namespace Rumble_Mod_Manager
                                         ImageUrl = imageUrl,
                                         Version = version,
                                         Dependencies = dependencies,
-                                        DateUpdated = lastUpdated.ToString("o"),
+                                        DateUpdated = dateUpdated,
                                         ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
                                         OnlinePageUrl = $"https://thunderstore.io/c/rumble/p/{author}/{name}",
                                         isOutdated = isOutdated,

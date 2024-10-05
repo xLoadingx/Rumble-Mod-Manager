@@ -22,12 +22,12 @@ namespace Rumble_Mod_Manager
 {
     public partial class LaunchPage : Form
     {
-        private PrivateFontCollection privateFonts = new PrivateFontCollection();
+        private static PrivateFontCollection privateFonts = new PrivateFontCollection();
         private static Settings _settingsInstance;
         private static Credits _creditsInstance;
         private static RUMBLEModManager _rumbleModManagerInstance;
 
-        Dictionary<string, string> modMappings = new Dictionary<string, string>();
+        private static Dictionary<string, string> modMappings = new Dictionary<string, string>();
 
         public LaunchPage()
         {
@@ -427,7 +427,7 @@ namespace Rumble_Mod_Manager
             return modPanels;
         }
 
-        private ModPanelControl CreateModPanel(string modFile, bool isEnabled, string rumblePath)
+        public static ModPanelControl CreateModPanel(string modFile, bool isEnabled, string rumblePath)
         {
             string modFileName = Path.GetFileName(modFile);
 

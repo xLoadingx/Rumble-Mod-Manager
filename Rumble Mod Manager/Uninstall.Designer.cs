@@ -28,24 +28,27 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             label1 = new Label();
             button2 = new Button();
             button1 = new Button();
             panel1 = new Panel();
             label2 = new Label();
+            guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
             panel1.SuspendLayout();
             SuspendLayout();
             // 
             // label1
             // 
-            label1.AutoSize = true;
+            label1.Dock = DockStyle.Top;
             label1.Font = new Font("Arial", 21.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label1.ForeColor = Color.White;
-            label1.Location = new Point(48, 9);
+            label1.Location = new Point(0, 0);
             label1.Name = "label1";
-            label1.Size = new Size(435, 33);
+            label1.Size = new Size(448, 40);
             label1.TabIndex = 0;
             label1.Text = "Are you sure you want to delete?";
+            label1.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // button2
             // 
@@ -84,6 +87,7 @@
             // 
             // label2
             // 
+            label2.AutoEllipsis = true;
             label2.Dock = DockStyle.Fill;
             label2.Font = new Font("Arial Narrow", 27.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label2.ForeColor = Color.White;
@@ -95,23 +99,30 @@
             label2.Text = "ModName";
             label2.TextAlign = ContentAlignment.MiddleCenter;
             // 
+            // guna2BorderlessForm1
+            // 
+            guna2BorderlessForm1.BorderRadius = 12;
+            guna2BorderlessForm1.ContainerControl = this;
+            guna2BorderlessForm1.DockIndicatorTransparencyValue = 0.6D;
+            guna2BorderlessForm1.TransparentWhileDrag = true;
+            // 
             // Uninstall
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 20, 20);
-            ClientSize = new Size(432, 210);
+            ClientSize = new Size(448, 212);
             Controls.Add(panel1);
             Controls.Add(button1);
             Controls.Add(button2);
             Controls.Add(label1);
-            MaximumSize = new Size(448, 249);
-            MinimumSize = new Size(448, 249);
+            FormBorderStyle = FormBorderStyle.None;
+            MaximumSize = new Size(448, 212);
+            MinimumSize = new Size(448, 212);
             Name = "Uninstall";
             Text = "UninstallDialog";
             panel1.ResumeLayout(false);
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
@@ -121,5 +132,6 @@
         private Button button1;
         private Panel panel1;
         private Label label2;
+        private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
     }
 }

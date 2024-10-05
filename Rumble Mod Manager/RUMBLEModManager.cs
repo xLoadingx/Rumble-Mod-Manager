@@ -29,7 +29,7 @@ namespace Rumble_Mod_Manager
         private static Settings _settingsInstance;
 
         Dictionary<string, string> modMappings = new Dictionary<string, string>();
-        List<ModPanelControl> preloadedModPanels = new List<ModPanelControl>();
+        public List<ModPanelControl> preloadedModPanels = new List<ModPanelControl>();
 
         public RUMBLEModManager(List<ModPanelControl> preloadedPanels)
         {
@@ -303,8 +303,9 @@ namespace Rumble_Mod_Manager
 
             WelcomeLabel.Visible = enabledModFiles.Length == 0 && disabledModFiles.Length == 0;
 
-            WelcomeLabel.Visible = false;
             panel2.Controls.Clear();
+
+            preloadedModPanels = preloadedModPanels.OrderBy(p => p.ModNameLabel.ToLowerInvariant()).ToList();
 
             foreach (var panel in preloadedModPanels)
             {
@@ -316,7 +317,7 @@ namespace Rumble_Mod_Manager
                 {
                     panel.ModEnabled = isInEnabledMods;
                     panel.Click -= ModPanel_Click;
-                    panel.Click += (s, e) => ModPanel_Click(panel, e);
+                    panel.Click += ModPanel_Click;
 
                     var updateButton = panel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
                     if (updateButton != null)
@@ -384,6 +385,9 @@ namespace Rumble_Mod_Manager
                     if (form.ShowDialog() == DialogResult.OK)
                     {
                         File.Delete(modFilePath);
+
+                        preloadedModPanels.Remove(selectedPanel);
+
                         LoadMods();
                         SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
                     }

@@ -24,6 +24,19 @@ namespace Rumble_Mod_Manager
             this.Text = "Uninstall";
             label2.Text = modName;
             this.modPath = modPath;
+
+            this.KeyDown += new KeyEventHandler(Uninstall_KeyDown);
+        }
+
+        private void Uninstall_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                button1_Click(sender, e);
+            } else if (e.KeyCode == Keys.Return)
+            {
+                button2_Click(sender, e);
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
