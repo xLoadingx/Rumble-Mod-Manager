@@ -161,7 +161,7 @@ namespace Rumble_Mod_Manager
             return modPanel;
         }
 
-        public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null)
+        public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null, ModPanelControl panel = null)
         {
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
             string tempZipPath = Path.Combine(tempDir, "temp_mod.zip");
@@ -296,12 +296,8 @@ namespace Rumble_Mod_Manager
 
         private static bool IsValidMod(string extractedDir)
         {
-            bool hasDll = Directory.GetFiles(extractedDir, "*.dll", System.IO.SearchOption.AllDirectories).Any();
-            bool hasManifest = Directory.GetFiles(extractedDir, "manifest.json", System.IO.SearchOption.AllDirectories).Any();
-
-            return hasDll && hasManifest;
+            return Directory.GetFiles(extractedDir, "*.dll", System.IO.SearchOption.AllDirectories).Any();
         }
-
 
         public static void InstallMod(string zipPath, bool ModEnabled)
         {
@@ -355,12 +351,6 @@ namespace Rumble_Mod_Manager
                     UserMessage errorMessage = new UserMessage("This ZIP file does not contain a valid mod.", true);
                     errorMessage.ShowDialog();
                 }
-
-                Directory.Delete(tempDir, true);
-                if (File.Exists(zipPath))
-                {
-                    File.Delete(zipPath);
-                }
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -381,6 +371,14 @@ namespace Rumble_Mod_Manager
             {
                 UserMessage errorMessage = new UserMessage($"Failed to install mod: {ex.Message}", true);
                 errorMessage.Show();
+            }
+            finally
+            {
+                Directory.Delete(tempDir, true);
+                if (File.Exists(zipPath))
+                {
+                    File.Delete(zipPath);
+                }
             }
         }
 
@@ -645,8 +643,23 @@ namespace Rumble_Mod_Manager
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            string searchText = textBox1.Text.ToLower();
-            FilterMods(searchText);
+            if (debounceTimer != null)
+            {
+                debounceTimer.Stop();
+                debounceTimer.Dispose(); // Dispose of the old timer before creating a new one
+            }
+
+            debounceTimer = new System.Windows.Forms.Timer();
+            debounceTimer.Interval = 300; // Adjust debounce delay (300ms here)
+            debounceTimer.Tick += (s, ev) =>
+            {
+                debounceTimer.Stop();
+                debounceTimer.Dispose(); // Clean up timer
+                string searchText = textBox1.Text.ToLower();
+                FilterMods(searchText);
+            };
+
+            debounceTimer.Start();
         }
 
         private void FilterMods(string searchText)

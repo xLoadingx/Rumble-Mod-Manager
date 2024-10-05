@@ -36,7 +36,6 @@
             DependenciesLabel = new Label();
             ModAuthorLabel = new Label();
             ModNameLabel = new Label();
-            ModDescriptionLabel = new Label();
             ModVersionLabel = new Label();
             ModPictureDisplay = new PictureBox();
             ThunderstoreButton = new Button();
@@ -47,25 +46,34 @@
             ToggleModLabel = new Button();
             panel1 = new Panel();
             CustomMapsDownloadButton = new Button();
+            ModDescriptionLabel = new Label();
             guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
             guna2Elipse2 = new Guna.UI2.WinForms.Guna2Elipse(components);
             guna2Elipse3 = new Guna.UI2.WinForms.Guna2Elipse(components);
             guna2Elipse4 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
+            guna2Elipse5 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            panel3 = new Panel();
+            pictureBox2 = new PictureBox();
+            FormTitle = new Label();
+            guna2DragControl1 = new Guna.UI2.WinForms.Guna2DragControl(components);
             panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)SettingsButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ToggleModButton).BeginInit();
             panel1.SuspendLayout();
+            panel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             SuspendLayout();
             // 
             // panel2
             // 
             panel2.BackColor = Color.FromArgb(40, 40, 40);
             panel2.Controls.Add(WelcomeLabel);
-            panel2.Location = new Point(12, 12);
+            panel2.Location = new Point(12, 38);
             panel2.Name = "panel2";
-            panel2.Size = new Size(592, 420);
+            panel2.Size = new Size(592, 447);
             panel2.TabIndex = 2;
             // 
             // WelcomeLabel
@@ -74,7 +82,7 @@
             WelcomeLabel.ForeColor = Color.FromArgb(64, 64, 64);
             WelcomeLabel.Location = new Point(0, 0);
             WelcomeLabel.Name = "WelcomeLabel";
-            WelcomeLabel.Size = new Size(592, 420);
+            WelcomeLabel.Size = new Size(592, 447);
             WelcomeLabel.TabIndex = 0;
             WelcomeLabel.Text = resources.GetString("WelcomeLabel.Text");
             WelcomeLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -106,6 +114,7 @@
             // ModAuthorLabel
             // 
             ModAuthorLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModAuthorLabel.AutoEllipsis = true;
             ModAuthorLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModAuthorLabel.Font = new Font("Arial Narrow", 15F);
             ModAuthorLabel.ForeColor = Color.White;
@@ -119,6 +128,7 @@
             // ModNameLabel
             // 
             ModNameLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModNameLabel.AutoEllipsis = true;
             ModNameLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModNameLabel.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModNameLabel.ForeColor = Color.White;
@@ -130,22 +140,10 @@
             ModNameLabel.Text = "Rumble Modding API";
             ModNameLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // ModDescriptionLabel
-            // 
-            ModDescriptionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
-            ModDescriptionLabel.BackColor = Color.FromArgb(20, 20, 20);
-            ModDescriptionLabel.Font = new Font("Arial Narrow", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            ModDescriptionLabel.ForeColor = Color.White;
-            ModDescriptionLabel.Location = new Point(17, 158);
-            ModDescriptionLabel.Name = "ModDescriptionLabel";
-            ModDescriptionLabel.Size = new Size(153, 153);
-            ModDescriptionLabel.TabIndex = 4;
-            ModDescriptionLabel.Text = "API to Help Modders Get Started and to remove the necessity of GameObject.Find";
-            ModDescriptionLabel.TextAlign = ContentAlignment.MiddleCenter;
-            // 
             // ModVersionLabel
             // 
             ModVersionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModVersionLabel.AutoEllipsis = true;
             ModVersionLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModVersionLabel.Font = new Font("Arial Narrow", 26.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModVersionLabel.ForeColor = Color.White;
@@ -196,6 +194,7 @@
             // DateUpdated
             // 
             DateUpdated.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            DateUpdated.AutoEllipsis = true;
             DateUpdated.BackColor = Color.FromArgb(40, 40, 40);
             DateUpdated.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             DateUpdated.ForeColor = Color.White;
@@ -260,7 +259,7 @@
             panel1.Controls.Add(ModAuthorLabel);
             panel1.Controls.Add(DependenciesLabel);
             panel1.Controls.Add(SettingsButton);
-            panel1.Location = new Point(628, 0);
+            panel1.Location = new Point(631, 38);
             panel1.Name = "panel1";
             panel1.Size = new Size(406, 447);
             panel1.TabIndex = 2;
@@ -276,6 +275,20 @@
             CustomMapsDownloadButton.Text = "Custom Maps";
             CustomMapsDownloadButton.UseVisualStyleBackColor = false;
             CustomMapsDownloadButton.Click += CustomMapsDownloadButton_Click;
+            // 
+            // ModDescriptionLabel
+            // 
+            ModDescriptionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            ModDescriptionLabel.AutoEllipsis = true;
+            ModDescriptionLabel.BackColor = Color.FromArgb(20, 20, 20);
+            ModDescriptionLabel.Font = new Font("Arial Narrow", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            ModDescriptionLabel.ForeColor = Color.White;
+            ModDescriptionLabel.Location = new Point(17, 158);
+            ModDescriptionLabel.Name = "ModDescriptionLabel";
+            ModDescriptionLabel.Size = new Size(153, 153);
+            ModDescriptionLabel.TabIndex = 4;
+            ModDescriptionLabel.Text = "API to Help Modders Get Started and to remove the necessity of GameObject.Find";
+            ModDescriptionLabel.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // guna2Elipse1
             // 
@@ -297,18 +310,71 @@
             guna2Elipse4.BorderRadius = 12;
             guna2Elipse4.TargetControl = ModPictureDisplay;
             // 
+            // guna2BorderlessForm1
+            // 
+            guna2BorderlessForm1.BorderRadius = 12;
+            guna2BorderlessForm1.ContainerControl = this;
+            guna2BorderlessForm1.DockIndicatorTransparencyValue = 0.6D;
+            guna2BorderlessForm1.ResizeForm = false;
+            guna2BorderlessForm1.TransparentWhileDrag = true;
+            // 
+            // guna2Elipse5
+            // 
+            guna2Elipse5.BorderRadius = 12;
+            guna2Elipse5.TargetControl = panel1;
+            // 
+            // panel3
+            // 
+            panel3.BackColor = Color.FromArgb(15, 15, 15);
+            panel3.Controls.Add(pictureBox2);
+            panel3.Controls.Add(FormTitle);
+            panel3.Location = new Point(0, -1);
+            panel3.Name = "panel3";
+            panel3.Size = new Size(1049, 33);
+            panel3.TabIndex = 3;
+            // 
+            // pictureBox2
+            // 
+            pictureBox2.Image = Properties.Resources.ExitButton;
+            pictureBox2.Location = new Point(1016, 5);
+            pictureBox2.Name = "pictureBox2";
+            pictureBox2.Size = new Size(23, 23);
+            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox2.TabIndex = 1;
+            pictureBox2.TabStop = false;
+            pictureBox2.Click += pictureBox2_Click;
+            // 
+            // FormTitle
+            // 
+            FormTitle.Dock = DockStyle.Left;
+            FormTitle.ForeColor = Color.White;
+            FormTitle.ImageAlign = ContentAlignment.MiddleLeft;
+            FormTitle.Location = new Point(0, 0);
+            FormTitle.Name = "FormTitle";
+            FormTitle.Size = new Size(186, 33);
+            FormTitle.TabIndex = 0;
+            FormTitle.Text = "Rumble Mod Manager";
+            FormTitle.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // guna2DragControl1
+            // 
+            guna2DragControl1.DockIndicatorTransparencyValue = 0.6D;
+            guna2DragControl1.TargetControl = panel3;
+            guna2DragControl1.UseTransparentDrag = true;
+            // 
             // RUMBLEModManager
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 20, 20);
-            ClientSize = new Size(1033, 444);
+            ClientSize = new Size(1049, 497);
+            Controls.Add(panel3);
             Controls.Add(panel1);
             Controls.Add(panel2);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle = FormBorderStyle.None;
             MaximizeBox = false;
-            MaximumSize = new Size(1049, 483);
-            MinimumSize = new Size(1049, 483);
+            MaximumSize = new Size(1049, 497);
+            MinimumSize = new Size(1049, 497);
             Name = "RUMBLEModManager";
             Text = "Form1";
             panel2.ResumeLayout(false);
@@ -317,6 +383,8 @@
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ((System.ComponentModel.ISupportInitialize)ToggleModButton).EndInit();
             panel1.ResumeLayout(false);
+            panel3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             ResumeLayout(false);
         }
 
@@ -327,7 +395,6 @@
         private Label DependenciesLabel;
         private Label ModAuthorLabel;
         private Label ModNameLabel;
-        private Label ModDescriptionLabel;
         private Label ModVersionLabel;
         private PictureBox ModPictureDisplay;
         private Button ThunderstoreButton;
@@ -343,5 +410,12 @@
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse2;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse3;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse4;
+        private Label ModDescriptionLabel;
+        private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
+        private Panel panel3;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse5;
+        private Guna.UI2.WinForms.Guna2DragControl guna2DragControl1;
+        private Label FormTitle;
+        private PictureBox pictureBox2;
     }
 }

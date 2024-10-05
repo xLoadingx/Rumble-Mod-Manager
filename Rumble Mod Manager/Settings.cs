@@ -38,6 +38,7 @@ namespace Rumble_Mod_Manager
             button1.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
             SwitchProfile.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
             button2.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
+            label2.Font = new Font(privateFonts.Families[0], 17.0F, FontStyle.Regular);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -51,6 +52,7 @@ namespace Rumble_Mod_Manager
         private void button2_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.RumblePath = textBox1.Text;
+            Properties.Settings.Default.SkipMapLoading = guna2ToggleSwitch1.Checked;
             Properties.Settings.Default.Save();
             UserMessage errorMessage = new UserMessage("Settings saved succesfully!", true);
             errorMessage.Show();
@@ -69,6 +71,7 @@ namespace Rumble_Mod_Manager
         private void LoadSettings()
         {
             textBox1.Text = Properties.Settings.Default.RumblePath;
+            guna2ToggleSwitch1.Checked = Properties.Settings.Default.SkipMapLoading;
         }
 
         private void SwitchProfile_Click(object sender, EventArgs e)

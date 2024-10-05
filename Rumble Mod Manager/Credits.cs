@@ -33,7 +33,6 @@ namespace Rumble_Mod_Manager
                 privateFonts.AddFontFile(fs.Name);
             }
 
-            // Iterate through all controls in the form
             foreach (Control control in this.Controls)
             {
                 if (control is Label)
@@ -41,10 +40,8 @@ namespace Rumble_Mod_Manager
                     control.Font = new Font(privateFonts.Families[1], control.Font.Size, FontStyle.Regular);
                 }
 
-                // Check if the control has child controls (like panels or group boxes)
                 if (control.HasChildren)
                 {
-                    // Iterate through child controls
                     foreach (Control childControl in control.Controls)
                     {
                         if (childControl is Label)

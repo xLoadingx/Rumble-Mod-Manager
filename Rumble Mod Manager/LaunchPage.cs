@@ -27,6 +27,8 @@ namespace Rumble_Mod_Manager
         private static Credits _creditsInstance;
         private static RUMBLEModManager _rumbleModManagerInstance;
 
+        Dictionary<string, string> modMappings = new Dictionary<string, string>();
+
         public LaunchPage()
         {
             InitializeComponent();
@@ -124,74 +126,14 @@ namespace Rumble_Mod_Manager
 
         private async void Continue(object sender, EventArgs e)
         {
-            // Start the swipe animations with shorter delays
-            SwipeControlOut(LaunchButton, 0);
-            SwipeControlOut(SettingsButton, 100); // 250ms delay after the first button
-            SwipeControlOut(CreditsButton, 200); // 250ms delay after the second button
-
-            await Task.Delay(250);
-
-            // Show the progress bar and label
             progressBar1.Visible = true;
             label1.Visible = true;
 
-            // Animate the progress bar and label to slide in from left to right
-            AnimateControlIn(progressBar1, progressBar1.Location.X);
-            await AnimateControlIn(label1, label1.Location.X);
+            LaunchButton.Visible = false;
+            SettingsButton.Visible = false;
+            CreditsButton.Visible = false;
 
-            LaunchManager();
-        }
-
-        private async Task SwipeControlOut(Control control, int delay)
-        {
-            control.Enabled = false;
-            await Task.Delay(delay);
-
-            int targetX = -control.Width; // Target X position (completely out of view to the left)
-            int initialPosition = control.Left;
-            int distance = initialPosition - targetX;
-
-            for (int i = 0; i <= 50; i++)
-            {
-                double t = i / 50.0;
-                double easeInValue = t * t; // Ease-in quadratic formula
-
-                int newLeft = initialPosition - (int)(easeInValue * distance);
-
-                // Ensure UI updates are done on the main thread
-                control.Invoke((Action)(() =>
-                {
-                    control.Left = newLeft;
-                    control.Invalidate(); // Force a redraw to prevent artifacts
-                }));
-
-                await Task.Delay(10); // Adjust this value to control the smoothness
-            }
-
-            // Ensure it ends exactly at the target position
-            control.Invoke((Action)(() =>
-            {
-                control.Left = targetX;
-                control.Visible = false;
-            }));
-        }
-
-        private async Task AnimateControlIn(Control control, int targetX)
-        {
-            int initialPosition = this.Width; // Start off-screen to the right
-            control.Left = initialPosition;
-
-            // Manually animate the control to slide in with ease-out
-            for (int i = 0; i <= 100; i++)
-            {
-                double t = i / 100.0;
-                double easeOutValue = 1 - (1 - t) * (1 - t); // Ease-out quadratic formula
-
-                control.Left = (int)(initialPosition + easeOutValue * (targetX - initialPosition));
-                await Task.Delay(10); // Adjust this value to control the smoothness
-            }
-
-            control.Left = targetX; // Ensure it ends exactly at the target position
+            await LaunchManager();
         }
 
         static async Task<Dictionary<int, List<CustomMap>>> ManageMaps(Guna.UI2.WinForms.Guna2CircleProgressBar progressBar)
@@ -210,7 +152,7 @@ namespace Rumble_Mod_Manager
                 return null;
             }
 
-            List<(string name, string description, string author, string version, string imageUrl, string downloadUrl)> mapDetails = new List<(string name, string description, string author, string version, string imageUrl, string downloadUrl)>();
+            var mapDetails = new List<(string name, string description, string author, string version, string imageUrl, string downloadUrl)>();
 
             using (HttpClient client = new HttpClient())
             {
@@ -405,7 +347,153 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private async void LaunchManager()
+        private async Task<List<ModPanelControl>> LoadModPanels()
+        {
+            string modsPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mods");
+            string disabledModsPath = Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods");
+
+            label1.Text = "Loading Mod Mappings...";
+            label1.Refresh();
+
+            string url = "https://raw.githubusercontent.com/xLoadingx/mod-maps/main/modMapping.json";
+            modMappings = await RUMBLEModManager.GetModMappingsAsync(url);
+
+            if (!Directory.Exists(disabledModsPath))
+            {
+                label1.Text = "Creating Disabled Directory...";
+                label1.Refresh();
+                Directory.CreateDirectory(disabledModsPath);
+            }
+
+            var enabledModFiles = Directory.GetFiles(modsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
+            var disabledModFiles = Directory.GetFiles(disabledModsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
+
+            List<ModPanelControl> modPanels = new List<ModPanelControl>();
+
+            progressBar1.Maximum = enabledModFiles.Length + disabledModFiles.Length;
+            progressBar1.Value = 0;
+
+            label1.Text = "Loading Enabled Mods...";
+            label1.Refresh();
+            foreach (var modFile in enabledModFiles)
+            {
+                ModPanelControl modPanel = CreateModPanel(modFile, true, Properties.Settings.Default.RumblePath);
+                modPanels.Add(modPanel);
+
+                progressBar1.Value += 1;
+                progressBar1.Refresh();
+            }
+
+            label1.Text = "Loading Disabled Mods...";
+            label1.Refresh();
+            foreach (var modFile in disabledModFiles)
+            {
+                ModPanelControl modPanel = CreateModPanel(modFile, false, Properties.Settings.Default.RumblePath);
+                modPanels.Add(modPanel);
+
+                progressBar1.Value += 1;
+                progressBar1.Refresh();
+            }
+
+            return modPanels;
+        }
+
+        private ModPanelControl CreateModPanel(string modFile, bool isEnabled, string rumblePath)
+        {
+            // Extract the mod name from the file name
+            string modFileName = Path.GetFileName(modFile);
+
+            // Try to get the mod name from the mapping dictionary
+            modMappings.TryGetValue(modFileName, out string modNameFromMapping);
+
+            string modVersionStr = (string)RUMBLEModManager.GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName, MelonLoaderModInfoType.Version);
+            Color color = Color.Lime;
+            Image cloudIcon = null;
+            string toolTip = "Unknown";
+            Image modImage = null;
+            string ModAuthor = null;
+            bool modFound = false;
+            bool outdated = false;
+
+            if (modNameFromMapping != null)
+            {
+                foreach (var kvp in ModCache.ModsByPage)
+                {
+                    foreach (var mod in kvp.Value)
+                    {
+                        if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
+                        {
+                            modFound = true;
+                            ModAuthor = mod.Author;
+                            modImage = mod.ModImage;
+
+                            if (!string.IsNullOrEmpty(modVersionStr))
+                            {
+                                int modVersion = int.Parse(modVersionStr.Replace(".", ""));
+                                int modVersionCache = int.Parse(mod.Version.Replace(".", ""));
+
+                                if (modVersion < modVersionCache)
+                                {
+                                    color = Color.Red;
+                                    toolTip = "Out of Date";
+                                    cloudIcon = Properties.Resources.UpdateIcon;
+                                    outdated = true;
+                                }
+                                else if (modVersion == modVersionCache)
+                                {
+                                    color = Color.Lime;
+                                    toolTip = "Up To Date";
+                                    outdated = false;
+                                }
+                                else
+                                {
+                                    color = Color.Cyan;
+                                    toolTip = "Unreleased version";
+                                    outdated = false;
+                                }
+                            }
+                            else
+                            {
+                                modVersionStr = mod.Version;
+                                toolTip = "Up To Date";
+                                outdated = false;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(ModAuthor))
+            {
+                ModAuthor = $"By {RUMBLEModManager.GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName, MelonLoaderModInfoType.Author)}";
+            }
+
+            if (!modFound)
+            {
+                toolTip = "Not Found / Unreleased";
+                color = Color.Cyan;
+            }
+
+            ModPanelControl modPanel = new ModPanelControl
+            {
+                ModNameLabel = Path.GetFileNameWithoutExtension(modFile),
+                DetailsLabel = $"v{modVersionStr} by {ModAuthor}",
+                ModLabelFont = new Font(privateFonts.Families[1], 15.0F, FontStyle.Bold),
+                DetailsLabelFont = new Font(privateFonts.Families[1], 15.0F, FontStyle.Regular),
+                UpdateNeededImage = cloudIcon,
+                UpdateColor = color,
+                Outdated = outdated,
+                ModImage = modImage ?? Properties.Resources.UnknownMod,
+                Tag = Path.GetFileName(modFile),
+                ModEnabled = isEnabled,
+                ModDllPath = modFile
+            };
+
+            return modPanel;
+        }
+
+        private async Task LaunchManager()
         {
             try
             {
@@ -416,30 +504,34 @@ namespace Rumble_Mod_Manager
                 ModCache.ModsByPage = modsByPage;
 
                 string basePath = Properties.Settings.Default.RumblePath;
-                string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 
-                if (Directory.Exists(targetDirectory))
+                if (!Properties.Settings.Default.SkipMapLoading)
                 {
-                    label1.Text = "Fetching Maps...";
-                    var mapsByPage = await ManageMaps(progressBar1);
+                    string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 
-                    int retryCount = 0;
-                    int maxRetries = 20;
+                    if (Directory.Exists(targetDirectory))
+                    {
+                        label1.Text = "Fetching Maps...";
+                        var mapsByPage = await ManageMaps(progressBar1);
 
-                    while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
-                    {
-                        retryCount++;
-                        mapsByPage = await ManageMaps(progressBar1);
-                    }
+                        int retryCount = 0;
+                        int maxRetries = 20;
 
-                    if (mapsByPage != null && mapsByPage.Any())
-                    {
-                        CustomMapsCache.MapsByPage = mapsByPage;
-                    }
-                    else
-                    {
-                        UserMessage errorMessage = new UserMessage($"Failed to fetch maps after {maxRetries} attempts. The manager has probably been opened a lot in a short period of time, if so, please try again later.", true);
-                        errorMessage.Show();
+                        while ((mapsByPage == null || !mapsByPage.Any()) && retryCount < maxRetries)
+                        {
+                            retryCount++;
+                            mapsByPage = await ManageMaps(progressBar1);
+                        }
+
+                        if (mapsByPage != null && mapsByPage.Any())
+                        {
+                            CustomMapsCache.MapsByPage = mapsByPage;
+                        }
+                        else
+                        {
+                            label1.Text = "Failed to fetch maps...";
+                            await Task.Delay(500);
+                        }
                     }
                 }
 
@@ -449,12 +541,15 @@ namespace Rumble_Mod_Manager
                     await InstallMelonLoader();
                 }
 
+                label1.Text = "Preloading Panels...";
+                var preloadedPanels = await LoadModPanels();
+
                 progressBar1.Visible = false;
                 label1.Visible = false;
 
                 if (_rumbleModManagerInstance == null || _rumbleModManagerInstance.IsDisposed)
                 {
-                    _rumbleModManagerInstance = new RUMBLEModManager();
+                    _rumbleModManagerInstance = new RUMBLEModManager(preloadedPanels);
                     _rumbleModManagerInstance.FormClosed += (s, args) => _rumbleModManagerInstance = null;
                     _rumbleModManagerInstance.Show();
                     this.Hide();
@@ -535,7 +630,6 @@ namespace Rumble_Mod_Manager
                 }
             }
 
-            // Check custom library paths from the libraryfolders.vdf
             string configPath = Path.Combine(steamInstallPath, "steamapps", "libraryfolders.vdf");
             if (File.Exists(configPath))
             {

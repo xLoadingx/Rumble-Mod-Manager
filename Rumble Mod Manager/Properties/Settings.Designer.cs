@@ -58,5 +58,17 @@ namespace Rumble_Mod_Manager.Properties {
                 this["PreviousLoadedProfile"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SkipMapLoading {
+            get {
+                return ((bool)(this["SkipMapLoading"]));
+            }
+            set {
+                this["SkipMapLoading"] = value;
+            }
+        }
     }
 }

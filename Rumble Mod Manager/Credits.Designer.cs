@@ -29,21 +29,9 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Credits));
-            CrumbleFont = new Label();
             CreditsLabel = new Label();
             label1 = new Label();
             SuspendLayout();
-            // 
-            // CrumbleFont
-            // 
-            CrumbleFont.AutoSize = true;
-            CrumbleFont.Font = new Font("Arial", 15F);
-            CrumbleFont.ForeColor = Color.White;
-            CrumbleFont.Location = new Point(12, 83);
-            CrumbleFont.Name = "CrumbleFont";
-            CrumbleFont.Size = new Size(361, 23);
-            CrumbleFont.TabIndex = 0;
-            CrumbleFont.Text = "Crumble font by SDRAWKACBMIAY YT";
             // 
             // CreditsLabel
             // 
@@ -59,11 +47,11 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Arial", 13F);
+            label1.Font = new Font("Arial", 15F);
             label1.ForeColor = Color.White;
-            label1.Location = new Point(12, 118);
+            label1.Location = new Point(12, 83);
             label1.Name = "label1";
-            label1.Size = new Size(585, 105);
+            label1.Size = new Size(550, 322);
             label1.TabIndex = 2;
             label1.Text = resources.GetString("label1.Text");
             // 
@@ -75,7 +63,6 @@
             ClientSize = new Size(434, 450);
             Controls.Add(label1);
             Controls.Add(CreditsLabel);
-            Controls.Add(CrumbleFont);
             MaximumSize = new Size(450, 489);
             MinimumSize = new Size(450, 489);
             Name = "Credits";
@@ -85,8 +72,6 @@
         }
 
         #endregion
-
-        private Label CrumbleFont;
         private Label CreditsLabel;
         private Label label1;
     }

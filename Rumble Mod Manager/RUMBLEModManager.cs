@@ -29,8 +29,9 @@ namespace Rumble_Mod_Manager
         private static Settings _settingsInstance;
 
         Dictionary<string, string> modMappings = new Dictionary<string, string>();
+        List<ModPanelControl> preloadedModPanels = new List<ModPanelControl>();
 
-        public RUMBLEModManager()
+        public RUMBLEModManager(List<ModPanelControl> preloadedPanels)
         {
             InitializeComponent();
             this.Text = "RUMBLE Mod Manager";
@@ -40,6 +41,8 @@ namespace Rumble_Mod_Manager
 
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(ModManager_KeyDown);
+
+            preloadedModPanels = preloadedPanels;
 
             StartManager();
         }
@@ -98,6 +101,7 @@ namespace Rumble_Mod_Manager
                         InstallMod(file, true);
                         UserMessage successMessage = new UserMessage($"Mod '{Path.GetFileName(file)}' installed successfully!", true);
                         successMessage.Show();
+                        successMessage.BringToFront();
                     }
                 }
             }
@@ -112,6 +116,7 @@ namespace Rumble_Mod_Manager
                 {
                     UserMessage errorMessage = new UserMessage("Invalid link or unsupported file type. Please drop a valid Thunderstore link or a .zip file.", true);
                     errorMessage.Show();
+                    errorMessage.BringToFront();
                 }
             }
 
@@ -136,11 +141,15 @@ namespace Rumble_Mod_Manager
 
                     InstallMod(tempZipPath, true);
                     UserMessage successMessage = new UserMessage("Mod downloaded and installed successfully from URL!", true);
+                    successMessage.Show();
+                    successMessage.BringToFront();
                 }
             }
             catch (Exception ex)
             {
                 UserMessage errorMessage = new UserMessage($"An error occurred while downloading or installing the mod: {ex.Message}", true);
+                errorMessage.Show();
+                errorMessage.BringToFront();
             }
             finally
             {
@@ -172,28 +181,36 @@ namespace Rumble_Mod_Manager
             {
                 UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
                 errorMessage.Show();
+                errorMessage.BringToFront();
                 return null;
             }
         }
 
         private void LoadCustomFont()
         {
+            using (FileStream fs = new FileStream("CRUMBLE.otf", FileMode.Open, FileAccess.Read))
+            {
+                privateFonts.AddFontFile(fs.Name);
+            }
+
             using (FileStream fs = new FileStream("GoodDogPlain.ttf", FileMode.Open, FileAccess.Read))
             {
                 privateFonts.AddFontFile(fs.Name);
             }
-            UninstallButton.Font = new Font(privateFonts.Families[0], 26.0F, FontStyle.Regular);
-            ToggleModLabel.Font = new Font(privateFonts.Families[0], 26.0F, FontStyle.Regular);
-            ThunderstoreButton.Font = new Font(privateFonts.Families[0], 26.0F, FontStyle.Regular);
-            CustomMapsDownloadButton.Font = new Font(privateFonts.Families[0], 22.0F, FontStyle.Regular);
-            SettingsButton.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Regular);
-            ModNameLabel.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Regular);
-            ModVersionLabel.Font = new Font(privateFonts.Families[0], 26.0F, FontStyle.Regular);
-            DateUpdated.Font = new Font(privateFonts.Families[0], 16.0F, FontStyle.Regular);
-            ModAuthorLabel.Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular);
-            DependenciesLabel.Font = new Font(privateFonts.Families[0], 11.0F, FontStyle.Regular);
-            ModDescriptionLabel.Font = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular);
-            WelcomeLabel.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
+
+            UninstallButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
+            ToggleModLabel.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
+            ThunderstoreButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
+            CustomMapsDownloadButton.Font = new Font(privateFonts.Families[1], 22.0F, FontStyle.Regular);
+            SettingsButton.Font = new Font(privateFonts.Families[1], 24.0F, FontStyle.Regular);
+            ModNameLabel.Font = new Font(privateFonts.Families[1], 24.0F, FontStyle.Regular);
+            ModVersionLabel.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
+            DateUpdated.Font = new Font(privateFonts.Families[1], 16.0F, FontStyle.Regular);
+            ModAuthorLabel.Font = new Font(privateFonts.Families[1], 15.0F, FontStyle.Regular);
+            DependenciesLabel.Font = new Font(privateFonts.Families[1], 11.0F, FontStyle.Regular);
+            ModDescriptionLabel.Font = new Font(privateFonts.Families[1], 13.0F, FontStyle.Regular);
+            WelcomeLabel.Font = new Font(privateFonts.Families[1], 20.0F, FontStyle.Regular);
+            FormTitle.Font = new Font(privateFonts.Families[0], 15.0f, FontStyle.Regular);
         }
 
         private void Settings_Button_Click(object sender, EventArgs e)
@@ -229,30 +246,15 @@ namespace Rumble_Mod_Manager
                 selectedPanel.BackColor = Color.FromArgb(30, 30, 30);
                 selectedPanel = null;
             }
-            string rumblePath = Properties.Settings.Default.RumblePath;
-            if (string.IsNullOrEmpty(rumblePath))
-            {
-                UserMessage errorMessage = new UserMessage("Rumble path is not set. Please set it in the settings.", true);
-                errorMessage.Show();
-                return;
-            }
 
-            string modsPath = Path.Combine(rumblePath, "Mods");
-            if (!Directory.Exists(modsPath))
-            {
-                UserMessage errorMessage = new UserMessage("Mods folder not found in the specified Rumble path. Please ensure that MelonLoader is installed correctly and you have run the game once (to the T-Pose screen) without any mods installed.", true);
-                errorMessage.Show();
-                return;
-            }
-
-            DisplayMods(Properties.Settings.Default.RumblePath);
+            DisplayMods();
         }
 
         private void ModManager_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.R && !isLoadingDisplay)
             {
-                DisplayMods(Properties.Settings.Default.RumblePath);
+                DisplayMods();
             }
 
             if (e.Control && e.KeyCode == Keys.S)
@@ -270,26 +272,26 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private void DisplayMods(string rumblePath)
+        private void DisplayMods()
         {
             isLoadingDisplay = true;
 
-            var customMapsPath = Path.Combine(rumblePath, "UserData", "CustomMultiplayerMaps", "Maps");
+            var customMapsPath = Path.Combine(Properties.Settings.Default.RumblePath, "UserData", "CustomMultiplayerMaps", "Maps");
             if (Directory.Exists(customMapsPath) && CustomMapsCache.MapsByPage.Count > 0)
             {
-                ThunderstoreButton.Font = new Font(privateFonts.Families[0], 22.0F, FontStyle.Regular);
+                ThunderstoreButton.Font = new Font(privateFonts.Families[1], 22.0F, FontStyle.Regular);
                 ThunderstoreButton.Size = new Size(161, 48);
                 CustomMapsDownloadButton.Visible = true;
             }
             else
             {
-                ThunderstoreButton.Font = new Font(privateFonts.Families[0], 26.0F, FontStyle.Regular);
+                ThunderstoreButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
                 ThunderstoreButton.Size = new Size(326, 48);
                 CustomMapsDownloadButton.Visible = false;
             }
 
-            string modsPath = Path.Combine(rumblePath, "Mods");
-            string disabledModsPath = Path.Combine(rumblePath, "DisabledMods");
+            string modsPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mods");
+            string disabledModsPath = Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods");
 
             if (!Directory.Exists(disabledModsPath))
             {
@@ -299,23 +301,39 @@ namespace Rumble_Mod_Manager
             var enabledModFiles = Directory.GetFiles(modsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
             var disabledModFiles = Directory.GetFiles(disabledModsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
 
-            WelcomeLabel.Visible = enabledModFiles.Length == 0 && disabledModFiles.Length == 0;
+            if (enabledModFiles.Length == 0 && disabledModFiles.Length == 0)
+            {
+                WelcomeLabel.Visible = true;
+                isLoadingDisplay = false;
+                return;
+            }
 
             panel2.Controls.Clear();
-            panel2.Controls.Add(WelcomeLabel);
 
             List<ModPanelControl> modPanels = new List<ModPanelControl>();
 
-            foreach (var modFile in enabledModFiles)
+            foreach(var panel in preloadedModPanels)
             {
-                ModPanelControl modPanel = CreateModPanel(modFile, true, rumblePath);
-                modPanels.Add(modPanel);
-            }
+                panel.Click += (s, e) => ModPanel_Click(panel, e);
 
-            foreach (var modFile in disabledModFiles)
-            {
-                ModPanelControl modPanel = CreateModPanel(modFile, false, rumblePath);
-                modPanels.Add(modPanel);
+                Guna.UI2.WinForms.Guna2ImageButton updateButton = panel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
+
+                if (updateButton != null)
+                {
+                    updateButton.Click += async (s, e) =>
+                    {
+                        ModPanel_Click(panel, e);
+
+                        while (selectedPanel == null)
+                        {
+                            await Task.Delay(1);
+                        }
+
+                        button1_Click(panel, e);
+                    };
+                }
+
+                modPanels.Add(panel);
             }
 
             int panelWidth = 580;
@@ -342,123 +360,6 @@ namespace Rumble_Mod_Manager
             isLoadingDisplay = false;
         }
 
-        private ModPanelControl CreateModPanel(string modFile, bool isEnabled, string rumblePath)
-        {
-            // Extract the mod name from the file name
-            string modFileName = Path.GetFileName(modFile);
-
-            // Try to get the mod name from the mapping dictionary
-            modMappings.TryGetValue(modFileName, out string modNameFromMapping);
-
-            string modVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName, MelonLoaderModInfoType.Version);
-            Color color = Color.Lime;
-            Image cloudIcon = null;
-            string toolTip = "Unknown";
-            Image modImage = null;
-            string ModAuthor = null;
-            bool modFound = false;
-            bool outdated = false;
-
-            if (modNameFromMapping != null)
-            {
-                foreach (var kvp in ModCache.ModsByPage)
-                {
-                    foreach (var mod in kvp.Value)
-                    {
-                        if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
-                        {
-                            modFound = true;
-                            ModAuthor = mod.Author;
-                            modImage = mod.ModImage;
-
-                            if (!string.IsNullOrEmpty(modVersionStr))
-                            {
-                                int modVersion = int.Parse(modVersionStr.Replace(".", ""));
-                                int modVersionCache = int.Parse(mod.Version.Replace(".", ""));
-
-                                if (modVersion < modVersionCache)
-                                {
-                                    color = Color.Red;
-                                    toolTip = "Out of Date";
-                                    cloudIcon = Properties.Resources.UpdateIcon;
-                                    outdated = true;
-                                }
-                                else if (modVersion == modVersionCache)
-                                {
-                                    color = Color.Lime;
-                                    toolTip = "Up To Date";
-                                    outdated = false;
-                                }
-                                else
-                                {
-                                    color = Color.Cyan;
-                                    toolTip = "Unreleased version";
-                                    outdated = false;
-                                }
-                            }
-                            else
-                            {
-                                modVersionStr = mod.Version;
-                                toolTip = "Up To Date";
-                                outdated = false;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (string.IsNullOrEmpty(ModAuthor))
-            {
-                ModAuthor = $"By {GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName, MelonLoaderModInfoType.Author)}";
-            }
-
-            if (!modFound)
-            {
-                toolTip = "Not Found / Unreleased";
-                color = Color.Cyan;
-            }
-
-            ModPanelControl modPanel = new ModPanelControl
-            {
-                ModNameLabel = Path.GetFileNameWithoutExtension(modFile),
-                DetailsLabel = $"v{modVersionStr} by {ModAuthor}",
-                ModLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Bold),
-                DetailsLabelFont = new Font(privateFonts.Families[0], 15.0F, FontStyle.Regular),
-                UpdateNeededImage = cloudIcon,
-                UpdateColor = color,
-                Outdated = outdated,
-                //toolTip1Text = toolTip,
-                ModImage = modImage ?? Properties.Resources.UnknownMod,
-                Tag = Path.GetFileName(modFile),
-                ModEnabled = isEnabled,
-                ModDllPath = modFile
-            };
-
-            // Add click event
-            modPanel.Click += (s, e) => ModPanel_Click(modPanel, e);
-
-            Guna.UI2.WinForms.Guna2ImageButton updateButton = modPanel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
-
-            if (updateButton != null)
-            {
-                updateButton.Click += async (s, e) =>
-                {
-                    ModPanel_Click(modPanel, e);
-
-                    while (selectedPanel == null)
-                    {
-                        await Task.Delay(10);
-                    }
-
-                    button1_Click(modPanel, e);
-                };
-            }
-
-            return modPanel;
-        }
-
-
         private void Uninstall_Button_Click(object sender, EventArgs e)
         {
             if (selectedPanel != null)
@@ -470,6 +371,7 @@ namespace Rumble_Mod_Manager
                 {
                     UserMessage errorMessage = new UserMessage("Something went wrong. File path does not exist.", true);
                     errorMessage.Show();
+                    errorMessage.BringToFront();
                     return;
                 }
 
@@ -479,6 +381,7 @@ namespace Rumble_Mod_Manager
                     {
                         File.Delete(modFilePath);
                         LoadMods();
+                        SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
                     }
                 }
             }
@@ -496,7 +399,6 @@ namespace Rumble_Mod_Manager
             string rumblePath = Properties.Settings.Default.RumblePath;
             string melonLoaderDllPath = Path.Combine(rumblePath, "MelonLoader", "net6", "MelonLoader.dll");
 
-            // Setup assembly resolver
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 string assemblyPath = Path.Combine(path, new AssemblyName(args.Name).Name + ".dll");
@@ -513,21 +415,17 @@ namespace Rumble_Mod_Manager
 
             try
             {
-                // Load the assembly into memory to avoid locking the file
                 byte[] assemblyBytes = File.ReadAllBytes(dllPath);
                 Assembly assembly = Assembly.Load(assemblyBytes);
 
-                // Get custom attributes of type MelonInfoAttribute
                 var attributes = assembly.GetCustomAttributes(false);
 
                 foreach (var attribute in attributes)
                 {
                     string attributeName = attribute.GetType().Name;
 
-                    // Check if the attribute is of type MelonInfoAttribute
                     if (attributeName == "MelonInfoAttribute")
                     {
-                        // Use reflection to get the desired property (Name or Version)
                         switch (modEnum)
                         {
                             case MelonLoaderModInfoType.Name:
@@ -551,45 +449,50 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private void AdjustFontSizeToFit(Control control)
+        public Dictionary<string, object> LoadSettings(string modName)
         {
-            if (string.IsNullOrEmpty(control.Text))
-                return;
+            Dictionary<string, object> settingsDictionary = new Dictionary<string, object>();
 
-            // Get the initial size
-            Size controlSize = control.ClientSize;
+            string settingsFilePath = Path.Combine(Properties.Settings.Default.RumblePath, "UserData", modName, "Settings.txt");
 
-            // Create a Graphics object for the control
-            using (Graphics g = control.CreateGraphics())
+            if (File.Exists(settingsFilePath))
             {
-                int minFontSize = 1;
-                int maxFontSize = 1000; // Set an upper limit for font size
-                int optimalFontSize = minFontSize;
-
-                // Perform a binary search to find the optimal font size
-                while (minFontSize <= maxFontSize)
+                string[] lines = File.ReadAllLines(settingsFilePath);
+                for (int i = 2; i < lines.Length; i++)
                 {
-                    int currentFontSize = (minFontSize + maxFontSize) / 2;
-                    Font testFont = new Font(control.Font.FontFamily, currentFontSize, control.Font.Style);
-                    SizeF textSize = g.MeasureString(control.Text, testFont);
+                    if (!string.IsNullOrWhiteSpace(lines[i]) && lines[i].Contains(":"))
+                    {
+                        string[] keyValue = lines[i].Split(new[] { ":" }, 2, StringSplitOptions.None);
+                        if (keyValue.Length == 2)
+                        {
+                            string key = keyValue[0].Trim();
+                            string value = keyValue[1].Trim();
 
-                    if (textSize.Width <= controlSize.Width && textSize.Height <= controlSize.Height)
-                    {
-                        optimalFontSize = currentFontSize;
-                        minFontSize = currentFontSize + 1;
-                    }
-                    else
-                    {
-                        maxFontSize = currentFontSize - 1;
+                            if (value.Contains(" "))
+                            {
+                                string[] values = value.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                                if (values.Length > 1 && Array.TrueForAll(values, v => double.TryParse(v, out _)))
+                                {
+                                    settingsDictionary[key] = Array.ConvertAll(values, double.Parse);
+                                }
+                                else
+                                {
+                                    settingsDictionary[key] = value;
+                                }
+                            }
+                            else
+                            {
+                                settingsDictionary[key] = value;
+                            }
+                        }
                     }
                 }
-
-                // Use the optimal font size
-                control.Font = new Font(control.Font.FontFamily, optimalFontSize, control.Font.Style);
             }
+
+            return settingsDictionary;
         }
 
-        private void SaveProfile(string profileName)
+        private void SaveProfile(string profileName, bool showMessage = true)
         {
             var profile = new ModProfile
             {
@@ -632,8 +535,12 @@ namespace Rumble_Mod_Manager
             string json = JsonConvert.SerializeObject(profile, Formatting.Indented);
             File.WriteAllText(profilePath, json);
 
-            UserMessage successMessage = new UserMessage($"Profile '{profileName}' successfully saved!", true);
-            successMessage.Show();
+            if (showMessage)
+            {
+                UserMessage successMessage = new UserMessage($"Profile '{profileName}' successfully saved!", true);
+                successMessage.Show();
+                successMessage.BringToFront();
+            }
         }
 
         public static void LoadProfile(string profileName, RUMBLEModManager modManagerInstance)
@@ -709,7 +616,6 @@ namespace Rumble_Mod_Manager
                     if (selectedPanel != null)
                     {
                         selectedPanel.BackColor = selectedPanel.ModEnabled ? Color.FromArgb(30, 30, 30) : Color.FromArgb(192, 0, 0);
-
                     }
 
                     if (selectedPanel != panel)
@@ -730,7 +636,8 @@ namespace Rumble_Mod_Manager
                         ToggleModLabel.ForeColor = selectedPanel.ModEnabled ? Color.Green : Color.Maroon;
                         selectedPanel.BackColor = Color.LightBlue;
                         ModNameLabel.Text = selectedPanel.ModNameLabel;
-                        AdjustFontSizeToFit(ModNameLabel);
+
+                        LoadSettings(selectedPanel.ModNameLabel);
 
                         modMappings.TryGetValue(selectedPanel.ModNameLabel + ".dll", out string modNameFromMapping);
 
@@ -777,7 +684,6 @@ namespace Rumble_Mod_Manager
 
 
                                         DependenciesLabel.Text = $"Dependencies:\n{string.Join("\n", cleanedDependencies)}";
-                                        AdjustFontSizeToFit(ModNameLabel);
                                         CurrentlySelectedVersion = modVersionStr ?? mod.Version;
                                         ModAuthorLabel.Text = $"By {mod.Author}";
                                         ModDescriptionLabel.Text = mod.Description;
@@ -821,7 +727,7 @@ namespace Rumble_Mod_Manager
                             ModVersionLabel.ForeColor = Color.Cyan;
                             DateUpdated.Text = "Unkown Last Date Updated";
                             DependenciesLabel.Text = "Dependencies:";
-                            ModDescriptionLabel.Text = "This mod could not be found. It's either unreleased or downloaded externally. You can still manage it.";
+                            ModDescriptionLabel.Text = "This mod could not be found in the official repository. It may be unreleased or downloaded from an external source. However, you can still manage it through this page!";
                         }
                     }
                     else
@@ -844,6 +750,7 @@ namespace Rumble_Mod_Manager
                 {
                     UserMessage errorMessage = new UserMessage("Panel is null", true);
                     errorMessage.Show();
+                    errorMessage.BringToFront();
                 }
             }
         }
@@ -869,16 +776,41 @@ namespace Rumble_Mod_Manager
             {
                 UserMessage errorMessage = new UserMessage("Please wait for mods to finish loading before accessing the Thunderstore mod page.", true);
                 errorMessage.Show();
+                errorMessage.BringToFront();
             }
         }
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            if (int.Parse(CurrentlySelectedVersion.Replace(".", ""), CultureInfo.InvariantCulture) < int.Parse(CurrentlySelectedMod.Version.Replace(".", ""), CultureInfo.InvariantCulture))
+            try
             {
-                await ThunderstoreMods.DownloadModFromInternet(CurrentlySelectedMod, this, selectedPanel.ModEnabled, true);
+                int currentVersion = int.Parse(CurrentlySelectedVersion.Replace(".", ""), CultureInfo.InvariantCulture);
+                int latestVersion = int.Parse(CurrentlySelectedMod.Version.Replace(".", ""), CultureInfo.InvariantCulture);
+
+                if (currentVersion < latestVersion)
+                {
+                    await ThunderstoreMods.DownloadModFromInternet(CurrentlySelectedMod, this, selectedPanel.ModEnabled, true);
+                    SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+
+                    string updatedVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, "Mods"), CurrentlySelectedMod.Name + ".dll", MelonLoaderModInfoType.Version);
+                    int updatedVersion = int.Parse(updatedVersionStr.Replace(".", ""), CultureInfo.InvariantCulture);
+
+                    if (updatedVersion < latestVersion)
+                    {
+                        UserMessage brokenModMessage = new UserMessage("The mod has been updated successfully, but it still shows as out of date. This might indicate the mod is broken and will continue to show as out of date until the developer fixes it.", true);
+                        brokenModMessage.Show();
+                        brokenModMessage.BringToFront();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                UserMessage errorMessage = new UserMessage($"An error occurred while updating the mod: {ex.Message}", true);
+                errorMessage.Show();
+                errorMessage.BringToFront();
             }
         }
+
 
         private void ToggleModButton_Click(object sender, EventArgs e)
         {
@@ -917,40 +849,48 @@ namespace Rumble_Mod_Manager
                     {
                         UserMessage message = new UserMessage("Destination file already exists. Deleting...", true);
                         message.Show();
+                        message.BringToFront();
                         File.Delete(destinationFilePath);
                     }
 
                     // Move the file
                     File.Move(sourcePath, destinationFilePath, true);
                     selectedPanel.ModDllPath = Path.Combine(destinationPath, Path.GetFileName(selectedPanel.ModDllPath));
+
+                    SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
                 }
                 else
                 {
                     UserMessage errorMessage = new UserMessage("Source file does not exist.", true);
                     errorMessage.Show();
+                    errorMessage.BringToFront();
                 }
             }
             catch (Exception ex)
             {
                 UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
                 errorMessage.Show();
+                errorMessage.BringToFront();
             }
         }
 
         private void CustomMapsDownloadButton_Click(object sender, EventArgs e)
         {
-            // Check if the instance already exists and is still open
             if (_customMapsInstance == null || _customMapsInstance.IsDisposed)
             {
                 _customMapsInstance = new CustomMaps(this);
-                _customMapsInstance.FormClosed += (s, args) => _customMapsInstance = null; // Clear the instance when the form is closed
+                _customMapsInstance.FormClosed += (s, args) => _customMapsInstance = null;
                 _customMapsInstance.Show();
             }
             else
             {
-                // Optionally, bring the existing form to the front
                 _customMapsInstance.BringToFront();
             }
+        }
+
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 

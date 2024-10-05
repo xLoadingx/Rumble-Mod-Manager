@@ -95,6 +95,8 @@
             Controls.Add(button2);
             Controls.Add(textBox1);
             Controls.Add(label1);
+            MaximumSize = new Size(440, 198);
+            MinimumSize = new Size(440, 198);
             Name = "UserInput";
             Text = "UserInput";
             ResumeLayout(false);

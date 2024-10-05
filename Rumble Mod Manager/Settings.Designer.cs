@@ -28,23 +28,32 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             label1 = new Label();
             textBox1 = new TextBox();
             button1 = new Button();
             button2 = new Button();
             SwitchProfile = new Button();
+            guna2ToggleSwitch1 = new Guna.UI2.WinForms.Guna2ToggleSwitch();
+            panel1 = new Panel();
+            guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            guna2Elipse2 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            label2 = new Label();
             SuspendLayout();
             // 
             // label1
             // 
-            label1.AutoSize = true;
+            label1.Dock = DockStyle.Top;
             label1.Font = new Font("Arial Narrow", 20.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label1.ForeColor = Color.White;
-            label1.Location = new Point(143, 9);
+            label1.Location = new Point(0, 0);
             label1.Name = "label1";
-            label1.Size = new Size(163, 31);
+            label1.Size = new Size(424, 49);
             label1.TabIndex = 2;
             label1.Text = "RUMBLE Path:";
+            label1.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // textBox1
             // 
@@ -63,7 +72,7 @@
             button1.BackColor = Color.SteelBlue;
             button1.Font = new Font("Arial Narrow", 20.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button1.ForeColor = Color.GhostWhite;
-            button1.Location = new Point(163, 99);
+            button1.Location = new Point(161, 86);
             button1.Name = "button1";
             button1.Size = new Size(104, 41);
             button1.TabIndex = 4;
@@ -77,7 +86,7 @@
             button2.BackColor = Color.FromArgb(128, 255, 128);
             button2.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button2.ForeColor = Color.Green;
-            button2.Location = new Point(163, 157);
+            button2.Location = new Point(161, 311);
             button2.Name = "button2";
             button2.Size = new Size(104, 39);
             button2.TabIndex = 5;
@@ -91,7 +100,7 @@
             SwitchProfile.BackColor = Color.SteelBlue;
             SwitchProfile.Font = new Font("Arial Narrow", 20.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             SwitchProfile.ForeColor = Color.GhostWhite;
-            SwitchProfile.Location = new Point(137, 216);
+            SwitchProfile.Location = new Point(255, 174);
             SwitchProfile.Name = "SwitchProfile";
             SwitchProfile.Size = new Size(157, 41);
             SwitchProfile.TabIndex = 6;
@@ -99,19 +108,75 @@
             SwitchProfile.UseVisualStyleBackColor = false;
             SwitchProfile.Click += SwitchProfile_Click;
             // 
+            // guna2ToggleSwitch1
+            // 
+            guna2ToggleSwitch1.Animated = true;
+            guna2ToggleSwitch1.AutoRoundedCorners = true;
+            guna2ToggleSwitch1.CheckedState.BorderColor = Color.SteelBlue;
+            guna2ToggleSwitch1.CheckedState.BorderRadius = 14;
+            guna2ToggleSwitch1.CheckedState.FillColor = Color.SteelBlue;
+            guna2ToggleSwitch1.CheckedState.InnerBorderColor = Color.White;
+            guna2ToggleSwitch1.CheckedState.InnerBorderRadius = 10;
+            guna2ToggleSwitch1.CheckedState.InnerColor = Color.White;
+            guna2ToggleSwitch1.CustomizableEdges = customizableEdges3;
+            guna2ToggleSwitch1.Location = new Point(15, 222);
+            guna2ToggleSwitch1.Name = "guna2ToggleSwitch1";
+            guna2ToggleSwitch1.ShadowDecoration.CustomizableEdges = customizableEdges4;
+            guna2ToggleSwitch1.Size = new Size(65, 31);
+            guna2ToggleSwitch1.TabIndex = 7;
+            guna2ToggleSwitch1.UncheckedState.BorderColor = Color.FromArgb(125, 137, 149);
+            guna2ToggleSwitch1.UncheckedState.BorderRadius = 14;
+            guna2ToggleSwitch1.UncheckedState.FillColor = Color.FromArgb(125, 137, 149);
+            guna2ToggleSwitch1.UncheckedState.InnerBorderColor = Color.White;
+            guna2ToggleSwitch1.UncheckedState.InnerBorderRadius = 10;
+            guna2ToggleSwitch1.UncheckedState.InnerColor = Color.White;
+            // 
+            // panel1
+            // 
+            panel1.AutoSize = true;
+            panel1.BackColor = Color.FromArgb(40, 40, 40);
+            panel1.Location = new Point(12, 149);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(401, 10);
+            panel1.TabIndex = 8;
+            // 
+            // guna2Elipse1
+            // 
+            guna2Elipse1.BorderRadius = 12;
+            guna2Elipse1.TargetControl = textBox1;
+            // 
+            // guna2Elipse2
+            // 
+            guna2Elipse2.TargetControl = panel1;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new Font("Arial", 15F);
+            label2.ForeColor = Color.White;
+            label2.Location = new Point(12, 169);
+            label2.Name = "label2";
+            label2.Size = new Size(93, 46);
+            label2.TabIndex = 9;
+            label2.Text = "Skip Map\r\nLoading";
+            label2.TextAlign = ContentAlignment.MiddleCenter;
+            // 
             // Settings
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 20, 20);
-            ClientSize = new Size(424, 269);
+            ClientSize = new Size(424, 362);
+            Controls.Add(label2);
+            Controls.Add(panel1);
+            Controls.Add(guna2ToggleSwitch1);
             Controls.Add(SwitchProfile);
             Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(textBox1);
             Controls.Add(label1);
-            MaximumSize = new Size(440, 308);
-            MinimumSize = new Size(440, 308);
+            MaximumSize = new Size(440, 401);
+            MinimumSize = new Size(440, 401);
             Name = "Settings";
             Text = "SettingsForm";
             ResumeLayout(false);
@@ -124,5 +189,10 @@
         private Button button1;
         private Button button2;
         private Button SwitchProfile;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch guna2ToggleSwitch1;
+        private Panel panel1;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse2;
+        private Label label2;
     }
 }

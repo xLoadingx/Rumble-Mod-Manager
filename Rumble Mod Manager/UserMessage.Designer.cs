@@ -31,8 +31,8 @@
             components = new System.ComponentModel.Container();
             button1 = new Button();
             panel1 = new Panel();
-            guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
             label1 = new Label();
+            guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -59,11 +59,6 @@
             panel1.Size = new Size(439, 162);
             panel1.TabIndex = 8;
             // 
-            // guna2Elipse1
-            // 
-            guna2Elipse1.BorderRadius = 12;
-            guna2Elipse1.TargetControl = panel1;
-            // 
             // label1
             // 
             label1.Dock = DockStyle.Fill;
@@ -75,6 +70,11 @@
             label1.Text = "label1";
             label1.TextAlign = ContentAlignment.MiddleCenter;
             // 
+            // guna2Elipse1
+            // 
+            guna2Elipse1.BorderRadius = 12;
+            guna2Elipse1.TargetControl = panel1;
+            // 
             // UserMessage
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -83,6 +83,8 @@
             ClientSize = new Size(463, 243);
             Controls.Add(panel1);
             Controls.Add(button1);
+            MaximumSize = new Size(479, 282);
+            MinimumSize = new Size(479, 282);
             Name = "UserMessage";
             Text = "UserMessage";
             panel1.ResumeLayout(false);
