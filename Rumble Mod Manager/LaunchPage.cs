@@ -351,6 +351,7 @@ namespace Rumble_Mod_Manager
         {
             string modsPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mods");
             string disabledModsPath = Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods");
+            string inactiveModsPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", "InactiveMods");
 
             label1.Text = "Loading Mod Mappings...";
             label1.Refresh();
@@ -365,13 +366,30 @@ namespace Rumble_Mod_Manager
                 Directory.CreateDirectory(disabledModsPath);
             }
 
+            if (!Directory.Exists(inactiveModsPath))
+            {
+                label1.Text = "Creating Inactive Mods Directory...";
+                label1.Refresh();
+                Directory.CreateDirectory(inactiveModsPath);
+            }
+
             var enabledModFiles = Directory.GetFiles(modsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
             var disabledModFiles = Directory.GetFiles(disabledModsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
+            var inactiveModFiles = Directory.GetFiles(inactiveModsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
 
             List<ModPanelControl> modPanels = new List<ModPanelControl>();
 
-            progressBar1.Maximum = enabledModFiles.Length + disabledModFiles.Length;
-            progressBar1.Value = 0;
+            int totalMods = enabledModFiles.Length + disabledModFiles.Length + inactiveModFiles.Length;
+            if (totalMods > 0)
+            {
+                progressBar1.Maximum = totalMods;
+                progressBar1.Value = 0;
+            }
+            else
+            {
+                label1.Text = "No mods found.";
+                return modPanels;
+            }
 
             label1.Text = "Loading Enabled Mods...";
             label1.Refresh();
@@ -380,7 +398,7 @@ namespace Rumble_Mod_Manager
                 ModPanelControl modPanel = CreateModPanel(modFile, true, Properties.Settings.Default.RumblePath);
                 modPanels.Add(modPanel);
 
-                progressBar1.Value += 1;
+                progressBar1.Value++;
                 progressBar1.Refresh();
             }
 
@@ -391,7 +409,18 @@ namespace Rumble_Mod_Manager
                 ModPanelControl modPanel = CreateModPanel(modFile, false, Properties.Settings.Default.RumblePath);
                 modPanels.Add(modPanel);
 
-                progressBar1.Value += 1;
+                progressBar1.Value++;
+                progressBar1.Refresh();
+            }
+
+            label1.Text = "Loading Inactive Mods...";
+            label1.Refresh();
+            foreach (var modFile in inactiveModFiles)
+            {
+                ModPanelControl modPanel = CreateModPanel(modFile, false, Properties.Settings.Default.RumblePath);
+                modPanels.Add(modPanel);
+
+                progressBar1.Value++;
                 progressBar1.Refresh();
             }
 
@@ -400,13 +429,15 @@ namespace Rumble_Mod_Manager
 
         private ModPanelControl CreateModPanel(string modFile, bool isEnabled, string rumblePath)
         {
-            // Extract the mod name from the file name
             string modFileName = Path.GetFileName(modFile);
 
-            // Try to get the mod name from the mapping dictionary
             modMappings.TryGetValue(modFileName, out string modNameFromMapping);
 
-            string modVersionStr = (string)RUMBLEModManager.GetMelonLoaderModInfo(Path.Combine(rumblePath, isEnabled ? "Mods" : "DisabledMods"), modFileName, MelonLoaderModInfoType.Version);
+            string folderPath = modFile.Contains("InactiveMods") ? "Mod_Profiles/InactiveMods" :
+                    isEnabled ? "Mods" : "DisabledMods";
+
+            string modVersionStr = (string)RUMBLEModManager.GetMelonLoaderModInfo(Path.Combine(rumblePath, folderPath), modFileName, MelonLoaderModInfoType.Version);
+
             Color color = Color.Lime;
             Image cloudIcon = null;
             string toolTip = "Unknown";
@@ -564,8 +595,7 @@ namespace Rumble_Mod_Manager
             {
                 string detailedErrorMessage = $"An error occurred while fetching mods from Thunderstore: {ex.Message}\n\n" +
                                               $"Stack Trace:\n{ex.StackTrace}";
-                UserMessage errorMessage = new UserMessage(detailedErrorMessage, true);
-                errorMessage.Show();
+                MessageBox.Show(detailedErrorMessage);
             }
         }
 

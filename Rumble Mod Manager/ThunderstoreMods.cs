@@ -439,7 +439,6 @@ namespace Rumble_Mod_Manager
         public static async Task<Dictionary<int, List<Mod>>> FetchThunderstoreMods(Guna.UI2.WinForms.Guna2CircleProgressBar progressBar)
         {
             var modsByPage = new Dictionary<int, List<Mod>>();
-
             var modList = new ConcurrentBag<Mod>();
             var pinnedModList = new ConcurrentBag<Mod>();
 
@@ -455,7 +454,6 @@ namespace Rumble_Mod_Manager
                     HttpResponseMessage response = await client.GetAsync(url);
                     if (response.StatusCode == HttpStatusCode.NotFound)
                     {
-                        // Stop if a 404 error is encountered
                         return modsByPage;
                     }
                     response.EnsureSuccessStatusCode();
@@ -479,11 +477,10 @@ namespace Rumble_Mod_Manager
                             try
                             {
                                 var modName = modDict.GetValueOrDefault("name")?.ToString();
-                                var DateUpdated = modDict.GetValueOrDefault("date_updated")?.ToString();
+                                var dateUpdated = modDict.GetValueOrDefault("date_updated")?.ToString();
 
                                 if (modName != null && modName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    // Skip MelonLoader
                                     return;
                                 }
 
@@ -493,7 +490,6 @@ namespace Rumble_Mod_Manager
                                 {
                                     var latestVersion = versions[0] as JObject;
 
-                                    // Check if mod is deprecated
                                     bool isDeprecated = modDict.GetValueOrDefault("is_deprecated")?.ToString().ToLower() == "true";
 
                                     var dependencies = latestVersion?.GetValue("dependencies")?.ToObject<List<string>>();
@@ -502,37 +498,49 @@ namespace Rumble_Mod_Manager
                                     string name = modName;
                                     string description = latestVersion?.GetValue("description")?.ToString();
                                     string author = modDict.GetValueOrDefault("owner")?.ToString();
-                                    string imageurl = latestVersion?.GetValue("icon")?.ToString();
+                                    string imageUrl = latestVersion?.GetValue("icon")?.ToString();
                                     string version = latestVersion?.GetValue("version_number")?.ToString();
-                                    string lastUpdated = DateUpdated;
+                                    DateTime lastUpdated;
+
+                                    if (!DateTime.TryParse(dateUpdated, out lastUpdated))
+                                    {
+                                        lastUpdated = DateTime.MinValue; // Or another fallback value
+                                    }
 
                                     var mod = new Mod
                                     {
                                         Name = name,
                                         Description = description,
                                         Author = author,
-                                        ImageUrl = imageurl,
+                                        ImageUrl = imageUrl,
                                         Version = version,
                                         Dependencies = dependencies,
-                                        DateUpdated = lastUpdated,
+                                        DateUpdated = lastUpdated.ToString("o"),
                                         ModPageUrl = $"https://thunderstore.io/package/download/{author}/{name}/{version}",
                                         OnlinePageUrl = $"https://thunderstore.io/c/rumble/p/{author}/{name}",
                                         isOutdated = isOutdated,
                                         isDeprecated = isDeprecated
                                     };
 
-                                    // Fetch the mod image
                                     if (!string.IsNullOrEmpty(mod.ImageUrl))
                                     {
-                                        string imageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
+                                        string fullImageUrl = mod.ImageUrl.StartsWith("http") ? mod.ImageUrl : $"https://thunderstore.io{mod.ImageUrl}";
 
-                                        using (HttpResponseMessage imageResponse = await client.GetAsync(imageUrl))
+                                        try
                                         {
-                                            imageResponse.EnsureSuccessStatusCode();
-                                            using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
+                                            using (HttpResponseMessage imageResponse = await client.GetAsync(fullImageUrl))
                                             {
-                                                mod.ModImage = Image.FromStream(imageStream);
+                                                imageResponse.EnsureSuccessStatusCode();
+                                                using (Stream imageStream = await imageResponse.Content.ReadAsStreamAsync())
+                                                {
+                                                    mod.ModImage = Image.FromStream(imageStream);
+                                                }
                                             }
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // Assign a placeholder image or log the issue if the image download fails
+                                            mod.ModImage = Properties.Resources.UnknownMod;
                                         }
                                     }
 
@@ -546,10 +554,12 @@ namespace Rumble_Mod_Manager
                                     }
                                 }
 
-                                // Update progress bar in batches to avoid too frequent UI updates
                                 if (progressBar.Value < progressBar.Maximum)
                                 {
-                                    progressBar.Invoke(new Action(() => progressBar.Value++));
+                                    progressBar.Invoke(new Action(() =>
+                                    {
+                                        progressBar.Value += 1;
+                                    }));
                                 }
                             }
                             catch (Exception ex)
@@ -561,31 +571,27 @@ namespace Rumble_Mod_Manager
                             {
                                 semaphore.Release();
                             }
-                        }).ToArray();
+                        }).ToList();
 
                         await Task.WhenAll(tasks);
                     }
 
-                    // Reverse and filter the list
                     var reversedModList = modList.Reverse().ToList();
                     reversedModList.RemoveAll(mod => mod.isOutdated || mod.isDeprecated);
 
                     int pageSize = 24;
                     int totalPages = (int)Math.Ceiling(reversedModList.Count / (double)pageSize);
 
-                    // Sort the entire list by DateUpdated
                     var sortedModList = reversedModList
                         .OrderByDescending(mod => DateTime.Parse(mod.DateUpdated))
                         .ToList();
 
-                    // Create pages from the sorted list
                     for (int i = 0; i < totalPages; i++)
                     {
                         var modsForPage = sortedModList.Skip(i * pageSize).Take(pageSize).ToList();
                         modsByPage[i + 1] = modsForPage;
                     }
 
-                    // Ensure pinned mods are at the top of the first page
                     if (modsByPage.ContainsKey(1))
                     {
                         modsByPage[1] = pinnedModList.Concat(modsByPage[1]).Take(pageSize).ToList();

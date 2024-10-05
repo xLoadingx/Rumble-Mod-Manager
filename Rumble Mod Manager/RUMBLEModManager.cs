@@ -301,39 +301,32 @@ namespace Rumble_Mod_Manager
             var enabledModFiles = Directory.GetFiles(modsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
             var disabledModFiles = Directory.GetFiles(disabledModsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
 
-            if (enabledModFiles.Length == 0 && disabledModFiles.Length == 0)
-            {
-                WelcomeLabel.Visible = true;
-                isLoadingDisplay = false;
-                return;
-            }
+            WelcomeLabel.Visible = enabledModFiles.Length == 0 && disabledModFiles.Length == 0;
 
+            WelcomeLabel.Visible = false;
             panel2.Controls.Clear();
 
-            List<ModPanelControl> modPanels = new List<ModPanelControl>();
-
-            foreach(var panel in preloadedModPanels)
+            foreach (var panel in preloadedModPanels)
             {
-                panel.Click += (s, e) => ModPanel_Click(panel, e);
+                string panelName = panel.ModNameLabel.ToLowerInvariant();
+                bool isInEnabledMods = enabledModFiles.Any(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == panelName);
+                bool isInDisabledMods = disabledModFiles.Any(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == panelName);
 
-                Guna.UI2.WinForms.Guna2ImageButton updateButton = panel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
-
-                if (updateButton != null)
+                if (isInEnabledMods || isInDisabledMods)
                 {
-                    updateButton.Click += async (s, e) =>
+                    panel.ModEnabled = isInEnabledMods;
+                    panel.Click -= ModPanel_Click;
+                    panel.Click += (s, e) => ModPanel_Click(panel, e);
+
+                    var updateButton = panel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
+                    if (updateButton != null)
                     {
-                        ModPanel_Click(panel, e);
+                        updateButton.Click -= async (s, e) => await UpdateButton_Click(panel);
+                        updateButton.Click += async (s, e) => await UpdateButton_Click(panel);
+                    }
 
-                        while (selectedPanel == null)
-                        {
-                            await Task.Delay(1);
-                        }
-
-                        button1_Click(panel, e);
-                    };
+                    panel2.Controls.Add(panel);
                 }
-
-                modPanels.Add(panel);
             }
 
             int panelWidth = 580;
@@ -344,11 +337,10 @@ namespace Rumble_Mod_Manager
             int totalPanelsWidth = panelWidth;
             int startX = (panel2Width - totalPanelsWidth) / 2;
 
-            for (int i = 0; i < modPanels.Count; i++)
+            foreach (Control modPanel in panel2.Controls)
             {
-                modPanels[i].Size = new Size(panelWidth, panelHeight);
-                modPanels[i].Location = new Point(startX, verticalMargin + i * (panelHeight + verticalMargin));
-                panel2.Controls.Add(modPanels[i]);
+                modPanel.Size = new Size(panelWidth, panelHeight);
+                modPanel.Location = new Point(startX, verticalMargin + panel2.Controls.GetChildIndex(modPanel) * (panelHeight + verticalMargin));
             }
 
             panel2.HorizontalScroll.Maximum = 0;
@@ -358,6 +350,18 @@ namespace Rumble_Mod_Manager
             panel2.AutoScroll = true;
 
             isLoadingDisplay = false;
+        }
+
+        private async Task UpdateButton_Click(ModPanelControl panel)
+        {
+            ModPanel_Click(panel, EventArgs.Empty);
+
+            while (selectedPanel == null)
+            {
+                await Task.Delay(1);
+            }
+
+            button1_Click(panel, EventArgs.Empty);
         }
 
         private void Uninstall_Button_Click(object sender, EventArgs e)

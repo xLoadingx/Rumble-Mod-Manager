@@ -33,6 +33,7 @@
             panel1 = new Panel();
             label1 = new Label();
             guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -75,16 +76,22 @@
             guna2Elipse1.BorderRadius = 12;
             guna2Elipse1.TargetControl = panel1;
             // 
+            // guna2BorderlessForm1
+            // 
+            guna2BorderlessForm1.BorderRadius = 12;
+            guna2BorderlessForm1.ContainerControl = this;
+            guna2BorderlessForm1.DockIndicatorTransparencyValue = 0.6D;
+            guna2BorderlessForm1.TransparentWhileDrag = true;
+            // 
             // UserMessage
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
-            ClientSize = new Size(463, 243);
+            ClientSize = new Size(462, 243);
             Controls.Add(panel1);
             Controls.Add(button1);
-            MaximumSize = new Size(479, 282);
-            MinimumSize = new Size(479, 282);
+            FormBorderStyle = FormBorderStyle.None;
             Name = "UserMessage";
             Text = "UserMessage";
             panel1.ResumeLayout(false);
@@ -98,5 +105,6 @@
         private Panel panel1;
         private Label label1;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
+        private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
     }
 }
