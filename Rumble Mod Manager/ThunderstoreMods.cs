@@ -165,7 +165,7 @@ namespace Rumble_Mod_Manager
 
         public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null, ModPanelControl panel = null)
         {
-            string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
+            string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, $"temp_mod_download_{Guid.NewGuid()}");
             string tempZipPath = Path.Combine(tempDir, "temp_mod.zip");
 
             try
@@ -219,7 +219,17 @@ namespace Rumble_Mod_Manager
                 // Create temp directory if it doesn't exist
                 if (!Directory.Exists(tempDir))
                 {
-                    Directory.CreateDirectory(tempDir);
+                    try
+                    {
+                        Directory.CreateDirectory(tempDir);
+                    }
+                    catch (Exception ex)
+                    {
+                        UserMessage errorMessage = new UserMessage($"Failed to create temp directory: {ex.Message}", true);
+                        errorMessage.Show();
+                        installingMessage.Close();
+                        return;
+                    }
                 }
 
                 using (HttpClient client = new HttpClient())
@@ -236,13 +246,20 @@ namespace Rumble_Mod_Manager
                     }
                 }
 
-                // Install the main mod
-                InstallMod(tempZipPath, ModEnabled, form1, installingMessage);
+                // Verify if file exists
+                if (!File.Exists(tempZipPath))
+                {
+                    UserMessage errorMessage = new UserMessage("Downloaded mod zip file could not be found. Please check if the download was successful.", true);
+                    errorMessage.Show();
+                    return;
+                }
+
+                await InstallMod(tempZipPath, ModEnabled, form1, installingMessage, initialMod);
 
                 if (initialMod)
                 {
                     installingMessage.UpdateStatusMessage($"'{mod.Name}' successfully installed");
-                    installingMessage.ShowCloseButton(true);
+                    installingMessage.ShowButtons(true);
                     form1.LoadMods();
                 }
             }
@@ -301,7 +318,7 @@ namespace Rumble_Mod_Manager
             return Directory.GetFiles(extractedDir, "*.dll", System.IO.SearchOption.AllDirectories).Any();
         }
 
-        public static void InstallMod(string zipPath, bool ModEnabled, RUMBLEModManager form1 = null, UserMessage message = null)
+        public static async Task InstallMod(string zipPath, bool ModEnabled, RUMBLEModManager form1 = null, UserMessage message = null, bool initialMod = false)
         {
             bool UpdatingMod = false;
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
@@ -331,11 +348,13 @@ namespace Rumble_Mod_Manager
                     {
                         foreach (var panel in form1.preloadedModPanels)
                         {
-                            if (string.Equals(Path.GetFileNameWithoutExtension(dllFilePath), panel.ModNameLabel, StringComparison.OrdinalIgnoreCase))
+                            if (string.Equals(Path.GetFileNameWithoutExtension(dllFilePath), panel.ModNameLabel, StringComparison.OrdinalIgnoreCase) && !initialMod)
                             {
                                 if (message != null)
                                 {
                                     message.UpdateStatusMessage("Mod already installed. Skipping.");
+
+                                    await Task.Delay(600);
                                 }
                                 return;
                             }
@@ -366,11 +385,14 @@ namespace Rumble_Mod_Manager
                         }
                     }
 
-                    if (form1 != null)
+                    var existingPanel = form1.preloadedModPanels.FirstOrDefault(panel => panel.ModNameLabel.Equals(Path.GetFileNameWithoutExtension(modPath), StringComparison.OrdinalIgnoreCase));
+                    if (form1 != null && existingPanel == null)
                     {
                         ModPanelControl newModPanel = LaunchPage.CreateModPanel(modPath, ModEnabled, Properties.Settings.Default.RumblePath);
-
                         form1.preloadedModPanels.Add(newModPanel);
+                        
+                        form1.panel2.Controls.Add(newModPanel);
+                        form1.AdjustPanelLocations();
                     }
 
                 } else

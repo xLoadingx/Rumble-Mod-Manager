@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -52,11 +53,13 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        public async Task InstallMelonLoader()
+        public async Task InstallMelonLoader(bool launchGame = true)
         {
             string rumblePath = Properties.Settings.Default.RumblePath;
 
-            string downloadUrl = "https://github.com/LavaGang/MelonLoader/releases/latest/download/MelonLoader.x64.zip";
+            string baseDownloadUrl = "https://github.com/LavaGang/MelonLoader/releases/latest/download/";
+            string architecture = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+            string downloadUrl = $"{baseDownloadUrl}MelonLoader.{architecture}.zip";
             string tempZipPath = Path.Combine(Path.GetTempPath(), "MelonLoader.zip");
             string gamePath = Path.Combine(Properties.Settings.Default.RumblePath, "RUMBLE.exe");
 
@@ -78,26 +81,29 @@ namespace Rumble_Mod_Manager
             ZipFile.ExtractToDirectory(tempZipPath, rumblePath, true);
             File.Delete(tempZipPath);
 
-            UserMessage errorMessage = new UserMessage($"MelonLoader has been installed successfully. The game is about to open, once it reaches the T-POSE screen, please close the game. \n\n Do not click on the console. If you do, please press enter.", true);
-            errorMessage.Show();
-
-            if (!File.Exists(gamePath))
+            if (launchGame)
             {
-                Console.WriteLine($"Executable not found at: {gamePath}");
-                return;
+                UserMessage errorMessage = new UserMessage($"MelonLoader has been installed successfully. The game is about to open, once it reaches the T-POSE screen, please close the game. \n\n Do not click on the console. If you do, please press enter.", true);
+                errorMessage.Show();
+
+                if (!File.Exists(gamePath))
+                {
+                    Console.WriteLine($"Executable not found at: {gamePath}");
+                    return;
+                }
+
+                label1.Text = "Waiting...";
+
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.FileName = gamePath;
+                startInfo.WorkingDirectory = Properties.Settings.Default.RumblePath;
+
+                Process gameProcess = new Process();
+                gameProcess.StartInfo = startInfo;
+                gameProcess.Start();
+
+                gameProcess.WaitForExit();
             }
-
-            label1.Text = "Waiting...";
-
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = gamePath;
-            startInfo.WorkingDirectory = Properties.Settings.Default.RumblePath;
-
-            Process gameProcess = new Process();
-            gameProcess.StartInfo = startInfo;
-            gameProcess.Start();
-
-            gameProcess.WaitForExit();
         }
 
         public void CheckRumblePath()
@@ -578,6 +584,33 @@ namespace Rumble_Mod_Manager
                 progressBar1.Visible = false;
                 label1.Visible = false;
 
+                if (Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
+                {
+                    string melonLoaderPath = Path.Combine(Properties.Settings.Default.RumblePath, "MelonLoader", "net6", "MelonLoader.dll");
+                    FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(melonLoaderPath);
+
+                    string currentMelonVersion = fileVersionInfo.FileVersion;
+                    currentMelonVersion = string.Join(".", currentMelonVersion.Split('.').Reverse().SkipWhile(part => part == "0").Reverse());
+                    string latestMelonVersion = await GetLatestMelonLoaderVersionAsync();
+
+                    if (currentMelonVersion != latestMelonVersion)
+                    {
+                        UserMessage updatePrompt = new UserMessage($"Your current MelonLoader version is out of date. Would you like to update? \n {currentMelonVersion} -> {latestMelonVersion}", false, true);
+                        DialogResult result = updatePrompt.ShowDialog();
+
+                        if (result == DialogResult.Yes)
+                        {
+                            UserMessage updatingPrompt = new UserMessage("Updating MelonLoader...", false);
+                            updatingPrompt.Show();
+
+                            await InstallMelonLoader(false);
+
+                            updatingPrompt.UpdateStatusMessage("MelonLoader updated successfully!");
+                            updatingPrompt.ShowButtons(true);
+                        }
+                    }
+                }
+
                 if (_rumbleModManagerInstance == null || _rumbleModManagerInstance.IsDisposed)
                 {
                     _rumbleModManagerInstance = new RUMBLEModManager(preloadedPanels);
@@ -596,6 +629,29 @@ namespace Rumble_Mod_Manager
                 string detailedErrorMessage = $"An error occurred while fetching mods from Thunderstore: {ex.Message}\n\n" +
                                               $"Stack Trace:\n{ex.StackTrace}";
                 MessageBox.Show(detailedErrorMessage);
+            }
+        }
+
+        public static async Task<string> GetLatestMelonLoaderVersionAsync()
+        {
+            string latestReleaseUrl = "https://github.com/LavaGang/MelonLoader/releases/latest";
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    HttpResponseMessage response = await client.GetAsync(latestReleaseUrl);
+                    response.EnsureSuccessStatusCode();
+
+                    string redirectedUrl = response.RequestMessage.RequestUri.ToString();
+
+                    string version = redirectedUrl.Split('/').Last().TrimStart('v');
+                    return version;
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Error fetching latest version: {ex.Message}";
             }
         }
 

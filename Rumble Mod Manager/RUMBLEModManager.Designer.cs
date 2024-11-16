@@ -32,6 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RUMBLEModManager));
             panel2 = new Panel();
             WelcomeLabel = new Label();
+            LaunchGame = new Button();
             SettingsButton = new PictureBox();
             DependenciesLabel = new Label();
             ModAuthorLabel = new Label();
@@ -57,6 +58,8 @@
             pictureBox2 = new PictureBox();
             FormTitle = new Label();
             guna2DragControl1 = new Guna.UI2.WinForms.Guna2DragControl(components);
+            textBox1 = new TextBox();
+            debounceTimer = new System.Windows.Forms.Timer(components);
             panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)SettingsButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
@@ -71,7 +74,7 @@
             // 
             panel2.BackColor = Color.FromArgb(40, 40, 40);
             panel2.Controls.Add(WelcomeLabel);
-            panel2.Location = new Point(12, 38);
+            panel2.Location = new Point(12, 61);
             panel2.Name = "panel2";
             panel2.Size = new Size(592, 447);
             panel2.TabIndex = 2;
@@ -87,12 +90,25 @@
             WelcomeLabel.Text = resources.GetString("WelcomeLabel.Text");
             WelcomeLabel.TextAlign = ContentAlignment.MiddleCenter;
             // 
+            // LaunchGame
+            // 
+            LaunchGame.AutoSize = true;
+            LaunchGame.BackColor = Color.Lime;
+            LaunchGame.ForeColor = Color.Green;
+            LaunchGame.Location = new Point(192, 5);
+            LaunchGame.Name = "LaunchGame";
+            LaunchGame.Size = new Size(102, 25);
+            LaunchGame.TabIndex = 27;
+            LaunchGame.Text = "Launch Game";
+            LaunchGame.UseVisualStyleBackColor = false;
+            LaunchGame.Click += LaunchGame_Click;
+            // 
             // SettingsButton
             // 
             SettingsButton.BackColor = Color.Transparent;
             SettingsButton.BackgroundImage = Properties.Resources.darkgray;
             SettingsButton.BackgroundImageLayout = ImageLayout.Zoom;
-            SettingsButton.Location = new Point(0, 377);
+            SettingsButton.Location = new Point(0, 378);
             SettingsButton.Name = "SettingsButton";
             SettingsButton.Size = new Size(67, 66);
             SettingsButton.TabIndex = 20;
@@ -168,6 +184,7 @@
             // 
             // ThunderstoreButton
             // 
+            ThunderstoreButton.AutoSize = true;
             ThunderstoreButton.BackColor = Color.SlateBlue;
             ThunderstoreButton.ForeColor = Color.DarkSlateBlue;
             ThunderstoreButton.Location = new Point(67, 385);
@@ -180,6 +197,7 @@
             // 
             // UninstallButton
             // 
+            UninstallButton.AutoSize = true;
             UninstallButton.BackColor = Color.FromArgb(192, 0, 0);
             UninstallButton.Font = new Font("Arial", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             UninstallButton.ForeColor = Color.Maroon;
@@ -210,7 +228,7 @@
             pictureBox1.BackColor = Color.Transparent;
             pictureBox1.BackgroundImage = Properties.Resources.Gear;
             pictureBox1.BackgroundImageLayout = ImageLayout.Zoom;
-            pictureBox1.Location = new Point(17, 395);
+            pictureBox1.Location = new Point(17, 396);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(27, 27);
             pictureBox1.TabIndex = 21;
@@ -231,6 +249,7 @@
             // 
             // ToggleModLabel
             // 
+            ToggleModLabel.AutoSize = true;
             ToggleModLabel.BackColor = Color.FromArgb(192, 0, 0);
             ToggleModLabel.Font = new Font("Arial", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ToggleModLabel.ForeColor = Color.Maroon;
@@ -251,6 +270,7 @@
             panel1.Controls.Add(pictureBox1);
             panel1.Controls.Add(DateUpdated);
             panel1.Controls.Add(UninstallButton);
+            panel1.Controls.Add(SettingsButton);
             panel1.Controls.Add(ThunderstoreButton);
             panel1.Controls.Add(ModPictureDisplay);
             panel1.Controls.Add(ModVersionLabel);
@@ -258,14 +278,14 @@
             panel1.Controls.Add(ModNameLabel);
             panel1.Controls.Add(ModAuthorLabel);
             panel1.Controls.Add(DependenciesLabel);
-            panel1.Controls.Add(SettingsButton);
-            panel1.Location = new Point(631, 38);
+            panel1.Location = new Point(631, 61);
             panel1.Name = "panel1";
             panel1.Size = new Size(406, 447);
             panel1.TabIndex = 2;
             // 
             // CustomMapsDownloadButton
             // 
+            CustomMapsDownloadButton.AutoSize = true;
             CustomMapsDownloadButton.BackColor = Color.Purple;
             CustomMapsDownloadButton.ForeColor = Color.FromArgb(64, 0, 64);
             CustomMapsDownloadButton.Location = new Point(232, 385);
@@ -315,7 +335,6 @@
             guna2BorderlessForm1.BorderRadius = 12;
             guna2BorderlessForm1.ContainerControl = this;
             guna2BorderlessForm1.DockIndicatorTransparencyValue = 0.6D;
-            guna2BorderlessForm1.ResizeForm = false;
             guna2BorderlessForm1.TransparentWhileDrag = true;
             // 
             // guna2Elipse5
@@ -326,6 +345,7 @@
             // panel3
             // 
             panel3.BackColor = Color.FromArgb(15, 15, 15);
+            panel3.Controls.Add(LaunchGame);
             panel3.Controls.Add(pictureBox2);
             panel3.Controls.Add(FormTitle);
             panel3.Location = new Point(0, -1);
@@ -362,18 +382,36 @@
             guna2DragControl1.TargetControl = panel3;
             guna2DragControl1.UseTransparentDrag = true;
             // 
+            // textBox1
+            // 
+            textBox1.BackColor = Color.FromArgb(64, 64, 64);
+            textBox1.ForeColor = Color.White;
+            textBox1.Location = new Point(12, 34);
+            textBox1.Name = "textBox1";
+            textBox1.PlaceholderText = "Search for mods via name, author, or description";
+            textBox1.Size = new Size(278, 23);
+            textBox1.TabIndex = 5;
+            textBox1.TextAlign = HorizontalAlignment.Center;
+            textBox1.TextChanged += textBox1_TextChanged;
+            // 
+            // debounceTimer
+            // 
+            debounceTimer.Interval = 300;
+            debounceTimer.Tick += debounceTimer_Tick;
+            // 
             // RUMBLEModManager
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            AutoSize = true;
             BackColor = Color.FromArgb(20, 20, 20);
-            ClientSize = new Size(1049, 497);
+            ClientSize = new Size(1049, 520);
+            Controls.Add(textBox1);
             Controls.Add(panel3);
             Controls.Add(panel1);
             Controls.Add(panel2);
             FormBorderStyle = FormBorderStyle.None;
             MaximizeBox = false;
-            MaximumSize = new Size(1049, 497);
             MinimumSize = new Size(1049, 497);
             Name = "RUMBLEModManager";
             Text = "Form1";
@@ -383,14 +421,17 @@
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ((System.ComponentModel.ISupportInitialize)ToggleModButton).EndInit();
             panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             panel3.ResumeLayout(false);
+            panel3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
-        private Panel panel2;
+        public Panel panel2;
         private PictureBox SettingsButton;
         private Label DependenciesLabel;
         private Label ModAuthorLabel;
@@ -417,5 +458,8 @@
         private Guna.UI2.WinForms.Guna2DragControl guna2DragControl1;
         private Label FormTitle;
         private PictureBox pictureBox2;
+        private Button LaunchGame;
+        private TextBox textBox1;
+        private System.Windows.Forms.Timer debounceTimer;
     }
 }

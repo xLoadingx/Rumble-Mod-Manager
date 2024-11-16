@@ -76,7 +76,7 @@
             linkLabel1.LinkColor = Color.ForestGreen;
             linkLabel1.Location = new Point(164, 80);
             linkLabel1.Name = "linkLabel1";
-            linkLabel1.Size = new Size(151, 15);
+            linkLabel1.Size = new Size(146, 15);
             linkLabel1.TabIndex = 13;
             linkLabel1.TabStop = true;
             linkLabel1.Text = "See Mod On Thunderstore";
@@ -228,8 +228,9 @@
             textBox1.Location = new Point(12, 6);
             textBox1.Name = "textBox1";
             textBox1.PlaceholderText = "Search for mods via name, author, or description";
-            textBox1.Size = new Size(278, 21);
+            textBox1.Size = new Size(278, 23);
             textBox1.TabIndex = 4;
+            textBox1.TextAlign = HorizontalAlignment.Center;
             textBox1.TextChanged += textBox1_TextChanged;
             // 
             // guna2Elipse1

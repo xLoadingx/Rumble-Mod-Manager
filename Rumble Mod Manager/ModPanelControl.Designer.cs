@@ -66,7 +66,7 @@
             ModName.ForeColor = Color.White;
             ModName.Location = new Point(78, 19);
             ModName.Name = "ModName";
-            ModName.Size = new Size(41, 15);
+            ModName.Size = new Size(38, 15);
             ModName.TabIndex = 1;
             ModName.Text = "label1";
             // 
@@ -76,7 +76,7 @@
             label2.ForeColor = Color.White;
             label2.Location = new Point(78, 45);
             label2.Name = "label2";
-            label2.Size = new Size(41, 15);
+            label2.Size = new Size(38, 15);
             label2.TabIndex = 2;
             label2.Text = "label2";
             // 
@@ -132,9 +132,9 @@
         private Guna.UI2.WinForms.Guna2PictureBox guna2PictureBox1;
         private Guna.UI2.WinForms.Guna2HtmlLabel Details;
         private Label ModName;
-        private Label label2;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse3;
         private Guna.UI2.WinForms.Guna2ImageButton ImageButton;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse4;
+        public Label label2;
     }
 }

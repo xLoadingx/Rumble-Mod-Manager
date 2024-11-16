@@ -34,6 +34,8 @@
             label1 = new Label();
             guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
             guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
+            button2 = new Button();
+            button3 = new Button();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -83,12 +85,42 @@
             guna2BorderlessForm1.DockIndicatorTransparencyValue = 0.6D;
             guna2BorderlessForm1.TransparentWhileDrag = true;
             // 
+            // button2
+            // 
+            button2.AutoSize = true;
+            button2.BackColor = Color.FromArgb(128, 255, 128);
+            button2.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            button2.ForeColor = Color.Green;
+            button2.Location = new Point(79, 192);
+            button2.Name = "button2";
+            button2.Size = new Size(104, 39);
+            button2.TabIndex = 9;
+            button2.Text = "Yes";
+            button2.UseVisualStyleBackColor = false;
+            button2.Click += button2_Click;
+            // 
+            // button3
+            // 
+            button3.AutoSize = true;
+            button3.BackColor = Color.Red;
+            button3.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            button3.ForeColor = Color.FromArgb(192, 0, 0);
+            button3.Location = new Point(284, 192);
+            button3.Name = "button3";
+            button3.Size = new Size(104, 39);
+            button3.TabIndex = 10;
+            button3.Text = "No";
+            button3.UseVisualStyleBackColor = false;
+            button3.Click += button3_Click;
+            // 
             // UserMessage
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
             ClientSize = new Size(462, 243);
+            Controls.Add(button3);
+            Controls.Add(button2);
             Controls.Add(panel1);
             Controls.Add(button1);
             FormBorderStyle = FormBorderStyle.None;
@@ -106,5 +138,7 @@
         private Label label1;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
         private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
+        private Button button3;
+        private Button button2;
     }
 }

@@ -1,17 +1,14 @@
 namespace Rumble_Mod_Manager
 {
-    using Microsoft.Windows.Themes;
+    using Microsoft.Win32;
     using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
     using System;
     using System.Diagnostics;
     using System.Drawing.Text;
     using System.Globalization;
     using System.IO;
-    using System.IO.Compression;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.InteropServices;
     using System.Windows.Forms;
     using static Rumble_Mod_Manager.ThunderstoreMods;
 
@@ -27,6 +24,8 @@ namespace Rumble_Mod_Manager
         private static CustomMaps _customMapsInstance;
         private static ThunderstoreMods _thunderstoreModsInstance;
         private static Settings _settingsInstance;
+
+        private Process gameProcess;
 
         Dictionary<string, string> modMappings = new Dictionary<string, string>();
         public List<ModPanelControl> preloadedModPanels = new List<ModPanelControl>();
@@ -57,7 +56,13 @@ namespace Rumble_Mod_Manager
 
             panel2.AllowDrop = true;
             panel2.DragEnter += new DragEventHandler(panel2_DragEnter);
+            panel2.DragLeave += new EventHandler(panel2_DragLeave);
             panel2.DragDrop += new DragEventHandler(panel2_DragDrop);
+        }
+
+        private void panel2_DragLeave(object sender, EventArgs e)
+        {
+            panel2.BackColor = Color.FromArgb(40, 40, 40);
         }
 
         private void panel2_DragEnter(object sender, DragEventArgs e)
@@ -68,6 +73,7 @@ namespace Rumble_Mod_Manager
                 if (files != null && files.Length > 0 && files[0].EndsWith(".zip"))
                 {
                     e.Effect = DragDropEffects.Copy;
+                    panel2.BackColor = Color.LightBlue;
                     return;
                 }
             }
@@ -98,12 +104,14 @@ namespace Rumble_Mod_Manager
                 {
                     if (file.EndsWith(".zip"))
                     {
-                        InstallMod(file, true);
+                        await InstallMod(file, true, this);
                         UserMessage successMessage = new UserMessage($"Mod '{Path.GetFileName(file)}' installed successfully!", true);
                         successMessage.Show();
                         successMessage.BringToFront();
                     }
                 }
+
+                panel2.BackColor = Color.FromArgb(40, 40, 40);
             }
             else if (e.Data.GetDataPresent(DataFormats.Text))
             {
@@ -118,6 +126,8 @@ namespace Rumble_Mod_Manager
                     errorMessage.Show();
                     errorMessage.BringToFront();
                 }
+
+                panel2.BackColor = Color.FromArgb(40, 40, 40);
             }
 
             LoadMods();
@@ -139,7 +149,7 @@ namespace Rumble_Mod_Manager
                         await response.Content.CopyToAsync(fileStream);
                     }
 
-                    InstallMod(tempZipPath, true);
+                    await InstallMod(tempZipPath, true, this);
                     UserMessage successMessage = new UserMessage("Mod downloaded and installed successfully from URL!", true);
                     successMessage.Show();
                     successMessage.BringToFront();
@@ -199,6 +209,7 @@ namespace Rumble_Mod_Manager
             }
 
             UninstallButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
+            LaunchGame.Font = new Font(privateFonts.Families[1], 12.0f, FontStyle.Regular);
             ToggleModLabel.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
             ThunderstoreButton.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
             CustomMapsDownloadButton.Font = new Font(privateFonts.Families[1], 22.0F, FontStyle.Regular);
@@ -228,6 +239,28 @@ namespace Rumble_Mod_Manager
             }
         }
 
+        public void AdjustPanelLocations()
+        {
+            int panelWidth = 580;
+            int panelHeight = 84;
+            int verticalMargin = 10;
+
+            int panel2Width = panel2.ClientSize.Width;
+            int totalPanelsWidth = panelWidth;
+            int startX = (panel2Width - totalPanelsWidth) / 2;
+
+            foreach (Control modPanel in panel2.Controls)
+            {
+                modPanel.Size = new Size(panelWidth, panelHeight);
+                modPanel.Location = new Point(startX, verticalMargin + panel2.Controls.GetChildIndex(modPanel) * (panelHeight + verticalMargin));
+            }
+
+            panel2.HorizontalScroll.Maximum = 0;
+            panel2.AutoScroll = false;
+            panel2.VerticalScroll.Maximum = 0;
+            panel2.VerticalScroll.Visible = false;
+            panel2.AutoScroll = true;
+        }
 
         public void LoadMods()
         {
@@ -272,7 +305,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private void DisplayMods()
+        public void DisplayMods()
         {
             isLoadingDisplay = true;
 
@@ -330,38 +363,13 @@ namespace Rumble_Mod_Manager
                 }
             }
 
-            int panelWidth = 580;
-            int panelHeight = 84;
-            int verticalMargin = 10;
-
-            int panel2Width = panel2.ClientSize.Width;
-            int totalPanelsWidth = panelWidth;
-            int startX = (panel2Width - totalPanelsWidth) / 2;
-
-            foreach (Control modPanel in panel2.Controls)
-            {
-                modPanel.Size = new Size(panelWidth, panelHeight);
-                modPanel.Location = new Point(startX, verticalMargin + panel2.Controls.GetChildIndex(modPanel) * (panelHeight + verticalMargin));
-            }
-
-            panel2.HorizontalScroll.Maximum = 0;
-            panel2.AutoScroll = false;
-            panel2.VerticalScroll.Maximum = 0;
-            panel2.VerticalScroll.Visible = false;
-            panel2.AutoScroll = true;
+            AdjustPanelLocations();
 
             isLoadingDisplay = false;
         }
 
         private async Task UpdateButton_Click(ModPanelControl panel)
         {
-            ModPanel_Click(panel, EventArgs.Empty);
-
-            while (selectedPanel == null)
-            {
-                await Task.Delay(1);
-            }
-
             button1_Click(panel, EventArgs.Empty);
         }
 
@@ -899,6 +907,116 @@ namespace Rumble_Mod_Manager
         private void pictureBox2_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private async void LaunchGame_Click(object sender, EventArgs e)
+        {
+            string steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
+
+            if (steamInstallPath == null)
+            {
+                steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) as string;
+            }
+
+            string steamExePath = Path.Combine(steamInstallPath, "steam.exe");
+
+            if (!File.Exists(steamExePath))
+            {
+                UserMessage error = new UserMessage("Steam executable not found at the specified path.", true);
+                error.Show();
+                return;
+            }
+
+            try
+            {
+                if (gameProcess == null)
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = steamExePath,
+                        Arguments = $"-applaunch 890550",
+                        UseShellExecute = true
+                    });
+
+                    await Task.Run(() =>
+                    {
+                        while (gameProcess == null || gameProcess.HasExited)
+                        {
+                            gameProcess = Process.GetProcessesByName("RUMBLE").FirstOrDefault();
+                            if (gameProcess != null)
+                            {
+                                break;
+                            }
+                            Thread.Sleep(250);
+                        }
+                    });
+
+                    LaunchGame.Text = "Stop Game";
+                    LaunchGame.BackColor = Color.Red;
+                    LaunchGame.ForeColor = Color.Maroon;
+                }
+                else
+                {
+                    if (!gameProcess.HasExited)
+                    {
+                        gameProcess.Kill();
+                        gameProcess.WaitForExit();
+                        gameProcess = null;
+                    }
+
+                    LaunchGame.Text = "Launch Game";
+                    LaunchGame.BackColor = Color.Lime;
+                    LaunchGame.ForeColor = Color.Green;
+                }
+            }
+            catch (Exception ex)
+            {
+                UserMessage error = new UserMessage($"Failed to launch or stop RUMBLE: {ex.Message}", true);
+                error.Show();
+            }
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            if (debounceTimer.Enabled)
+            {
+                debounceTimer.Stop();
+            }
+            debounceTimer.Start();
+        }
+
+        private void debounceTimer_Tick(object sender, EventArgs e)
+        {
+            debounceTimer.Stop();
+
+            string searchText = textBox1.Text.ToLower();
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                FilterMods(searchText);
+            }
+            else
+            {
+                DisplayMods();
+            }
+        }
+
+        private void FilterMods(string searchText)
+        {
+            var filteredPanels = preloadedModPanels
+                .Where(panel =>
+                    panel.ModNameLabel.ToLower().Contains(searchText.ToLower()) ||
+                    panel.label2.Text.ToLower().Contains(searchText.ToLower())
+                )
+                .ToList();
+
+            panel2.Controls.Clear();
+
+            foreach (var panel in filteredPanels)
+            {
+                panel2.Controls.Add(panel);
+            }
+
+            AdjustPanelLocations();
         }
     }
 
