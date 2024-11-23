@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -59,7 +60,11 @@ namespace Rumble_Mod_Manager
 
             if (ModMangager != null)
             {
-                ModMangager.LoadMods();
+                string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{Properties.Settings.Default.LastLoadedProfile}_profile.json");
+                string json = File.ReadAllText(profilePath);
+                var profile = JsonConvert.DeserializeObject<ModProfile>(json);
+
+                ModMangager.LoadMods(profile);
             }
             else if (launchPage != null)
             {

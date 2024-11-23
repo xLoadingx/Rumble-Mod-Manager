@@ -260,7 +260,12 @@ namespace Rumble_Mod_Manager
                 {
                     installingMessage.UpdateStatusMessage($"'{mod.Name}' successfully installed");
                     installingMessage.ShowButtons(true);
-                    form1.LoadMods();
+
+                    string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{Properties.Settings.Default.LastLoadedProfile}_profile.json");
+                    string json = File.ReadAllText(profilePath);
+                    var profile = JsonConvert.DeserializeObject<ModProfile>(json);
+
+                    form1.LoadMods(profile);
                 }
             }
             catch (Exception ex)

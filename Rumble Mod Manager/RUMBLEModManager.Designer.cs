@@ -60,6 +60,8 @@
             guna2DragControl1 = new Guna.UI2.WinForms.Guna2DragControl(components);
             textBox1 = new TextBox();
             debounceTimer = new System.Windows.Forms.Timer(components);
+            guna2Elipse6 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            button1 = new Button();
             panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)SettingsButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
@@ -345,6 +347,7 @@
             // panel3
             // 
             panel3.BackColor = Color.FromArgb(15, 15, 15);
+            panel3.Controls.Add(button1);
             panel3.Controls.Add(LaunchGame);
             panel3.Controls.Add(pictureBox2);
             panel3.Controls.Add(FormTitle);
@@ -385,19 +388,41 @@
             // textBox1
             // 
             textBox1.BackColor = Color.FromArgb(64, 64, 64);
+            textBox1.BorderStyle = BorderStyle.None;
+            textBox1.Font = new Font("Segoe UI", 10F);
             textBox1.ForeColor = Color.White;
-            textBox1.Location = new Point(12, 34);
+            textBox1.Location = new Point(12, 35);
+            textBox1.Multiline = true;
             textBox1.Name = "textBox1";
-            textBox1.PlaceholderText = "Search for mods via name, author, or description";
-            textBox1.Size = new Size(278, 23);
+            textBox1.PlaceholderText = "Search for mods via name, author, or version";
+            textBox1.Size = new Size(293, 23);
             textBox1.TabIndex = 5;
             textBox1.TextAlign = HorizontalAlignment.Center;
+            textBox1.WordWrap = false;
             textBox1.TextChanged += textBox1_TextChanged;
             // 
             // debounceTimer
             // 
             debounceTimer.Interval = 300;
             debounceTimer.Tick += debounceTimer_Tick;
+            // 
+            // guna2Elipse6
+            // 
+            guna2Elipse6.BorderRadius = 12;
+            guna2Elipse6.TargetControl = textBox1;
+            // 
+            // button1
+            // 
+            button1.AutoSize = true;
+            button1.BackColor = Color.SlateBlue;
+            button1.ForeColor = Color.White;
+            button1.Location = new Point(896, 5);
+            button1.Name = "button1";
+            button1.Size = new Size(114, 25);
+            button1.TabIndex = 28;
+            button1.Text = "Check for Updates";
+            button1.UseVisualStyleBackColor = false;
+            button1.Click += button1_Click_1;
             // 
             // RUMBLEModManager
             // 
@@ -461,5 +486,7 @@
         private Button LaunchGame;
         private TextBox textBox1;
         private System.Windows.Forms.Timer debounceTimer;
+        private Guna.UI2.WinForms.Guna2Elipse guna2Elipse6;
+        private Button button1;
     }
 }

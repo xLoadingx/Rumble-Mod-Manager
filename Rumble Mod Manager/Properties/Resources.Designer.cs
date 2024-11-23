@@ -63,6 +63,16 @@ namespace Rumble_Mod_Manager.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap AchievementUnlocked {
+            get {
+                object obj = ResourceManager.GetObject("AchievementUnlocked", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap blue {
             get {
                 object obj = ResourceManager.GetObject("blue", resourceCulture);
@@ -93,6 +103,16 @@ namespace Rumble_Mod_Manager.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Favoritied {
+            get {
+                object obj = ResourceManager.GetObject("Favoritied", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Gear {
             get {
                 object obj = ResourceManager.GetObject("Gear", resourceCulture);
@@ -106,6 +126,16 @@ namespace Rumble_Mod_Manager.Properties {
         internal static System.Drawing.Bitmap green {
             get {
                 object obj = ResourceManager.GetObject("green", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Not_Favorited {
+            get {
+                object obj = ResourceManager.GetObject("Not Favorited", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

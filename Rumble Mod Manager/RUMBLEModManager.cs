@@ -29,6 +29,7 @@ namespace Rumble_Mod_Manager
 
         Dictionary<string, string> modMappings = new Dictionary<string, string>();
         public List<ModPanelControl> preloadedModPanels = new List<ModPanelControl>();
+        private List<ModPanelControl> allMods = new List<ModPanelControl>();
 
         public RUMBLEModManager(List<ModPanelControl> preloadedPanels)
         {
@@ -52,7 +53,7 @@ namespace Rumble_Mod_Manager
             modMappings = await GetModMappingsAsync(url);
 
             LoadCustomFont();
-            LoadMods();
+            LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
 
             panel2.AllowDrop = true;
             panel2.DragEnter += new DragEventHandler(panel2_DragEnter);
@@ -105,7 +106,7 @@ namespace Rumble_Mod_Manager
                     if (file.EndsWith(".zip"))
                     {
                         await InstallMod(file, true, this);
-                        UserMessage successMessage = new UserMessage($"Mod '{Path.GetFileName(file)}' installed successfully!", true);
+                        UserMessage successMessage = new UserMessage($"Mod '{Path.GetFileNameWithoutExtension(file)}' installed successfully!", true);
                         successMessage.Show();
                         successMessage.BringToFront();
                     }
@@ -130,7 +131,8 @@ namespace Rumble_Mod_Manager
                 panel2.BackColor = Color.FromArgb(40, 40, 40);
             }
 
-            LoadMods();
+
+            LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
         }
 
         private async Task DownloadModFromURL(string url)
@@ -222,6 +224,7 @@ namespace Rumble_Mod_Manager
             ModDescriptionLabel.Font = new Font(privateFonts.Families[1], 13.0F, FontStyle.Regular);
             WelcomeLabel.Font = new Font(privateFonts.Families[1], 20.0F, FontStyle.Regular);
             FormTitle.Font = new Font(privateFonts.Families[0], 15.0f, FontStyle.Regular);
+            button1.Font = new Font(privateFonts.Families[1], 12.0f, FontStyle.Regular);
         }
 
         private void Settings_Button_Click(object sender, EventArgs e)
@@ -239,6 +242,22 @@ namespace Rumble_Mod_Manager
             }
         }
 
+        private void AddOrUpdateModPanel(ModPanelControl modPanel)
+        {
+            var existingPanel = allMods.FirstOrDefault(mod => mod.ModNameLabel == modPanel.ModNameLabel);
+            if (existingPanel != null)
+            {
+                existingPanel.ModEnabled = modPanel.ModEnabled;
+                existingPanel.Outdated = modPanel.Outdated;
+                existingPanel.FavoritedStar.Checked = modPanel.FavoritedStar.Checked;
+            }
+            else
+            {
+                allMods.Add(modPanel);
+                panel2.Controls.Add(modPanel);
+            }
+        }
+
         public void AdjustPanelLocations()
         {
             int panelWidth = 580;
@@ -249,20 +268,34 @@ namespace Rumble_Mod_Manager
             int totalPanelsWidth = panelWidth;
             int startX = (panel2Width - totalPanelsWidth) / 2;
 
-            foreach (Control modPanel in panel2.Controls)
+            panel2.AutoScroll = false;
+
+            var sortedPanels = panel2.Controls.OfType<ModPanelControl>()
+                .OrderByDescending(p => p.FavoritedStar.Checked)
+                .ThenBy(p => p.ModNameLabel.ToLowerInvariant())
+                .ToList();
+
+            int currentIndex = 0;
+
+            foreach (var modPanel in sortedPanels)
             {
+                panel2.Controls.SetChildIndex(modPanel, currentIndex);
+
                 modPanel.Size = new Size(panelWidth, panelHeight);
-                modPanel.Location = new Point(startX, verticalMargin + panel2.Controls.GetChildIndex(modPanel) * (panelHeight + verticalMargin));
+                modPanel.Location = new Point(startX, verticalMargin + currentIndex * (panelHeight + verticalMargin));
+                currentIndex++;
             }
 
             panel2.HorizontalScroll.Maximum = 0;
             panel2.AutoScroll = false;
             panel2.VerticalScroll.Maximum = 0;
             panel2.VerticalScroll.Visible = false;
+
+            panel2.AutoScrollPosition = new Point(0, 0);
             panel2.AutoScroll = true;
         }
 
-        public void LoadMods()
+        public void LoadMods(ModProfile loadedProfile)
         {
             UninstallButton.Visible = false;
             ModNameLabel.Visible = false;
@@ -280,14 +313,14 @@ namespace Rumble_Mod_Manager
                 selectedPanel = null;
             }
 
-            DisplayMods();
+            DisplayMods(loadedProfile);
         }
 
         private void ModManager_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.R && !isLoadingDisplay)
             {
-                DisplayMods();
+                LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
             }
 
             if (e.Control && e.KeyCode == Keys.S)
@@ -305,7 +338,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        public void DisplayMods()
+        public void DisplayMods(ModProfile loadedProfile)
         {
             isLoadingDisplay = true;
 
@@ -336,8 +369,6 @@ namespace Rumble_Mod_Manager
 
             WelcomeLabel.Visible = enabledModFiles.Length == 0 && disabledModFiles.Length == 0;
 
-            panel2.Controls.Clear();
-
             preloadedModPanels = preloadedModPanels.OrderBy(p => p.ModNameLabel.ToLowerInvariant()).ToList();
 
             foreach (var panel in preloadedModPanels)
@@ -345,21 +376,37 @@ namespace Rumble_Mod_Manager
                 string panelName = panel.ModNameLabel.ToLowerInvariant();
                 bool isInEnabledMods = enabledModFiles.Any(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == panelName);
                 bool isInDisabledMods = disabledModFiles.Any(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == panelName);
+                ModState profileMod = loadedProfile.enabledMods.Concat(loadedProfile.disabledMods).FirstOrDefault(mod => mod.ModName.ToLowerInvariant() == panelName);
 
                 if (isInEnabledMods || isInDisabledMods)
                 {
                     panel.ModEnabled = isInEnabledMods;
-                    panel.Click -= ModPanel_Click;
-                    panel.Click += ModPanel_Click;
 
-                    var updateButton = panel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
-                    if (updateButton != null)
+                    if (!panel2.Controls.Contains(panel))
                     {
-                        updateButton.Click -= async (s, e) => await UpdateButton_Click(panel);
-                        updateButton.Click += async (s, e) => await UpdateButton_Click(panel);
-                    }
+                        panel.Click -= ModPanel_Click;
+                        panel.Click += ModPanel_Click;
+                        panel.FavoritedStar.MouseUp += (sender, e) =>
+                        {
+                            SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+                            AddOrUpdateModPanel(panel);
+                            LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
+                        };
 
-                    panel2.Controls.Add(panel);
+                        var updateButton = panel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
+                        if (updateButton != null)
+                        {
+                            updateButton.Click -= async (s, e) => await UpdateButton_Click(panel);
+                            updateButton.Click += async (s, e) => await UpdateButton_Click(panel);
+                        }
+
+                        if (profileMod != null)
+                        {
+                            panel.FavoritedStar.Checked = profileMod.Favorited;
+                        }
+
+                        AddOrUpdateModPanel(panel);
+                    }
                 }
             }
 
@@ -395,9 +442,11 @@ namespace Rumble_Mod_Manager
                         File.Delete(modFilePath);
 
                         preloadedModPanels.Remove(selectedPanel);
+                        panel2.Controls.Remove(selectedPanel);
 
-                        LoadMods();
                         SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+                        AddOrUpdateModPanel(selectedPanel);
+                        LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
                     }
                 }
             }
@@ -517,12 +566,13 @@ namespace Rumble_Mod_Manager
                 disabledMods = new List<ModState>()
             };
 
-            foreach (ModPanelControl modPanel in panel2.Controls.OfType<ModPanelControl>())
+            foreach (ModPanelControl modPanel in allMods)
             {
                 ModState state = new ModState
                 {
                     ModName = modPanel.ModNameLabel,
-                    Outdated = modPanel.Outdated
+                    Outdated = modPanel.Outdated,
+                    Favorited = modPanel.FavoritedStar.Checked
                 };
 
                 if (modPanel.ModEnabled)
@@ -600,7 +650,7 @@ namespace Rumble_Mod_Manager
 
             if (modManagerInstance != null)
             {
-                modManagerInstance.LoadMods();
+                modManagerInstance.LoadMods(profile);
             }
         }
 
@@ -759,6 +809,7 @@ namespace Rumble_Mod_Manager
                         ModPictureDisplay.Visible = false;
                         ToggleModButton.Visible = false;
                         ToggleModLabel.Visible = false;
+
                         selectedPanel = null;
                     }
                 }
@@ -807,6 +858,7 @@ namespace Rumble_Mod_Manager
                 {
                     await ThunderstoreMods.DownloadModFromInternet(CurrentlySelectedMod, this, selectedPanel.ModEnabled, true);
                     SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+                    AddOrUpdateModPanel(selectedPanel);
 
                     string updatedVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, "Mods"), CurrentlySelectedMod.Name + ".dll", MelonLoaderModInfoType.Version);
                     int updatedVersion = int.Parse(updatedVersionStr.Replace(".", ""), CultureInfo.InvariantCulture);
@@ -874,6 +926,7 @@ namespace Rumble_Mod_Manager
                     selectedPanel.ModDllPath = Path.Combine(destinationPath, Path.GetFileName(selectedPanel.ModDllPath));
 
                     SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+                    AddOrUpdateModPanel(selectedPanel);
                 }
                 else
                 {
@@ -990,24 +1043,18 @@ namespace Rumble_Mod_Manager
             debounceTimer.Stop();
 
             string searchText = textBox1.Text.ToLower();
-            if (!string.IsNullOrEmpty(searchText))
-            {
-                FilterMods(searchText);
-            }
-            else
-            {
-                DisplayMods();
-            }
+            LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
+            FilterMods(searchText);
         }
 
         private void FilterMods(string searchText)
         {
             var filteredPanels = preloadedModPanels
-                .Where(panel =>
-                    panel.ModNameLabel.ToLower().Contains(searchText.ToLower()) ||
-                    panel.label2.Text.ToLower().Contains(searchText.ToLower())
-                )
-                .ToList();
+                  .Where(panel =>
+                      panel.ModNameLabel.ToLower().Contains(searchText.ToLower()) ||
+                      panel.label2.Text.ToLower().Contains(searchText.ToLower())
+                  )
+                  .ToList();
 
             panel2.Controls.Clear();
 
@@ -1017,6 +1064,11 @@ namespace Rumble_Mod_Manager
             }
 
             AdjustPanelLocations();
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            LaunchPage.CheckForUpdates(true);
         }
     }
 
@@ -1036,6 +1088,7 @@ namespace Rumble_Mod_Manager
     {
         public string ModName { get; set; }
         public bool Outdated { get; set; }
+        public bool Favorited { get; set; }
     }
 
     public class ModProfile

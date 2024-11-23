@@ -29,9 +29,10 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             toolTip1 = new ToolTip(components);
             guna2PictureBox1 = new Guna.UI2.WinForms.Guna2PictureBox();
             ModName = new Label();
@@ -39,6 +40,7 @@
             guna2Elipse3 = new Guna.UI2.WinForms.Guna2Elipse(components);
             ImageButton = new Guna.UI2.WinForms.Guna2ImageButton();
             guna2Elipse4 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            FavoritedStar = new Guna.UI2.WinForms.Guna2ImageCheckBox();
             ((System.ComponentModel.ISupportInitialize)guna2PictureBox1).BeginInit();
             SuspendLayout();
             // 
@@ -50,11 +52,11 @@
             // 
             guna2PictureBox1.BackColor = Color.Transparent;
             guna2PictureBox1.BorderRadius = 12;
-            guna2PictureBox1.CustomizableEdges = customizableEdges1;
+            guna2PictureBox1.CustomizableEdges = customizableEdges5;
             guna2PictureBox1.ImageRotate = 0F;
             guna2PictureBox1.Location = new Point(7, 9);
             guna2PictureBox1.Name = "guna2PictureBox1";
-            guna2PictureBox1.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            guna2PictureBox1.ShadowDecoration.CustomizableEdges = customizableEdges6;
             guna2PictureBox1.Size = new Size(65, 65);
             guna2PictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             guna2PictureBox1.TabIndex = 0;
@@ -96,7 +98,7 @@
             ImageButton.Location = new Point(545, 0);
             ImageButton.Name = "ImageButton";
             ImageButton.PressedState.ImageSize = new Size(35, 24);
-            ImageButton.ShadowDecoration.CustomizableEdges = customizableEdges3;
+            ImageButton.ShadowDecoration.CustomizableEdges = customizableEdges7;
             ImageButton.Size = new Size(35, 35);
             ImageButton.TabIndex = 3;
             // 
@@ -105,11 +107,28 @@
             guna2Elipse4.BorderRadius = 24;
             guna2Elipse4.TargetControl = ImageButton;
             // 
+            // FavoritedStar
+            // 
+            FavoritedStar.BackColor = Color.Transparent;
+            FavoritedStar.CheckedState.Image = Properties.Resources.Favoritied;
+            FavoritedStar.CheckedState.ImageSize = new Size(25, 25);
+            FavoritedStar.HoverState.ImageSize = new Size(28, 28);
+            FavoritedStar.Image = Properties.Resources.Not_Favorited;
+            FavoritedStar.ImageOffset = new Point(0, 0);
+            FavoritedStar.ImageRotate = 0F;
+            FavoritedStar.ImageSize = new Size(25, 25);
+            FavoritedStar.Location = new Point(545, 45);
+            FavoritedStar.Name = "FavoritedStar";
+            FavoritedStar.ShadowDecoration.CustomizableEdges = customizableEdges8;
+            FavoritedStar.Size = new Size(35, 35);
+            FavoritedStar.TabIndex = 4;
+            // 
             // ModPanelControl
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
+            Controls.Add(FavoritedStar);
             Controls.Add(ImageButton);
             Controls.Add(label2);
             Controls.Add(ModName);
@@ -136,5 +155,6 @@
         private Guna.UI2.WinForms.Guna2ImageButton ImageButton;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse4;
         public Label label2;
+        public Guna.UI2.WinForms.Guna2ImageCheckBox FavoritedStar;
     }
 }

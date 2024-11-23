@@ -1,23 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+﻿using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Drawing.Text;
 using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Guna.UI2.WinForms;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using TheArtOfDevHtmlRenderer.Adapters;
-using static Rumble_Mod_Manager.ThunderstoreMods;
-using Timer = System.Threading.Timer;
+using Tulpep.NotificationWindow;
 
 namespace Rumble_Mod_Manager
 {
@@ -50,7 +38,29 @@ namespace Rumble_Mod_Manager
             if (!string.IsNullOrEmpty(Properties.Settings.Default.RumblePath))
             {
                 CheckRumblePath();
+
+                await CheckForUpdates();
             }
+        }
+
+        public static void ShowNotification(Image image, string titleText, string contentText)
+        {
+            Font textFont = new Font(privateFonts.Families[1], 15.0F, FontStyle.Regular);
+            PopupNotifier popup = new PopupNotifier();
+            popup.Image = image;
+            popup.ImagePadding = new Padding(0, 5, 0, 0);
+            popup.ImageSize = new Size(80, 80);
+            popup.BodyColor = Color.White;
+            popup.TitleText = titleText;
+            popup.TitlePadding = new Padding(0, 5, 0, 0);
+            popup.TitleColor = Color.Black;
+            popup.TitleFont = textFont;
+
+            popup.ContentText = contentText;
+            popup.ContentColor = Color.Black;
+            popup.ContentFont = textFont;
+            popup.ContentPadding = new Padding(0, 10, 0, 0);
+            popup.Popup();
         }
 
         public async Task InstallMelonLoader(bool launchGame = true)
@@ -528,6 +538,46 @@ namespace Rumble_Mod_Manager
             };
 
             return modPanel;
+        }
+
+        public static async Task CheckForUpdates(bool showScreen = false)
+        {
+            var client = new HttpClient();
+
+            var url = "https://raw.githubusercontent.com/xLoadingx/Rumble-Mod-Manager/main/update/updates.json";
+            url += "?nocache=" + DateTime.Now.Ticks;
+            var response = await client.GetStringAsync(url);
+            dynamic updateInfo = JsonConvert.DeserializeObject(response);
+
+            if (updateInfo.version != Application.ProductVersion)
+            {
+                UserMessage updateMessage = new UserMessage($"A new version is available! Do you want to install? \n\n {Application.ProductVersion} => {updateInfo.version.ToString()}", false, true);
+                if (updateMessage.ShowDialog() == DialogResult.Yes)
+                {
+                    string tempZipPath = Path.Combine(Path.GetTempPath(), "Manager.zip");
+                    using (var download = await client.GetStreamAsync(updateInfo.url.ToString()))
+                    using (var fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write))
+                    {
+                        await download.CopyToAsync(fileStream);
+                    }
+
+                    string updaterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Updater.exe");
+                    if (File.Exists(updaterPath))
+                    {
+                        Process.Start(updaterPath, $"\"{tempZipPath}\" \"{AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')}\" \"{Environment.ProcessPath}\"");
+                        Application.Exit();
+                    }
+                    else
+                    {
+                        UserMessage error = new UserMessage("Updater not found. Please reinstall the application.");
+                        error.Show();
+                    }
+                }
+            } else if (showScreen)
+            {
+                UserMessage upToDate = new UserMessage("You have the latest version!");
+                upToDate.Show();
+            }
         }
 
         private async Task LaunchManager()
