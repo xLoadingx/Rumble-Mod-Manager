@@ -70,5 +70,17 @@ namespace Rumble_Mod_Manager.Properties {
                 this["SkipMapLoading"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoModUpdating {
+            get {
+                return ((bool)(this["AutoModUpdating"]));
+            }
+            set {
+                this["AutoModUpdating"] = value;
+            }
+        }
     }
 }

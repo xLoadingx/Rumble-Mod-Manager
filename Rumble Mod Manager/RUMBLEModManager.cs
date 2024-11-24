@@ -726,77 +726,69 @@ namespace Rumble_Mod_Manager
 
                         bool modFound = false;
 
-                        if (ModCache.ModsByPage.Count > 0)
+                        if (selectedPanel.Mod != null)
                         {
-                            foreach (var kvp in ModCache.ModsByPage)
-                            {
-                                foreach (var mod in kvp.Value)
+                            Mod mod = selectedPanel.Mod;
+
+                            modVersionStr = modVersionStr ?? mod.Version;
+                            CurrentlySelectedName = selectedPanel.ModNameLabel;
+                            ModPictureDisplay.Image = mod.ModImage;
+                            CurrentlySelectedMod = mod;
+                            ModNameLabel.Text = mod.Name;
+                            DateUpdated.Text = mod.DateUpdated;
+
+                            var cleanedDependencies = CurrentlySelectedMod.Dependencies
+                                .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
+                                .Select(d =>
                                 {
-                                    if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
+                                    var parts = d.Split('-').ToList();
+                                    if (parts.Count == 2)
                                     {
-                                        modVersionStr = modVersionStr ?? mod.Version;
-                                        CurrentlySelectedName = selectedPanel.ModNameLabel;
-                                        ModPictureDisplay.Image = mod.ModImage;
-                                        CurrentlySelectedMod = mod;
-                                        ModNameLabel.Text = mod.Name;
-                                        DateUpdated.Text = mod.DateUpdated;
-
-                                        var cleanedDependencies = CurrentlySelectedMod.Dependencies
-                                            .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
-                                            .Select(d =>
-                                            {
-                                                var parts = d.Split('-').ToList();
-                                                if (parts.Count == 2)
-                                                {
-                                                    var name = parts[0];
-                                                    var version = parts[1];
-                                                    return $"{name} v{version}";
-                                                }
-                                                else if (parts.Count > 2)
-                                                {
-                                                    var name = string.Join(" ", parts.Skip(1).Take(parts.Count - 2));
-                                                    var version = parts.Last();
-                                                    return $"{name} v{version}";
-                                                }
-                                                return d; // In case it doesn't follow the expected format
-                                            })
-                                            .Where(d => !d.Contains("MelonLoader", StringComparison.OrdinalIgnoreCase)) // Double check after cleaning
-                                            .ToList();
-
-
-                                        DependenciesLabel.Text = $"Dependencies:\n{string.Join("\n", cleanedDependencies)}";
-                                        CurrentlySelectedVersion = modVersionStr ?? mod.Version;
-                                        ModAuthorLabel.Text = $"By {mod.Author}";
-                                        ModDescriptionLabel.Text = mod.Description;
-
-                                        if (modVersionStr != null)
-                                        {
-                                            int modVersion = int.Parse(modVersionStr.Replace(".", ""));
-                                            int modVersionCache = int.Parse(mod.Version.Replace(".", ""));
-
-                                            if (modVersion > modVersionCache)
-                                            {
-                                                ModVersionLabel.ForeColor = Color.Cyan;
-                                            }
-                                            else if (modVersion == modVersionCache)
-                                            {
-                                                ModVersionLabel.ForeColor = Color.Lime;
-                                            }
-                                            else
-                                            {
-                                                ModVersionLabel.ForeColor = Color.Red;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            ModVersionLabel.ForeColor = Color.Lime;
-                                        }
-
-                                        modFound = true;
-                                        break;
+                                        var name = parts[0];
+                                        var version = parts[1];
+                                        return $"{name} v{version}";
                                     }
+                                    else if (parts.Count > 2)
+                                    {
+                                        var name = string.Join(" ", parts.Skip(1).Take(parts.Count - 2));
+                                        var version = parts.Last();
+                                        return $"{name} v{version}";
+                                    }
+                                    return d; // In case it doesn't follow the expected format
+                                })
+                                .Where(d => !d.Contains("MelonLoader", StringComparison.OrdinalIgnoreCase)) // Double check after cleaning
+                                .ToList();
+
+
+                            DependenciesLabel.Text = $"Dependencies:\n{string.Join("\n", cleanedDependencies)}";
+                            CurrentlySelectedVersion = modVersionStr ?? mod.Version;
+                            ModAuthorLabel.Text = $"By {mod.Author}";
+                            ModDescriptionLabel.Text = mod.Description;
+
+                            if (modVersionStr != null)
+                            {
+                                int modVersion = int.Parse(modVersionStr.Replace(".", ""));
+                                int modVersionCache = int.Parse(mod.Version.Replace(".", ""));
+
+                                if (modVersion > modVersionCache)
+                                {
+                                    ModVersionLabel.ForeColor = Color.Cyan;
+                                }
+                                else if (modVersion == modVersionCache)
+                                {
+                                    ModVersionLabel.ForeColor = Color.Lime;
+                                }
+                                else
+                                {
+                                    ModVersionLabel.ForeColor = Color.Red;
                                 }
                             }
+                            else
+                            {
+                                ModVersionLabel.ForeColor = Color.Lime;
+                            }
+
+                            modFound = true;
                         }
 
                         ModVersionLabel.Text = $"Version {modVersionStr}";

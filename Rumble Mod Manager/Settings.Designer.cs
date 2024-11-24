@@ -31,6 +31,8 @@
             components = new System.ComponentModel.Container();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Settings));
             label1 = new Label();
             textBox1 = new TextBox();
@@ -42,6 +44,8 @@
             guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
             guna2Elipse2 = new Guna.UI2.WinForms.Guna2Elipse(components);
             label2 = new Label();
+            label3 = new Label();
+            guna2ToggleSwitch2 = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             SuspendLayout();
             // 
             // label1
@@ -162,12 +166,49 @@
             label2.Text = "Skip Map\r\nLoading";
             label2.TextAlign = ContentAlignment.MiddleCenter;
             // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Arial", 15F);
+            label3.ForeColor = Color.White;
+            label3.Location = new Point(12, 265);
+            label3.Name = "label3";
+            label3.Size = new Size(100, 46);
+            label3.TabIndex = 11;
+            label3.Text = "Auto mod \r\nupdating";
+            label3.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // guna2ToggleSwitch2
+            // 
+            guna2ToggleSwitch2.Animated = true;
+            guna2ToggleSwitch2.AutoRoundedCorners = true;
+            guna2ToggleSwitch2.CheckedState.BorderColor = Color.SteelBlue;
+            guna2ToggleSwitch2.CheckedState.BorderRadius = 14;
+            guna2ToggleSwitch2.CheckedState.FillColor = Color.SteelBlue;
+            guna2ToggleSwitch2.CheckedState.InnerBorderColor = Color.White;
+            guna2ToggleSwitch2.CheckedState.InnerBorderRadius = 10;
+            guna2ToggleSwitch2.CheckedState.InnerColor = Color.White;
+            guna2ToggleSwitch2.CustomizableEdges = customizableEdges3;
+            guna2ToggleSwitch2.Location = new Point(15, 318);
+            guna2ToggleSwitch2.Name = "guna2ToggleSwitch2";
+            guna2ToggleSwitch2.ShadowDecoration.CustomizableEdges = customizableEdges4;
+            guna2ToggleSwitch2.Size = new Size(65, 31);
+            guna2ToggleSwitch2.TabIndex = 10;
+            guna2ToggleSwitch2.UncheckedState.BorderColor = Color.FromArgb(125, 137, 149);
+            guna2ToggleSwitch2.UncheckedState.BorderRadius = 14;
+            guna2ToggleSwitch2.UncheckedState.FillColor = Color.FromArgb(125, 137, 149);
+            guna2ToggleSwitch2.UncheckedState.InnerBorderColor = Color.White;
+            guna2ToggleSwitch2.UncheckedState.InnerBorderRadius = 10;
+            guna2ToggleSwitch2.UncheckedState.InnerColor = Color.White;
+            // 
             // Settings
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 20, 20);
             ClientSize = new Size(424, 362);
+            Controls.Add(label3);
+            Controls.Add(guna2ToggleSwitch2);
             Controls.Add(label2);
             Controls.Add(panel1);
             Controls.Add(guna2ToggleSwitch1);
@@ -196,5 +237,7 @@
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse2;
         private Label label2;
+        private Label label3;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch guna2ToggleSwitch2;
     }
 }

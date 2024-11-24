@@ -554,7 +554,7 @@ namespace Rumble_Mod_Manager
 
         public static async Task CheckForUpdates(bool showScreen = false)
         {
-            int currentVersion = 131;
+            int currentVersion = 140;
 
             var client = new HttpClient();
 
