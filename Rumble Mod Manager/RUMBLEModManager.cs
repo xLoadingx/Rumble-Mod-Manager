@@ -29,7 +29,7 @@ namespace Rumble_Mod_Manager
 
         Dictionary<string, string> modMappings = new Dictionary<string, string>();
         public List<ModPanelControl> preloadedModPanels = new List<ModPanelControl>();
-        private List<ModPanelControl> allMods = new List<ModPanelControl>();
+        public List<ModPanelControl> allMods = new List<ModPanelControl>();
 
         public RUMBLEModManager(List<ModPanelControl> preloadedPanels)
         {
@@ -119,7 +119,7 @@ namespace Rumble_Mod_Manager
                 string url = (string)e.Data.GetData(DataFormats.Text);
                 if (Uri.IsWellFormedUriString(url, UriKind.Absolute) && url.Contains("thunderstore.io/package/download/"))
                 {
-                    await DownloadModFromURL(url);
+                    await DownloadModFromURL(url, this);
                 }
                 else
                 {
@@ -135,7 +135,7 @@ namespace Rumble_Mod_Manager
             LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
         }
 
-        private async Task DownloadModFromURL(string url)
+        public static async Task DownloadModFromURL(string url, RUMBLEModManager manager)
         {
             string tempZipPath = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod.zip");
 
@@ -151,7 +151,7 @@ namespace Rumble_Mod_Manager
                         await response.Content.CopyToAsync(fileStream);
                     }
 
-                    await InstallMod(tempZipPath, true, this);
+                    await InstallMod(tempZipPath, true, manager);
                     UserMessage successMessage = new UserMessage("Mod downloaded and installed successfully from URL!", true);
                     successMessage.Show();
                     successMessage.BringToFront();
@@ -406,7 +406,17 @@ namespace Rumble_Mod_Manager
                         }
 
                         AddOrUpdateModPanel(panel);
-                    }
+                    } 
+                }
+
+                bool existsInAnyList = loadedProfile.enabledMods
+                    .Concat(loadedProfile.disabledMods)
+                    .Any(mod => mod.ModName == panel.ModNameLabel);
+
+                if (!existsInAnyList && panel2.Controls.Contains(panel))
+                {
+                    panel2.Controls.Remove(panel);
+                    allMods.Remove(panel);
                 }
             }
 
@@ -442,10 +452,10 @@ namespace Rumble_Mod_Manager
                         File.Delete(modFilePath);
 
                         preloadedModPanels.Remove(selectedPanel);
+                        allMods.Remove(selectedPanel);
                         panel2.Controls.Remove(selectedPanel);
 
                         SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
-                        AddOrUpdateModPanel(selectedPanel);
                         LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
                     }
                 }
@@ -557,7 +567,7 @@ namespace Rumble_Mod_Manager
             return settingsDictionary;
         }
 
-        private void SaveProfile(string profileName, bool showMessage = true)
+        public void SaveProfile(string profileName, bool showMessage = true)
         {
             var profile = new ModProfile
             {
@@ -574,6 +584,11 @@ namespace Rumble_Mod_Manager
                     Outdated = modPanel.Outdated,
                     Favorited = modPanel.FavoritedStar.Checked
                 };
+
+                if (modPanel.Mod != null)
+                {
+                    state.DownloadLink = modPanel.Mod.ModPageUrl;
+                }
 
                 if (modPanel.ModEnabled)
                 {
@@ -671,7 +686,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private void ModPanel_Click(object sender, EventArgs e)
+        public void ModPanel_Click(object sender, EventArgs e)
         {
             if (Path.Exists(Path.Combine(Properties.Settings.Default.RumblePath, "Mods")))
             {
@@ -1089,6 +1104,7 @@ namespace Rumble_Mod_Manager
         public string ModName { get; set; }
         public bool Outdated { get; set; }
         public bool Favorited { get; set; }
+        public string DownloadLink { get; set; }
     }
 
     public class ModProfile

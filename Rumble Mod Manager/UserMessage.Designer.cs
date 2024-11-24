@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UserMessage));
             button1 = new Button();
             panel1 = new Panel();
             label1 = new Label();
@@ -124,6 +125,7 @@
             Controls.Add(panel1);
             Controls.Add(button1);
             FormBorderStyle = FormBorderStyle.None;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "UserMessage";
             Text = "UserMessage";
             panel1.ResumeLayout(false);

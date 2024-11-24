@@ -157,78 +157,87 @@ namespace Rumble_Mod_Manager
             string repoOwner = "xLoadingx";
             string repoName = "mod-maps";
             var maps = new Dictionary<int, List<CustomMap>>();
-
             progressBar.Value = 0;
 
             string basePath = Properties.Settings.Default.RumblePath;
             string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
-
-            if (!Directory.Exists(targetDirectory))
-            {
-                return null;
-            }
-
-            var mapDetails = new List<(string name, string description, string author, string version, string imageUrl, string downloadUrl)>();
+            if (!Directory.Exists(targetDirectory)) return null;
 
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://api.github.com/");
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("request");
-                HttpResponseMessage response = await client.GetAsync($"repos/{repoOwner}/{repoName}/contents/");
-                if (response.IsSuccessStatusCode)
+                var response = await client.GetAsync($"repos/{repoOwner}/{repoName}/contents/");
+                if (!response.IsSuccessStatusCode) return null;
+
+                var directories = JArray.Parse(await response.Content.ReadAsStringAsync())
+                    .Where(d => d["type"].ToString() == "dir")
+                    .ToList();
+
+                progressBar.Maximum = directories.Count;
+                progressBar.Value = 0;
+
+                var allFiles = await Task.WhenAll(directories.Select(async dir =>
                 {
-                    string json = await response.Content.ReadAsStringAsync();
-                    JArray directories = JArray.Parse(json);
+                    var dirResponse = await client.GetAsync(dir["url"].ToString());
+                    return dirResponse.IsSuccessStatusCode ? JArray.Parse(await dirResponse.Content.ReadAsStringAsync()) : null;
+                }));
 
-                    progressBar.Maximum = directories.Count;
-                    progressBar.Value = 0;
-
-                    var tasks = directories
-                        .Where(directory => directory["type"].ToString() == "dir")
-                        .Select(async directory =>
+                var mapDetails = allFiles
+                    .Where(files => files != null)
+                    .SelectMany(files => files)
+                    .GroupBy(file => file["path"].ToString().Split('/')[1])
+                    .Select(group =>
+                    {
+                        string name = "Unknown", description = "Unknown", author = "Unknown", version = "Unknown";
+                        string imageUrl = "", downloadUrl = "";
+                        foreach (var file in group)
                         {
-                            string dirUrl = directory["url"].ToString();
-                            var mapDetail = await GetMapDetailsFromDirectory(dirUrl, client);
-                            if (mapDetail != ("Unknown", "Unknown", "Unknown", "Unknown", "", ""))
+                            string fileName = file["name"].ToString();
+                            if (fileName == "Details.txt")
                             {
-                                progressBar.Invoke((Action)(() => progressBar.Value += 1));
-                                return mapDetail;
+                                var detailsResponse = client.GetAsync(file["download_url"].ToString()).Result;
+                                if (detailsResponse.IsSuccessStatusCode)
+                                {
+                                    var lines = detailsResponse.Content.ReadAsStringAsync().Result.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                                    foreach (var line in lines)
+                                    {
+                                        if (line.StartsWith("Name: ")) name = line.Substring(6);
+                                        if (line.StartsWith("Description: ")) description = line.Substring(13);
+                                        if (line.StartsWith("Author: ")) author = line.Substring(8);
+                                        if (line.StartsWith("Version: ")) version = line.Substring(9);
+                                    }
+                                }
                             }
-                            return default;
-                        }).ToList();
+                            else if (fileName.EndsWith(".png")) imageUrl = file["download_url"].ToString();
+                            else if (fileName.EndsWith(".txt")) downloadUrl = file["download_url"].ToString();
+                        }
+                        return (name, description, author, version, imageUrl, downloadUrl);
+                    }).ToList();
 
-                    var results = await Task.WhenAll(tasks);
-
-                    mapDetails.AddRange(results.Where(result => result != default));
-                }
-            }
-
-            int pageIndex = 1;
-            int mapCount = 0;
-            foreach (var detail in mapDetails)
-            {
-                var customMap = new CustomMap
+                int pageIndex = 1, mapCount = 0;
+                foreach (var detail in mapDetails)
                 {
-                    name = detail.name,
-                    description = detail.description,
-                    author = detail.author,
-                    version = detail.version,
-                    mapImage = await DownloadImage(detail.imageUrl),
-                    downloadLink = detail.downloadUrl
-                };
+                    var customMap = new CustomMap
+                    {
+                        name = detail.name,
+                        description = detail.description,
+                        author = detail.author,
+                        version = detail.version,
+                        mapImage = await DownloadImage(detail.imageUrl),
+                        downloadLink = detail.downloadUrl
+                    };
 
-                if (!maps.ContainsKey(pageIndex))
-                {
-                    maps[pageIndex] = new List<CustomMap>();
-                }
+                    if (!maps.ContainsKey(pageIndex)) maps[pageIndex] = new List<CustomMap>();
+                    maps[pageIndex].Add(customMap);
+                    mapCount++;
 
-                maps[pageIndex].Add(customMap);
-                mapCount++;
-
-                if (mapCount >= 26)
-                {
-                    pageIndex++;
-                    mapCount = 0;
+                    if (mapCount >= 26)
+                    {
+                        pageIndex++;
+                        mapCount = 0;
+                    }
+                    progressBar.Invoke((Action)(() => progressBar.Value += 1));
                 }
             }
 
@@ -461,6 +470,7 @@ namespace Rumble_Mod_Manager
             string ModAuthor = null;
             bool modFound = false;
             bool outdated = false;
+            ThunderstoreMods.Mod panelMod = null;
 
             if (modNameFromMapping != null)
             {
@@ -473,6 +483,7 @@ namespace Rumble_Mod_Manager
                             modFound = true;
                             ModAuthor = mod.Author;
                             modImage = mod.ModImage;
+                            panelMod = mod;
 
                             if (!string.IsNullOrEmpty(modVersionStr))
                             {
@@ -534,7 +545,8 @@ namespace Rumble_Mod_Manager
                 ModImage = modImage ?? Properties.Resources.UnknownMod,
                 Tag = Path.GetFileName(modFile),
                 ModEnabled = isEnabled,
-                ModDllPath = modFile
+                ModDllPath = modFile,
+                Mod = panelMod
             };
 
             return modPanel;
@@ -542,16 +554,19 @@ namespace Rumble_Mod_Manager
 
         public static async Task CheckForUpdates(bool showScreen = false)
         {
+            int currentVersion = 131;
+
             var client = new HttpClient();
 
             var url = "https://raw.githubusercontent.com/xLoadingx/Rumble-Mod-Manager/main/update/updates.json";
             url += "?nocache=" + DateTime.Now.Ticks;
             var response = await client.GetStringAsync(url);
             dynamic updateInfo = JsonConvert.DeserializeObject(response);
+            string versionString = (string)updateInfo["version"];
 
-            if (updateInfo.version != Application.ProductVersion)
+            if (currentVersion < int.Parse(versionString.Replace(".", "")))
             {
-                UserMessage updateMessage = new UserMessage($"A new version is available! Do you want to install? \n\n {Application.ProductVersion} => {updateInfo.version.ToString()}", false, true);
+                UserMessage updateMessage = new UserMessage($"A new version is available! Do you want to install? \n\n {string.Join(".", currentVersion.ToString().ToCharArray())} => {updateInfo.version.ToString()}", false, true);
                 if (updateMessage.ShowDialog() == DialogResult.Yes)
                 {
                     string tempZipPath = Path.Combine(Path.GetTempPath(), "Manager.zip");
@@ -575,7 +590,11 @@ namespace Rumble_Mod_Manager
                 }
             } else if (showScreen)
             {
-                UserMessage upToDate = new UserMessage("You have the latest version!");
+                string message = "You have the latest version!";
+
+                if (Environment.MachineName == "Desktop-49CDQ") message = "You have the latest version. \n You are the developer idiot.";
+
+                UserMessage upToDate = new UserMessage(message);
                 upToDate.Show();
             }
         }

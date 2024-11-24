@@ -359,7 +359,7 @@ namespace Rumble_Mod_Manager
                                 {
                                     message.UpdateStatusMessage("Mod already installed. Skipping.");
 
-                                    await Task.Delay(600);
+                                    await Task.Delay(100);
                                 }
                                 return;
                             }
@@ -390,14 +390,17 @@ namespace Rumble_Mod_Manager
                         }
                     }
 
-                    var existingPanel = form1.preloadedModPanels.FirstOrDefault(panel => panel.ModNameLabel.Equals(Path.GetFileNameWithoutExtension(modPath), StringComparison.OrdinalIgnoreCase));
+                    var existingPanel = form1.allMods.FirstOrDefault(panel => panel.ModNameLabel.Equals(Path.GetFileNameWithoutExtension(modPath), StringComparison.OrdinalIgnoreCase));
                     if (form1 != null && existingPanel == null)
                     {
                         ModPanelControl newModPanel = LaunchPage.CreateModPanel(modPath, ModEnabled, Properties.Settings.Default.RumblePath);
+                        newModPanel.Click += form1.ModPanel_Click;
                         form1.preloadedModPanels.Add(newModPanel);
                         
                         form1.panel2.Controls.Add(newModPanel);
+                        form1.allMods.Add(newModPanel);
                         form1.AdjustPanelLocations();
+                        form1.SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
                     }
 
                 } else

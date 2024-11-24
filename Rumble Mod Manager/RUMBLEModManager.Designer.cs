@@ -55,13 +55,13 @@
             guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
             guna2Elipse5 = new Guna.UI2.WinForms.Guna2Elipse(components);
             panel3 = new Panel();
+            button1 = new Button();
             pictureBox2 = new PictureBox();
             FormTitle = new Label();
             guna2DragControl1 = new Guna.UI2.WinForms.Guna2DragControl(components);
             textBox1 = new TextBox();
             debounceTimer = new System.Windows.Forms.Timer(components);
             guna2Elipse6 = new Guna.UI2.WinForms.Guna2Elipse(components);
-            button1 = new Button();
             panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)SettingsButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
@@ -356,6 +356,19 @@
             panel3.Size = new Size(1049, 33);
             panel3.TabIndex = 3;
             // 
+            // button1
+            // 
+            button1.AutoSize = true;
+            button1.BackColor = Color.SlateBlue;
+            button1.ForeColor = Color.White;
+            button1.Location = new Point(896, 5);
+            button1.Name = "button1";
+            button1.Size = new Size(114, 25);
+            button1.TabIndex = 28;
+            button1.Text = "Check for Updates";
+            button1.UseVisualStyleBackColor = false;
+            button1.Click += button1_Click_1;
+            // 
             // pictureBox2
             // 
             pictureBox2.Image = Properties.Resources.ExitButton;
@@ -411,19 +424,6 @@
             guna2Elipse6.BorderRadius = 12;
             guna2Elipse6.TargetControl = textBox1;
             // 
-            // button1
-            // 
-            button1.AutoSize = true;
-            button1.BackColor = Color.SlateBlue;
-            button1.ForeColor = Color.White;
-            button1.Location = new Point(896, 5);
-            button1.Name = "button1";
-            button1.Size = new Size(114, 25);
-            button1.TabIndex = 28;
-            button1.Text = "Check for Updates";
-            button1.UseVisualStyleBackColor = false;
-            button1.Click += button1_Click_1;
-            // 
             // RUMBLEModManager
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -436,6 +436,7 @@
             Controls.Add(panel1);
             Controls.Add(panel2);
             FormBorderStyle = FormBorderStyle.None;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimumSize = new Size(1049, 497);
             Name = "RUMBLEModManager";

@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ThunderstoreMods));
             panel1 = new Panel();
             linkLabel1 = new LinkLabel();
             ForwardButton = new Button();
@@ -257,6 +258,7 @@
             Controls.Add(textBox1);
             Controls.Add(panel2);
             Controls.Add(panel1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximumSize = new Size(1049, 483);
             MinimumSize = new Size(1049, 483);
             Name = "ThunderstoreMods";

@@ -63,6 +63,7 @@
             ClientSize = new Size(434, 450);
             Controls.Add(label1);
             Controls.Add(CreditsLabel);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximumSize = new Size(450, 489);
             MinimumSize = new Size(450, 489);
             Name = "Credits";

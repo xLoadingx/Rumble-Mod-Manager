@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Uninstall));
             label1 = new Label();
             button2 = new Button();
             button1 = new Button();
@@ -117,6 +118,7 @@
             Controls.Add(button2);
             Controls.Add(label1);
             FormBorderStyle = FormBorderStyle.None;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximumSize = new Size(448, 212);
             MinimumSize = new Size(448, 212);
             Name = "Uninstall";

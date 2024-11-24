@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UserInput));
             button2 = new Button();
             textBox1 = new TextBox();
             label1 = new Label();
@@ -95,6 +96,7 @@
             Controls.Add(button2);
             Controls.Add(textBox1);
             Controls.Add(label1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximumSize = new Size(440, 198);
             MinimumSize = new Size(440, 198);
             Name = "UserInput";

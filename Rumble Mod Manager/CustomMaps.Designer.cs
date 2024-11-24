@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CustomMaps));
             panel1 = new Panel();
             ModVersionLabel = new Label();
             ModAuthorLabel = new Label();
@@ -189,7 +190,7 @@
             textBox1.Location = new Point(6, 4);
             textBox1.Name = "textBox1";
             textBox1.PlaceholderText = "Search for maps";
-            textBox1.Size = new Size(253, 21);
+            textBox1.Size = new Size(253, 23);
             textBox1.TabIndex = 8;
             textBox1.TextChanged += textBox1_TextChanged;
             // 
@@ -220,6 +221,7 @@
             Controls.Add(panel1);
             Controls.Add(textBox1);
             Controls.Add(panel2);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "CustomMaps";
             Text = "CustomMaps";
             panel1.ResumeLayout(false);

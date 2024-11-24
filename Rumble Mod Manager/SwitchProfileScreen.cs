@@ -31,6 +31,8 @@ namespace Rumble_Mod_Manager
 
             button2.Visible = false;
             button3.Visible = false;
+            Export.Visible = false;
+            Import.Visible = (manager != null);
         }
 
         private void LoadCustomFont()
@@ -40,6 +42,8 @@ namespace Rumble_Mod_Manager
             button1.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             button2.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             button3.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
+            Export.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
+            Import.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
         }
 
         private void LoadProfiles()
@@ -146,12 +150,14 @@ namespace Rumble_Mod_Manager
                     selectedPanel.BackColor = System.Drawing.Color.LightBlue;
                     button2.Visible = true;
                     button3.Visible = true;
+                    Export.Visible = true;
                 }
                 else
                 {
                     selectedPanel = null;
                     button2.Visible = false;
                     button3.Visible = false;
+                    Export.Visible = false;
                 }
             }
         }
@@ -239,6 +245,111 @@ namespace Rumble_Mod_Manager
         {
             char[] invalidChars = Path.GetInvalidFileNameChars();
             return !fileName.Any(ch => invalidChars.Contains(ch));
+        }
+
+        private void Export_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "JSON files (*.json)|*.json",
+                Title = "Export Mod Profile",
+                FileName = $"{selectedPanel.ModNameLabel}_profile.json"
+            };
+
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string sourcePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{selectedPanel.ModNameLabel}_profile.json");
+
+                File.Copy(sourcePath, saveFileDialog.FileName, true);
+
+                File.SetLastWriteTime(saveFileDialog.FileName, DateTime.Now);
+
+                UserMessage success = new UserMessage("Mod profile exported successfully!");
+                success.Show();
+            }
+        }
+
+        private bool IsModInstalled(string modName)
+        {
+            foreach (var modPanel in manager.allMods)
+            {
+                if (modPanel.ModNameLabel == modName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private async void Import_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "JSON files (*.json)|*.json",
+                Title = "Import Mod Profile"
+            };
+
+            if (openFileDialog.ShowDialog() != DialogResult.OK) return;
+
+            string sourcePath = openFileDialog.FileName;
+            string targetPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", Path.GetFileName(sourcePath));
+            string profileName = Path.GetFileNameWithoutExtension(targetPath).Split('_')[0];
+
+            try
+            {
+                string targetDir = Path.GetDirectoryName(targetPath);
+                if (!Directory.Exists(targetDir))
+                {
+                    Directory.CreateDirectory(targetDir);
+                }
+
+                if (File.Exists(targetPath))
+                {
+                    UserMessage message = new UserMessage("A mod profile with the same name already exists. Do you want to overwrite it?", false, true);
+                    if (message.ShowDialog() != DialogResult.Yes) return;
+                }
+
+                File.Copy(sourcePath, targetPath, true);
+
+                string jsonContent = await File.ReadAllTextAsync(sourcePath);
+                var profile = JsonSerializer.Deserialize<ModProfile>(jsonContent);
+
+                if (profile == null || profile.enabledMods == null || profile.disabledMods == null)
+                {
+                    UserMessage.Show("Invalid or incomplete profile file.", "Error", true);
+                    return;
+                }
+
+                LoadProfiles();
+                RUMBLEModManager.LoadProfile(profileName, manager);
+
+                foreach (var mod in profile.enabledMods.Concat(profile.disabledMods))
+                {
+                    if (!IsModInstalled(mod.ModName))
+                    {
+                        if (!string.IsNullOrWhiteSpace(mod.DownloadLink))
+                        {
+                            await RUMBLEModManager.DownloadModFromURL(mod.DownloadLink, manager);
+                        }
+                    }
+                }
+
+                UserMessage.Show("Profile imported successfully!", "Import Complete", true);
+            }
+            catch (IOException ioEx)
+            {
+                UserMessage.Show($"File error during import: {ioEx.Message}", "Profile Import Error", true);
+            }
+            catch (JsonException jsonEx)
+            {
+                UserMessage.Show($"Error parsing profile: {jsonEx.Message}", "Profile Import Error", true);
+            }
+            catch (Exception ex)
+            {
+                UserMessage.Show($"Unexpected error: {ex.Message}", "Profile Import Error", true);
+            }
         }
     }
 }

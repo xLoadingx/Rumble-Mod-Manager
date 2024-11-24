@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SwitchProfileScreen));
             Title = new Label();
             panel1 = new Panel();
             guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
@@ -37,6 +38,8 @@
             button1 = new Button();
             button2 = new Button();
             button3 = new Button();
+            Import = new Button();
+            Export = new Button();
             SuspendLayout();
             // 
             // Title
@@ -118,18 +121,49 @@
             button3.UseVisualStyleBackColor = false;
             button3.Click += button3_Click;
             // 
+            // Import
+            // 
+            Import.AutoSize = true;
+            Import.BackColor = Color.FromArgb(128, 128, 255);
+            Import.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            Import.ForeColor = Color.SlateBlue;
+            Import.Location = new Point(272, 12);
+            Import.Name = "Import";
+            Import.Size = new Size(104, 39);
+            Import.TabIndex = 9;
+            Import.Text = "Import";
+            Import.UseVisualStyleBackColor = false;
+            Import.Click += Import_Click;
+            // 
+            // Export
+            // 
+            Export.AutoSize = true;
+            Export.BackColor = Color.FromArgb(255, 128, 255);
+            Export.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            Export.ForeColor = Color.Fuchsia;
+            Export.Location = new Point(12, 12);
+            Export.Name = "Export";
+            Export.Size = new Size(104, 39);
+            Export.TabIndex = 10;
+            Export.Text = "Export";
+            Export.UseVisualStyleBackColor = false;
+            Export.Click += Export_Click;
+            // 
             // SwitchProfileScreen
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
             ClientSize = new Size(387, 450);
+            Controls.Add(Export);
+            Controls.Add(Import);
             Controls.Add(button3);
             Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(panel2);
             Controls.Add(panel1);
             Controls.Add(Title);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximumSize = new Size(403, 489);
             MinimumSize = new Size(403, 489);
             Name = "SwitchProfileScreen";
@@ -149,5 +183,7 @@
         private Button button1;
         private Button button2;
         private Button button3;
+        private Button Import;
+        private Button Export;
     }
 }
