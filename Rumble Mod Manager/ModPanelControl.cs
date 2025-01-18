@@ -5,6 +5,7 @@
         private bool _modEnabled = true;
         private bool _outdated = false;
         private string _modDLLPath = string.Empty;
+        private string _versionString = string.Empty;
         public ThunderstoreMods.Mod Mod { get; set; }
 
 
@@ -17,6 +18,12 @@
         {
             get { return ModName.Text; }
             set { ModName.Text = value; }
+        }
+
+        public string VersionString
+        {
+            get { return _versionString; }
+            set { _versionString = value; }
         }
 
         public string DetailsLabel

@@ -115,18 +115,18 @@ namespace Rumble_Mod_Manager
             return modPanel;
         }
 
-        private async void SwitchProfileScreen_Load(object sender, EventArgs e)
+        private void SwitchProfileScreen_Load(object sender, EventArgs e)
         {
             LoadProfiles();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
             if (selectedPanel != null)
             {
                 Properties.Settings.Default.PreviousLoadedProfile = Properties.Settings.Default.LastLoadedProfile;
 
-                RUMBLEModManager.LoadProfile(selectedPanel.ModNameLabel, manager);
+                await RUMBLEModManager.LoadProfile(selectedPanel.ModNameLabel, manager);
                 Properties.Settings.Default.LastLoadedProfile = selectedPanel.ModNameLabel;
                 Properties.Settings.Default.Save();
 
@@ -166,13 +166,20 @@ namespace Rumble_Mod_Manager
         {
             if (selectedPanel != null)
             {
-                string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{selectedPanel.ModNameLabel}_profile.json");
+                List<string> profilePaths = new List<string> {
+                    Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{selectedPanel.ModNameLabel}_profile.json")
+                };
 
-                using (Uninstall delete = new Uninstall(selectedPanel.ModNameLabel, profilePath))
+                List<string> modNames = new List<string>
+                {
+                    selectedPanel.ModNameLabel
+                };
+
+                using (Uninstall delete = new Uninstall(modNames, profilePaths))
                 {
                     if (delete.ShowDialog() == DialogResult.OK)
                     {
-                        File.Delete(profilePath);
+                        File.Delete(profilePaths[0]);
 
                         if (selectedPanel.ModNameLabel == Properties.Settings.Default.LastLoadedProfile)
                         {

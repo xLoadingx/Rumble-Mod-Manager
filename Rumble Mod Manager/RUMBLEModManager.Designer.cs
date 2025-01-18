@@ -55,6 +55,7 @@
             guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
             guna2Elipse5 = new Guna.UI2.WinForms.Guna2Elipse(components);
             panel3 = new Panel();
+            pictureBox3 = new PictureBox();
             button1 = new Button();
             pictureBox2 = new PictureBox();
             FormTitle = new Label();
@@ -69,6 +70,7 @@
             ((System.ComponentModel.ISupportInitialize)ToggleModButton).BeginInit();
             panel1.SuspendLayout();
             panel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             SuspendLayout();
             // 
@@ -347,6 +349,7 @@
             // panel3
             // 
             panel3.BackColor = Color.FromArgb(15, 15, 15);
+            panel3.Controls.Add(pictureBox3);
             panel3.Controls.Add(button1);
             panel3.Controls.Add(LaunchGame);
             panel3.Controls.Add(pictureBox2);
@@ -356,26 +359,37 @@
             panel3.Size = new Size(1049, 33);
             panel3.TabIndex = 3;
             // 
+            // pictureBox3
+            // 
+            pictureBox3.Image = Properties.Resources.blue;
+            pictureBox3.Location = new Point(965, -1);
+            pictureBox3.Name = "pictureBox3";
+            pictureBox3.Size = new Size(37, 37);
+            pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox3.TabIndex = 29;
+            pictureBox3.TabStop = false;
+            pictureBox3.Click += pictureBox3_Click;
+            // 
             // button1
             // 
             button1.AutoSize = true;
             button1.BackColor = Color.SlateBlue;
             button1.ForeColor = Color.White;
-            button1.Location = new Point(896, 5);
+            button1.Location = new Point(797, 4);
             button1.Name = "button1";
-            button1.Size = new Size(114, 25);
+            button1.Size = new Size(164, 25);
             button1.TabIndex = 28;
-            button1.Text = "Check for Updates";
+            button1.Text = "Check for Manager Updates";
             button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click_1;
             // 
             // pictureBox2
             // 
-            pictureBox2.Image = Properties.Resources.ExitButton;
-            pictureBox2.Location = new Point(1016, 5);
+            pictureBox2.Image = Properties.Resources.red;
+            pictureBox2.Location = new Point(1009, -1);
             pictureBox2.Name = "pictureBox2";
-            pictureBox2.Size = new Size(23, 23);
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox2.Size = new Size(37, 37);
+            pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox2.TabIndex = 1;
             pictureBox2.TabStop = false;
             pictureBox2.Click += pictureBox2_Click;
@@ -450,6 +464,7 @@
             panel1.PerformLayout();
             panel3.ResumeLayout(false);
             panel3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -489,5 +504,6 @@
         private System.Windows.Forms.Timer debounceTimer;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse6;
         private Button button1;
+        private PictureBox pictureBox3;
     }
 }

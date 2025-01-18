@@ -15,15 +15,21 @@ namespace Rumble_Mod_Manager
     public partial class Uninstall : Form
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
-        public string modPath = string.Empty;
+        public List<string> modPaths = new List<string>();
 
-        public Uninstall(string modName, string modPath)
+        public Uninstall(List<string> modNames, List<string> modPaths)
         {
             InitializeComponent();
             LoadCustomFont();
             this.Text = "Uninstall";
-            label2.Text = modName;
-            this.modPath = modPath;
+            if (modNames.Count == 1)
+            {
+                label2.Text = modNames[0];
+            } else
+            {
+                label2.Text = $"{modNames.Count} Mod{(modNames.Count != 1 ? "s" : "")}";
+            }
+            this.modPaths = modPaths;
 
             this.KeyDown += new KeyEventHandler(Uninstall_KeyDown);
         }

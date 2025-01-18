@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Drawing.Text;
 using System.IO.Compression;
+using System.Net.NetworkInformation;
+using System.Windows.Navigation;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -39,8 +41,45 @@ namespace Rumble_Mod_Manager
             {
                 CheckRumblePath();
 
+                Task.Run(() => CheckForInternetConnectionBackground());
+
                 await CheckForUpdates();
             }
+        }
+
+        private async Task CheckForInternetConnectionBackground()
+        {
+            while (true)
+            {
+                if (!IsConnectedToInternet())
+                {
+                    LaunchButton.Enabled = false;
+                    UserMessage.ShowDialog("You are not connected to the internet. Please connect to the internet.", "Connection Error", true);
+
+                    while (!IsConnectedToInternet())
+                    {
+                        await Task.Delay(2000);
+                    }
+
+                    LaunchButton.Enabled = true;
+                }
+
+                await Task.Delay(5000);
+            }
+        }
+
+        public static bool IsConnectedToInternet()
+        {
+            foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (networkInterface.OperationalStatus == OperationalStatus.Up &&
+                    networkInterface.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                    networkInterface.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static void ShowNotification(Image image, string titleText, string contentText)
@@ -154,94 +193,133 @@ namespace Rumble_Mod_Manager
 
         static async Task<Dictionary<int, List<CustomMap>>> ManageMaps(Guna.UI2.WinForms.Guna2CircleProgressBar progressBar)
         {
-            string repoOwner = "xLoadingx";
-            string repoName = "mod-maps";
-            var maps = new Dictionary<int, List<CustomMap>>();
-            progressBar.Value = 0;
-
-            string basePath = Properties.Settings.Default.RumblePath;
-            string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
-            if (!Directory.Exists(targetDirectory)) return null;
-
-            using (HttpClient client = new HttpClient())
+            try
             {
-                client.BaseAddress = new Uri("https://api.github.com/");
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("request");
-                var response = await client.GetAsync($"repos/{repoOwner}/{repoName}/contents/");
-                if (!response.IsSuccessStatusCode) return null;
-
-                var directories = JArray.Parse(await response.Content.ReadAsStringAsync())
-                    .Where(d => d["type"].ToString() == "dir")
-                    .ToList();
-
-                progressBar.Maximum = directories.Count;
+                string repoOwner = "xLoadingx";
+                string repoName = "mod-maps";
+                var maps = new Dictionary<int, List<CustomMap>>();
                 progressBar.Value = 0;
 
-                var allFiles = await Task.WhenAll(directories.Select(async dir =>
-                {
-                    var dirResponse = await client.GetAsync(dir["url"].ToString());
-                    return dirResponse.IsSuccessStatusCode ? JArray.Parse(await dirResponse.Content.ReadAsStringAsync()) : null;
-                }));
+                string basePath = Properties.Settings.Default.RumblePath;
+                string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 
-                var mapDetails = allFiles
-                    .Where(files => files != null)
-                    .SelectMany(files => files)
-                    .GroupBy(file => file["path"].ToString().Split('/')[1])
-                    .Select(group =>
+                if (!Directory.Exists(targetDirectory))
+                {
+                    return new Dictionary<int, List<CustomMap>>();
+                }
+
+                using (HttpClient client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("https://api.github.com/");
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("request");
+
+                    var response = await client.GetAsync($"repos/{repoOwner}/{repoName}/contents/");
+                    if (!response.IsSuccessStatusCode)
                     {
-                        string name = "Unknown", description = "Unknown", author = "Unknown", version = "Unknown";
-                        string imageUrl = "", downloadUrl = "";
-                        foreach (var file in group)
+                        return new Dictionary<int, List<CustomMap>>();
+                    }
+
+                    var directoriesJson = await response.Content.ReadAsStringAsync();
+                    var directories = JArray.Parse(directoriesJson)
+                        .Where(d => d["type"]?.ToString() == "dir")
+                        .ToList();
+
+                    progressBar.Maximum = directories.Count;
+
+                    var allFiles = await Task.WhenAll(directories.Select(async dir =>
+                    {
+                        var dirResponse = await client.GetAsync(dir["url"]?.ToString() ?? string.Empty);
+                        return dirResponse.IsSuccessStatusCode
+                            ? JArray.Parse(await dirResponse.Content.ReadAsStringAsync())
+                            : null;
+                    }));
+
+                    var mapDetails = allFiles
+                        .Where(files => files != null)
+                        .SelectMany(files => files ?? Enumerable.Empty<JToken>())
+                        .GroupBy(file => file["path"]?.ToString()?.Split('/')[1])
+                        .Select(group =>
                         {
-                            string fileName = file["name"].ToString();
-                            if (fileName == "Details.txt")
+                            string name = "Unknown", description = "Unknown", author = "Unknown", version = "Unknown";
+                            string imageUrl = "", downloadUrl = "";
+
+                            foreach (var file in group)
                             {
-                                var detailsResponse = client.GetAsync(file["download_url"].ToString()).Result;
-                                if (detailsResponse.IsSuccessStatusCode)
+                                string fileName = file["name"]?.ToString();
+                                if (fileName == "Details.txt")
                                 {
-                                    var lines = detailsResponse.Content.ReadAsStringAsync().Result.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                                    foreach (var line in lines)
+                                    var detailsResponse = client.GetAsync(file["download_url"]?.ToString() ?? string.Empty).Result;
+                                    if (detailsResponse.IsSuccessStatusCode)
                                     {
-                                        if (line.StartsWith("Name: ")) name = line.Substring(6);
-                                        if (line.StartsWith("Description: ")) description = line.Substring(13);
-                                        if (line.StartsWith("Author: ")) author = line.Substring(8);
-                                        if (line.StartsWith("Version: ")) version = line.Substring(9);
+                                        var lines = detailsResponse.Content.ReadAsStringAsync().Result.Split(
+                                            new[] { "\r\n", "\r", "\n" },
+                                            StringSplitOptions.None
+                                        );
+                                        foreach (var line in lines)
+                                        {
+                                            if (line.StartsWith("Name: ")) name = line.Substring(6);
+                                            if (line.StartsWith("Description: ")) description = line.Substring(13);
+                                            if (line.StartsWith("Author: ")) author = line.Substring(8);
+                                            if (line.StartsWith("Version: ")) version = line.Substring(9);
+                                        }
                                     }
                                 }
+                                else if (fileName?.EndsWith(".png") == true)
+                                {
+                                    imageUrl = file["download_url"]?.ToString();
+                                }
+                                else if (fileName?.EndsWith(".txt") == true)
+                                {
+                                    downloadUrl = file["download_url"]?.ToString();
+                                }
                             }
-                            else if (fileName.EndsWith(".png")) imageUrl = file["download_url"].ToString();
-                            else if (fileName.EndsWith(".txt")) downloadUrl = file["download_url"].ToString();
+                            return (name, description, author, version, imageUrl, downloadUrl);
+                        }).ToList();
+
+                    int pageIndex = 1, mapCount = 0;
+
+                    foreach (var detail in mapDetails)
+                    {
+                        if (string.IsNullOrEmpty(detail.name) || string.IsNullOrEmpty(detail.downloadUrl))
+                        {
+                            continue; // Skip invalid entries
                         }
-                        return (name, description, author, version, imageUrl, downloadUrl);
-                    }).ToList();
 
-                int pageIndex = 1, mapCount = 0;
-                foreach (var detail in mapDetails)
-                {
-                    var customMap = new CustomMap
-                    {
-                        name = detail.name,
-                        description = detail.description,
-                        author = detail.author,
-                        version = detail.version,
-                        mapImage = await DownloadImage(detail.imageUrl),
-                        downloadLink = detail.downloadUrl
-                    };
+                        var customMap = new CustomMap
+                        {
+                            name = detail.name,
+                            description = detail.description,
+                            author = detail.author,
+                            version = detail.version,
+                            mapImage = await DownloadImage(detail.imageUrl),
+                            downloadLink = detail.downloadUrl
+                        };
 
-                    if (!maps.ContainsKey(pageIndex)) maps[pageIndex] = new List<CustomMap>();
-                    maps[pageIndex].Add(customMap);
-                    mapCount++;
+                        if (!maps.ContainsKey(pageIndex))
+                        {
+                            maps[pageIndex] = new List<CustomMap>();
+                        }
 
-                    if (mapCount >= 26)
-                    {
-                        pageIndex++;
-                        mapCount = 0;
+                        maps[pageIndex].Add(customMap);
+                        mapCount++;
+
+                        if (mapCount >= 26)
+                        {
+                            pageIndex++;
+                            mapCount = 0;
+                        }
+
+                        progressBar.Invoke((Action)(() => progressBar.Value += 1));
                     }
-                    progressBar.Invoke((Action)(() => progressBar.Value += 1));
                 }
-            }
 
-            return maps;
+                return maps;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred in ManageMaps: {ex.Message}\n{ex.StackTrace}");
+                return new Dictionary<int, List<CustomMap>>();
+            }
         }
 
         static async Task<(string name, string description, string author, string version, string imageUrl, string downloadUrl)> GetMapDetailsFromDirectory(string dirUrl, HttpClient client)
@@ -339,10 +417,7 @@ namespace Rumble_Mod_Manager
         {
             try
             {
-                if (string.IsNullOrEmpty(imageUrl))
-                {
-                    return null;
-                }
+                if (string.IsNullOrEmpty(imageUrl)) throw new ArgumentException("Image URL cannot be null or empty.", nameof(imageUrl)); ;
 
                 using (HttpClient client = new HttpClient())
                 {
@@ -350,7 +425,7 @@ namespace Rumble_Mod_Manager
                     {
                         UserMessage errorMessage = new UserMessage("The URL is not well-formed: " + imageUrl, true);
                         errorMessage.Show();
-                        return null;
+                        throw new ArgumentException("The URL is not well-formed", nameof(imageUrl));
                     }
 
                     HttpResponseMessage response = await client.GetAsync(imageUrl);
@@ -368,7 +443,7 @@ namespace Rumble_Mod_Manager
                                               $"Stack Trace:\n{ex.StackTrace}";
                 UserMessage errorMessage = new UserMessage(detailedErrorMessage, true);
                 errorMessage.Show();
-                return null;
+                throw new ArgumentException($"An error occurred while downloading image: {ex.Message}", nameof(imageUrl));
             }
         }
 
@@ -465,7 +540,6 @@ namespace Rumble_Mod_Manager
 
             Color color = Color.Lime;
             Image cloudIcon = null;
-            string toolTip = "Unknown";
             Image modImage = null;
             string ModAuthor = null;
             bool modFound = false;
@@ -478,7 +552,7 @@ namespace Rumble_Mod_Manager
                 {
                     foreach (var mod in kvp.Value)
                     {
-                        if (mod.Name.Replace("_", " ") == modNameFromMapping && !mod.isDeprecated)
+                        if ((mod.Name.Replace("_", " ") == modNameFromMapping || string.Equals(mod.Name.Replace("_", " "), Path.GetFileNameWithoutExtension(modFile), StringComparison.OrdinalIgnoreCase)) && !mod.isDeprecated)
                         {
                             modFound = true;
                             ModAuthor = mod.Author;
@@ -493,27 +567,23 @@ namespace Rumble_Mod_Manager
                                 if (modVersion < modVersionCache)
                                 {
                                     color = Color.Red;
-                                    toolTip = "Out of Date";
                                     cloudIcon = Properties.Resources.UpdateIcon;
                                     outdated = true;
                                 }
                                 else if (modVersion == modVersionCache)
                                 {
                                     color = Color.Lime;
-                                    toolTip = "Up To Date";
                                     outdated = false;
                                 }
                                 else
                                 {
                                     color = Color.Cyan;
-                                    toolTip = "Unreleased version";
                                     outdated = false;
                                 }
                             }
                             else
                             {
                                 modVersionStr = mod.Version;
-                                toolTip = "Up To Date";
                                 outdated = false;
                             }
                             break;
@@ -529,7 +599,6 @@ namespace Rumble_Mod_Manager
 
             if (!modFound)
             {
-                toolTip = "Not Found / Unreleased";
                 color = Color.Cyan;
             }
 
@@ -546,7 +615,8 @@ namespace Rumble_Mod_Manager
                 Tag = Path.GetFileName(modFile),
                 ModEnabled = isEnabled,
                 ModDllPath = modFile,
-                Mod = panelMod
+                Mod = panelMod,
+                VersionString = modVersionStr
             };
 
             return modPanel;
@@ -554,7 +624,8 @@ namespace Rumble_Mod_Manager
 
         public static async Task CheckForUpdates(bool showScreen = false)
         {
-            int currentVersion = 140;
+            if (!IsConnectedToInternet()) return; 
+            int currentVersion = 142;
 
             var client = new HttpClient();
 
@@ -566,7 +637,7 @@ namespace Rumble_Mod_Manager
 
             if (currentVersion < int.Parse(versionString.Replace(".", "")))
             {
-                UserMessage updateMessage = new UserMessage($"A new version is available! Do you want to install? \n\n {string.Join(".", currentVersion.ToString().ToCharArray())} => {updateInfo.version.ToString()}", false, true);
+                UserMessage updateMessage = new UserMessage($"A new version of the manager is available! Do you want to install? \n\n {string.Join(".", currentVersion.ToString().ToCharArray())} => {updateInfo.version.ToString()}", false, true);
                 if (updateMessage.ShowDialog() == DialogResult.Yes)
                 {
                     string tempZipPath = Path.Combine(Path.GetTempPath(), "Manager.zip");
@@ -590,7 +661,7 @@ namespace Rumble_Mod_Manager
                 }
             } else if (showScreen)
             {
-                string message = "You have the latest version!";
+                string message = "You have the latest version of Rumble Mod Manager!";
 
                 if (Environment.MachineName == "Desktop-49CDQ") message = "You have the latest version. \n You are the developer idiot.";
 
@@ -607,6 +678,13 @@ namespace Rumble_Mod_Manager
                 label1.Text = "Fetching Mods...";
 
                 var modsByPage = await ThunderstoreMods.FetchThunderstoreMods(progressBar1);
+                if (modsByPage == null || !modsByPage.Any())
+                {
+                    label1.Text = "Failed to fetch mods...";
+                    await Task.Delay(500);
+                    return;
+                }
+
                 ModCache.ModsByPage = modsByPage;
 
                 string basePath = Properties.Settings.Default.RumblePath;
@@ -649,6 +727,10 @@ namespace Rumble_Mod_Manager
 
                 label1.Text = "Preloading Panels...";
                 var preloadedPanels = await LoadModPanels();
+                if (preloadedPanels == null)
+                {
+                    throw new InvalidOperationException("Failed to preload mod panels.");
+                }
 
                 progressBar1.Visible = false;
                 label1.Visible = false;
@@ -656,26 +738,33 @@ namespace Rumble_Mod_Manager
                 if (Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
                 {
                     string melonLoaderPath = Path.Combine(Properties.Settings.Default.RumblePath, "MelonLoader", "net6", "MelonLoader.dll");
-                    FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(melonLoaderPath);
 
-                    string currentMelonVersion = fileVersionInfo.FileVersion;
-                    currentMelonVersion = string.Join(".", currentMelonVersion.Split('.').Reverse().SkipWhile(part => part == "0").Reverse());
-                    string latestMelonVersion = await GetLatestMelonLoaderVersionAsync();
-
-                    if (currentMelonVersion != latestMelonVersion)
+                    if (File.Exists(melonLoaderPath))
                     {
-                        UserMessage updatePrompt = new UserMessage($"Your current MelonLoader version is out of date. Would you like to update? \n {currentMelonVersion} -> {latestMelonVersion}", false, true);
-                        DialogResult result = updatePrompt.ShowDialog();
+                        FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(melonLoaderPath);
+                        string currentMelonVersionString = fileVersionInfo.FileVersion;
 
-                        if (result == DialogResult.Yes)
+                        currentMelonVersionString = string.Join(".", currentMelonVersionString.Split('.').Reverse().SkipWhile(part => part == "0").Reverse());
+                        Version currentMelonVersion = new Version(currentMelonVersionString);
+
+                        string latestMelonVersionString = await GetLatestMelonLoaderVersionAsync();
+                        Version latestMelonVersion = new Version(latestMelonVersionString);
+
+                        if (currentMelonVersion < latestMelonVersion)
                         {
-                            UserMessage updatingPrompt = new UserMessage("Updating MelonLoader...", false);
-                            updatingPrompt.Show();
+                            UserMessage updatePrompt = new UserMessage($"Your current MelonLoader version is out of date. Would you like to update? \n {currentMelonVersion} -> {latestMelonVersion}", false, true);
+                            DialogResult result = updatePrompt.ShowDialog();
 
-                            await InstallMelonLoader(false);
+                            if (result == DialogResult.Yes)
+                            {
+                                UserMessage updatingPrompt = new UserMessage("Updating MelonLoader...", false);
+                                updatingPrompt.Show();
 
-                            updatingPrompt.UpdateStatusMessage("MelonLoader updated successfully!");
-                            updatingPrompt.ShowButtons(true);
+                                await InstallMelonLoader(false);
+
+                                updatingPrompt.UpdateStatusMessage("MelonLoader updated successfully!");
+                                updatingPrompt.ShowButtons(true);
+                            }
                         }
                     }
                 }
@@ -766,7 +855,6 @@ namespace Rumble_Mod_Manager
         public string FindRumblePath()
         {
             string rumbleExe = "RUMBLE.exe";
-            string rumblePath = null;
             int rumbleAppId = 890550;
 
             string steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
@@ -854,9 +942,6 @@ namespace Rumble_Mod_Manager
         {
             try
             {
-                string steamGameFolderName = "RUMBLE";
-                string oculusGameFolderName = "kung-fu-magic-the-game";
-
                 string gameDirectory = FindRumblePath();
                 if (gameDirectory == null)
                 {

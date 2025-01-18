@@ -163,26 +163,24 @@ namespace Rumble_Mod_Manager
             return modPanel;
         }
 
-        public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null, ModPanelControl panel = null)
+        public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null, ModPanelControl panel = null, bool showMessage = true)
         {
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, $"temp_mod_download_{Guid.NewGuid()}");
             string tempZipPath = Path.Combine(tempDir, "temp_mod.zip");
 
             try
             {
-                // Only create a new form if one doesn't already exist (e.g., the first call)
-                if (installingMessage == null)
+                if (installingMessage == null && showMessage)
                 {
                     installingMessage = new UserMessage(string.Empty, false);
                     installingMessage.Show();
                 }
 
-                installingMessage.UpdateStatusMessage($"Starting installation for '{mod.Name}'");
+                installingMessage?.UpdateStatusMessage($"Starting installation for '{mod.Name}'");
 
-                // Handle dependencies
                 if (mod.Dependencies != null && mod.Dependencies.Any(dependency => !dependency.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase)))
                 {
-                    installingMessage.UpdateStatusMessage($"Starting installation of dependencies for '{mod.Name}'");
+                    installingMessage?.UpdateStatusMessage($"Starting installation of dependencies for '{mod.Name}'");
 
                     foreach (var dependency in mod.Dependencies)
                     {
@@ -197,26 +195,24 @@ namespace Rumble_Mod_Manager
                             string author = parts[0];
                             string name = parts[1];
 
-                            installingMessage.UpdateStatusMessage($"Attempting to install dependency: {author}-{name}");
+                            installingMessage?.UpdateStatusMessage($"Attempting to install dependency: {author}-{name}");
 
                             var dependentMod = FindModByAuthorAndName(author, name);
                             if (dependentMod != null)
                             {
-                                // Pass the same installingMessage form to the recursive call
-                                await DownloadModFromInternet(dependentMod, form1, ModEnabled, false, installingMessage);
-                                installingMessage.UpdateStatusMessage($"Successfully installed: {author}-{name}");
+                                await DownloadModFromInternet(dependentMod, form1, ModEnabled, false, installingMessage, showMessage: showMessage);
+                                installingMessage?.UpdateStatusMessage($"Successfully installed: {author}-{name}");
                             }
                             else
                             {
-                                installingMessage.UpdateStatusMessage($"Dependency {author}-{name} not found.");
+                                installingMessage?.UpdateStatusMessage($"Dependency {author}-{name} not found.");
                             }
                         }
                     }
 
-                    installingMessage.UpdateStatusMessage("Dependency installation process completed");
+                    installingMessage?.UpdateStatusMessage("Dependency installation process completed");
                 }
 
-                // Create temp directory if it doesn't exist
                 if (!Directory.Exists(tempDir))
                 {
                     try
@@ -227,7 +223,7 @@ namespace Rumble_Mod_Manager
                     {
                         UserMessage errorMessage = new UserMessage($"Failed to create temp directory: {ex.Message}", true);
                         errorMessage.Show();
-                        installingMessage.Close();
+                        installingMessage?.Close();
                         return;
                     }
                 }
@@ -246,7 +242,6 @@ namespace Rumble_Mod_Manager
                     }
                 }
 
-                // Verify if file exists
                 if (!File.Exists(tempZipPath))
                 {
                     UserMessage errorMessage = new UserMessage("Downloaded mod zip file could not be found. Please check if the download was successful.", true);
@@ -258,8 +253,8 @@ namespace Rumble_Mod_Manager
 
                 if (initialMod)
                 {
-                    installingMessage.UpdateStatusMessage($"'{mod.Name}' successfully installed");
-                    installingMessage.ShowButtons(true);
+                    installingMessage?.UpdateStatusMessage($"'{mod.Name}' successfully installed");
+                    installingMessage?.ShowButtons(true);
 
                     string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{Properties.Settings.Default.LastLoadedProfile}_profile.json");
                     string json = File.ReadAllText(profilePath);
@@ -323,27 +318,23 @@ namespace Rumble_Mod_Manager
             return Directory.GetFiles(extractedDir, "*.dll", System.IO.SearchOption.AllDirectories).Any();
         }
 
-        public static async Task InstallMod(string zipPath, bool ModEnabled, RUMBLEModManager form1 = null, UserMessage message = null, bool initialMod = false)
+        public static async Task<ModPanelControl> InstallMod(string zipPath, bool ModEnabled, RUMBLEModManager form1 = null, UserMessage message = null, bool initialMod = false)
         {
             bool UpdatingMod = false;
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, "temp_mod_download");
 
             try
             {
-                // Ensure temp directory exists
                 Directory.CreateDirectory(tempDir);
 
-                // Extract the ZIP file to the temp directory
                 ZipFile.ExtractToDirectory(zipPath, tempDir);
 
                 if (IsValidMod(tempDir))
                 {
                     string modsFolder = Path.Combine(Properties.Settings.Default.RumblePath, ModEnabled ? "Mods" : "DisabledMods");
 
-                    // Ensure mods folder exists
                     Directory.CreateDirectory(modsFolder);
 
-                    // Define the directories we want to process
                     var allowedDirs = new[] { "Mods", "UserLibs", "UserData" };
 
                     string dllFilePath = Directory.GetFiles(Path.Combine(tempDir, "Mods"))[0];
@@ -353,15 +344,20 @@ namespace Rumble_Mod_Manager
                     {
                         foreach (var panel in form1.preloadedModPanels)
                         {
-                            if (string.Equals(Path.GetFileNameWithoutExtension(dllFilePath), panel.ModNameLabel, StringComparison.OrdinalIgnoreCase) && !initialMod)
+                            if (string.Equals(Path.GetFileNameWithoutExtension(dllFilePath), panel.ModNameLabel, StringComparison.OrdinalIgnoreCase))
                             {
                                 if (message != null)
                                 {
-                                    message.UpdateStatusMessage("Mod already installed. Skipping.");
+                                    message.UpdateStatusMessage("Mod already installed. Updating existing mod...");
 
                                     await Task.Delay(100);
                                 }
-                                return;
+                                
+                                if (File.Exists(modPath))
+                                {
+                                    File.Delete(modPath);
+                                }
+                                File.Copy(dllFilePath, modPath, true);
                             }
                         }
                     }
@@ -390,17 +386,16 @@ namespace Rumble_Mod_Manager
                         }
                     }
 
-                    var existingPanel = form1.allMods.FirstOrDefault(panel => panel.ModNameLabel.Equals(Path.GetFileNameWithoutExtension(modPath), StringComparison.OrdinalIgnoreCase));
-                    if (form1 != null && existingPanel == null)
+                    if (form1 != null)
                     {
                         ModPanelControl newModPanel = LaunchPage.CreateModPanel(modPath, ModEnabled, Properties.Settings.Default.RumblePath);
                         newModPanel.Click += form1.ModPanel_Click;
-                        form1.preloadedModPanels.Add(newModPanel);
                         
-                        form1.panel2.Controls.Add(newModPanel);
-                        form1.allMods.Add(newModPanel);
+                        form1.AddOrUpdateModPanel(newModPanel);
                         form1.AdjustPanelLocations();
                         form1.SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+
+                        return newModPanel;
                     }
 
                 } else
@@ -437,6 +432,8 @@ namespace Rumble_Mod_Manager
                     File.Delete(zipPath);
                 }
             }
+
+            return null;
         }
 
         private static void MergeDirectories(string sourceDir, string targetDir, ref bool updatingMod)
@@ -479,9 +476,8 @@ namespace Rumble_Mod_Manager
                     fileOperation();
                     return;
                 }
-                catch (IOException ex) when (i < maxRetries - 1)
+                catch when (i < maxRetries - 1)
                 {
-                    // Wait before retrying
                     Thread.Sleep(delayMilliseconds);
                 }
             }
@@ -536,7 +532,7 @@ namespace Rumble_Mod_Manager
                                 var modName = modDict.GetValueOrDefault("name")?.ToString();
                                 var dateUpdated = modDict.GetValueOrDefault("date_updated")?.ToString();
 
-                                if (modName != null && modName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase))
+                                if (modName != null && (modName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase) || modName.Equals("GaleModManager", StringComparison.OrdinalIgnoreCase)))
                                 {
                                     return;
                                 }

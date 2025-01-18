@@ -31,6 +31,13 @@ namespace Rumble_Mod_Manager
             userMessage.Show();
         }
 
+        public static void ShowDialog(string message, string title, bool showButton, bool showYesNo = false)
+        {
+            UserMessage userMessage = new UserMessage(message, showButton, showYesNo);
+            userMessage.Text = title;
+            userMessage.ShowDialog();
+        }
+
         public void UpdateStatusMessage(string message)
         {
             label1.Text = message;

@@ -180,7 +180,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private async void InstallButton_Click(object sender, EventArgs e)
+        private void InstallButton_Click(object sender, EventArgs e)
         {
             return;
         }
@@ -214,10 +214,9 @@ namespace Rumble_Mod_Manager
                     fileOperation();
                     return;
                 }
-                catch (IOException ex) when (i < maxRetries - 1)
+                catch when (i < maxRetries - 1)
                 {
-                    // Wait before retrying
-                    System.Threading.Thread.Sleep(delayMilliseconds);
+                    Thread.Sleep(delayMilliseconds);
                 }
             }
         }

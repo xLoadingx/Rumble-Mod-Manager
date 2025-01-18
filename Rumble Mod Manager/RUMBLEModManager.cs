@@ -1,5 +1,7 @@
 namespace Rumble_Mod_Manager
 {
+    using Guna.UI2.WinForms;
+    using Microsoft.VisualBasic;
     using Microsoft.Win32;
     using Newtonsoft.Json;
     using System;
@@ -9,16 +11,18 @@ namespace Rumble_Mod_Manager
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Text.RegularExpressions;
+    using System.Windows.Controls;
     using System.Windows.Forms;
     using static Rumble_Mod_Manager.ThunderstoreMods;
+    using static System.Runtime.InteropServices.JavaScript.JSType;
+    using Control = Control;
 
     public partial class RUMBLEModManager : Form
     {
-        private ModPanelControl selectedPanel;
+        private List<ModPanelControl> selectedPanels = new List<ModPanelControl>();
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
-        private ThunderstoreMods.Mod CurrentlySelectedMod;
-        private string CurrentlySelectedVersion;
-        private string CurrentlySelectedName;
+
         private bool isLoadingDisplay = false;
 
         private static CustomMaps _customMapsInstance;
@@ -53,12 +57,32 @@ namespace Rumble_Mod_Manager
             modMappings = await GetModMappingsAsync(url);
 
             LoadCustomFont();
-            LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
+
+            await LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
+
+            if (Properties.Settings.Default.AutoModUpdating)
+                CheckForModUpdates();
 
             panel2.AllowDrop = true;
             panel2.DragEnter += new DragEventHandler(panel2_DragEnter);
             panel2.DragLeave += new EventHandler(panel2_DragLeave);
             panel2.DragDrop += new DragEventHandler(panel2_DragDrop);
+        }
+
+        private async void CheckForModUpdates()
+        {
+            foreach (ModPanelControl mod in allMods)
+            {
+                if (mod != null && mod.Outdated)
+                {
+                    await DownloadModFromInternet(mod.Mod, this, mod.Enabled, true, showMessage: false);
+                    mod.Outdated = false;
+                    mod.ImageButton.Image = null;
+                    mod.ImageButton.BackColor = Color.Lime;
+                }
+            }
+
+            SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
         }
 
         private void panel2_DragLeave(object sender, EventArgs e)
@@ -131,7 +155,6 @@ namespace Rumble_Mod_Manager
                 panel2.BackColor = Color.FromArgb(40, 40, 40);
             }
 
-
             LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
         }
 
@@ -151,7 +174,15 @@ namespace Rumble_Mod_Manager
                         await response.Content.CopyToAsync(fileStream);
                     }
 
-                    await InstallMod(tempZipPath, true, manager);
+                    ModPanelControl panel = await InstallMod(tempZipPath, true, manager);
+
+                    var updateButton = panel.Controls.OfType<Guna2ImageButton>().FirstOrDefault();
+                    if (updateButton != null)
+                    {
+                        updateButton.Click -= async (s, e) => await manager.UpdateButton_Click(panel);
+                        updateButton.Click += async (s, e) => await manager.UpdateButton_Click(panel);
+                    }
+
                     UserMessage successMessage = new UserMessage("Mod downloaded and installed successfully from URL!", true);
                     successMessage.Show();
                     successMessage.BringToFront();
@@ -242,7 +273,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private void AddOrUpdateModPanel(ModPanelControl modPanel)
+        public void AddOrUpdateModPanel(ModPanelControl modPanel)
         {
             var existingPanel = allMods.FirstOrDefault(mod => mod.ModNameLabel == modPanel.ModNameLabel);
             if (existingPanel != null)
@@ -295,7 +326,7 @@ namespace Rumble_Mod_Manager
             panel2.AutoScroll = true;
         }
 
-        public void LoadMods(ModProfile loadedProfile)
+        public async Task LoadMods(ModProfile loadedProfile)
         {
             UninstallButton.Visible = false;
             ModNameLabel.Visible = false;
@@ -307,13 +338,17 @@ namespace Rumble_Mod_Manager
             ModPictureDisplay.Visible = false;
             ToggleModButton.Visible = false;
             ToggleModLabel.Visible = false;
-            if (selectedPanel != null)
+            if (selectedPanels.Count != 0)
             {
-                selectedPanel.BackColor = Color.FromArgb(30, 30, 30);
-                selectedPanel = null;
+                foreach (var panel in selectedPanels)
+                {
+                    panel.BackColor = Color.FromArgb(30, 30, 30);
+                }
+
+                selectedPanels.Clear();
             }
 
-            DisplayMods(loadedProfile);
+            await DisplayMods(loadedProfile);
         }
 
         private void ModManager_KeyDown(object sender, KeyEventArgs e)
@@ -338,7 +373,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        public void DisplayMods(ModProfile loadedProfile)
+        public async Task DisplayMods(ModProfile loadedProfile)
         {
             isLoadingDisplay = true;
 
@@ -364,8 +399,18 @@ namespace Rumble_Mod_Manager
                 Directory.CreateDirectory(disabledModsPath);
             }
 
-            var enabledModFiles = Directory.GetFiles(modsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
-            var disabledModFiles = Directory.GetFiles(disabledModsPath, "*.dll").OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant()).ToArray();
+            var enabledModFilesTask = Task.Run(() =>
+                Directory.GetFiles(modsPath, "*.dll")
+                    .OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant())
+                    .ToArray());
+
+            var disabledModFilesTask = Task.Run(() =>
+                Directory.GetFiles(disabledModsPath, "*.dll")
+                    .OrderBy(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant())
+                    .ToArray());
+
+            var enabledModFiles = await enabledModFilesTask;
+            var disabledModFiles = await disabledModFilesTask;
 
             WelcomeLabel.Visible = enabledModFiles.Length == 0 && disabledModFiles.Length == 0;
 
@@ -376,47 +421,86 @@ namespace Rumble_Mod_Manager
                 string panelName = panel.ModNameLabel.ToLowerInvariant();
                 bool isInEnabledMods = enabledModFiles.Any(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == panelName);
                 bool isInDisabledMods = disabledModFiles.Any(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == panelName);
-                ModState profileMod = loadedProfile.enabledMods.Concat(loadedProfile.disabledMods).FirstOrDefault(mod => mod.ModName.ToLowerInvariant() == panelName);
 
-                if (isInEnabledMods || isInDisabledMods)
+
+                ModState profileMod = null;
+                if (loadedProfile != null)
                 {
-                    panel.ModEnabled = isInEnabledMods;
-
-                    if (!panel2.Controls.Contains(panel))
-                    {
-                        panel.Click -= ModPanel_Click;
-                        panel.Click += ModPanel_Click;
-                        panel.FavoritedStar.MouseUp += (sender, e) =>
-                        {
-                            SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
-                            AddOrUpdateModPanel(panel);
-                            LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
-                        };
-
-                        var updateButton = panel.Controls.OfType<Guna.UI2.WinForms.Guna2ImageButton>().FirstOrDefault();
-                        if (updateButton != null)
-                        {
-                            updateButton.Click -= async (s, e) => await UpdateButton_Click(panel);
-                            updateButton.Click += async (s, e) => await UpdateButton_Click(panel);
-                        }
-
-                        if (profileMod != null)
-                        {
-                            panel.FavoritedStar.Checked = profileMod.Favorited;
-                        }
-
-                        AddOrUpdateModPanel(panel);
-                    } 
-                }
-
-                bool existsInAnyList = loadedProfile.enabledMods
+                    profileMod = loadedProfile.enabledMods
                     .Concat(loadedProfile.disabledMods)
-                    .Any(mod => mod.ModName == panel.ModNameLabel);
+                    .FirstOrDefault(mod => mod.ModName.ToLowerInvariant() == panelName);
 
-                if (!existsInAnyList && panel2.Controls.Contains(panel))
+                    if (isInEnabledMods || isInDisabledMods)
+                    {
+                        panel.ModEnabled = isInEnabledMods;
+
+                        if (!panel2.Controls.Contains(panel))
+                        {
+                            panel.Click -= ModPanel_Click;
+                            panel.Click += ModPanel_Click;
+                            if (profileMod != null)
+                            {
+                                panel.FavoritedStar.MouseUp += (sender, e) =>
+                                {
+                                    SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+                                    AddOrUpdateModPanel(panel);
+                                    LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
+                                };
+                            }
+                            else
+                            {
+                                panel.FavoritedStar.Visible = false;
+                            }
+
+                            var updateButton = panel.Controls.OfType<Guna2ImageButton>().FirstOrDefault();
+                            if (updateButton != null)
+                            {
+                                updateButton.Click -= async (s, e) => await UpdateButton_Click(panel);
+                                updateButton.Click += async (s, e) => await UpdateButton_Click(panel);
+                            }
+
+                            if (profileMod != null)
+                            {
+                                panel.FavoritedStar.Checked = profileMod.Favorited;
+                            }
+
+                            AddOrUpdateModPanel(panel);
+                        }
+                    }
+
+                    bool existsInAnyList = loadedProfile.enabledMods
+                        .Concat(loadedProfile.disabledMods)
+                        .Any(mod => mod.ModName == panel.ModNameLabel);
+
+                    if (!existsInAnyList && panel2.Controls.Contains(panel))
+                    {
+                        panel2.Controls.Remove(panel);
+                        allMods.Remove(panel);
+                    }
+                }
+                else
                 {
-                    panel2.Controls.Remove(panel);
-                    allMods.Remove(panel);
+                    if (isInEnabledMods || isInDisabledMods)
+                    {
+                        panel.ModEnabled = isInEnabledMods;
+
+                        if (!panel2.Controls.Contains(panel))
+                        {
+                            panel.Click -= ModPanel_Click;
+                            panel.Click += ModPanel_Click;
+
+                            var updateButton = panel.Controls.OfType<Guna2ImageButton>().FirstOrDefault();
+                            if (updateButton != null)
+                            {
+                                updateButton.Click -= async (s, e) => await UpdateButton_Click(panel);
+                                updateButton.Click += async (s, e) => await UpdateButton_Click(panel);
+                            }
+
+                            panel.FavoritedStar.Visible = false;
+
+                            AddOrUpdateModPanel(panel);
+                        }
+                    }
                 }
             }
 
@@ -427,33 +511,56 @@ namespace Rumble_Mod_Manager
 
         private async Task UpdateButton_Click(ModPanelControl panel)
         {
-            button1_Click(panel, EventArgs.Empty);
+            await button1_Click(panel, EventArgs.Empty);
         }
 
         private void Uninstall_Button_Click(object sender, EventArgs e)
         {
-            if (selectedPanel != null)
+            if (selectedPanels.Count != 0)
             {
-                string modFilePath = selectedPanel.ModDllPath;
-                string modName = Path.GetFileNameWithoutExtension(modFilePath);
+                List<string> modFilePaths = new List<string>();
+                List<string> modNames = new List<string>();
 
-                if (modFilePath == null)
+                foreach (var selectedPanel in selectedPanels)
                 {
-                    UserMessage errorMessage = new UserMessage("Something went wrong. File path does not exist.", true);
-                    errorMessage.Show();
-                    errorMessage.BringToFront();
-                    return;
+                    if (selectedPanel.ModDllPath != null)
+                    {
+                        modFilePaths.Add(selectedPanel.ModDllPath);
+                        if (selectedPanel.Mod != null)
+                        {
+                            modNames.Add(selectedPanel.Mod.Name);
+                        }
+                        else
+                        {
+                            modNames.Add(Path.GetFileNameWithoutExtension(selectedPanel.ModDllPath));
+                        }
+                    }
+                    else
+                    {
+                        UserMessage errorMessage = new UserMessage("Something went wrong. A file path does not exist.", true);
+                        errorMessage.Show();
+                        errorMessage.BringToFront();
+                        return;
+                    }
                 }
 
-                using (Uninstall form = new Uninstall(modName, modFilePath))
+                using (Uninstall form = new Uninstall(modNames, modFilePaths))
                 {
                     if (form.ShowDialog() == DialogResult.OK)
                     {
-                        File.Delete(modFilePath);
+                        foreach (var selectedPanel in selectedPanels)
+                        {
+                            string modFilePath = selectedPanel.ModDllPath;
 
-                        preloadedModPanels.Remove(selectedPanel);
-                        allMods.Remove(selectedPanel);
-                        panel2.Controls.Remove(selectedPanel);
+                            if (File.Exists(modFilePath))
+                            {
+                                File.Delete(modFilePath);
+                            }
+
+                            preloadedModPanels.Remove(selectedPanel);
+                            allMods.Remove(selectedPanel);
+                            panel2.Controls.Remove(selectedPanel);
+                        }
 
                         SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
                         LoadProfile(Properties.Settings.Default.LastLoadedProfile, this);
@@ -518,7 +625,7 @@ namespace Rumble_Mod_Manager
 
                 return null;
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }
@@ -624,7 +731,7 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        public static void LoadProfile(string profileName, RUMBLEModManager modManagerInstance)
+        public static async Task LoadProfile(string profileName, RUMBLEModManager modManagerInstance)
         {
             string modsPath = Path.Combine(Properties.Settings.Default.RumblePath, "Mods");
             string disabledModsPath = Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods");
@@ -635,37 +742,47 @@ namespace Rumble_Mod_Manager
                 Directory.CreateDirectory(inactiveModsPath);
             }
 
-            MoveAllFiles(modsPath, inactiveModsPath);
-            MoveAllFiles(disabledModsPath, inactiveModsPath);
-
-            string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{profileName}_profile.json");
-            string json = File.ReadAllText(profilePath);
-            var profile = JsonConvert.DeserializeObject<ModProfile>(json);
-
-            Properties.Settings.Default.LastLoadedProfile = profileName;
-            Properties.Settings.Default.Save();
-
-            foreach (var mod in profile.enabledMods)
+            if (string.IsNullOrEmpty(Properties.Settings.Default.LastLoadedProfile) || !File.Exists(Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{Properties.Settings.Default.LastLoadedProfile}_profile.json")))
             {
-                string modFilePath = Path.Combine(inactiveModsPath, $"{mod.ModName}.dll");
-                if (File.Exists(modFilePath))
+                if (modManagerInstance != null)
                 {
-                    File.Move(modFilePath, Path.Combine(modsPath, $"{mod.ModName}.dll"));
+                    await modManagerInstance.LoadMods(null);
                 }
             }
-
-            foreach (var mod in profile.disabledMods)
+            else
             {
-                string modFilePath = Path.Combine(inactiveModsPath, $"{mod.ModName}.dll");
-                if (File.Exists(modFilePath))
+                MoveAllFiles(modsPath, inactiveModsPath);
+                MoveAllFiles(disabledModsPath, inactiveModsPath);
+
+                string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{profileName}_profile.json");
+                string json = await File.ReadAllTextAsync(profilePath);
+                var profile = JsonConvert.DeserializeObject<ModProfile>(json);
+
+                Properties.Settings.Default.LastLoadedProfile = profileName;
+                Properties.Settings.Default.Save();
+
+                foreach (var mod in profile.enabledMods)
                 {
-                    File.Move(modFilePath, Path.Combine(disabledModsPath, $"{mod.ModName}.dll"));
+                    string modFilePath = Path.Combine(inactiveModsPath, $"{mod.ModName}.dll");
+                    if (File.Exists(modFilePath))
+                    {
+                        await Task.Run(() => File.Move(modFilePath, Path.Combine(modsPath, $"{mod.ModName}.dll")));
+                    }
                 }
-            }
 
-            if (modManagerInstance != null)
-            {
-                modManagerInstance.LoadMods(profile);
+                foreach (var mod in profile.disabledMods)
+                {
+                    string modFilePath = Path.Combine(inactiveModsPath, $"{mod.ModName}.dll");
+                    if (File.Exists(modFilePath))
+                    {
+                        await Task.Run(() => File.Move(modFilePath, Path.Combine(disabledModsPath, $"{mod.ModName}.dll")));
+                    }
+                }
+
+                if (modManagerInstance != null)
+                {
+                    await modManagerInstance.LoadMods(profile);
+                }
             }
         }
 
@@ -693,13 +810,52 @@ namespace Rumble_Mod_Manager
                 ModPanelControl panel = sender as ModPanelControl;
                 if (panel != null)
                 {
-                    // Deselect the previous panel
-                    if (selectedPanel != null)
+                    bool shiftHeld = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+                    bool ctrlHeld = (Control.ModifierKeys & Keys.Control) == Keys.Control;
+
+                    if (shiftHeld && selectedPanels.Count > 0)
                     {
-                        selectedPanel.BackColor = selectedPanel.ModEnabled ? Color.FromArgb(30, 30, 30) : Color.FromArgb(192, 0, 0);
+                        var firstPanel = selectedPanels[0];
+                        int firstIndex = allMods.IndexOf(firstPanel);
+                        int clickedIndex = allMods.IndexOf(panel);
+
+                        int startIndex = Math.Min(firstIndex, clickedIndex);
+                        int endIndex = Math.Max(firstIndex, clickedIndex);
+
+                        foreach (var p in allMods.Skip(startIndex).Take(endIndex - startIndex + 1))
+                        {
+                            if (!selectedPanels.Contains(p))
+                            {
+                                selectedPanels.Add(p);
+                                p.BackColor = Color.LightBlue;
+                            }
+                        }
+                    }
+                    else if (ctrlHeld)
+                    {
+                        if (selectedPanels.Contains(panel))
+                        {
+                            panel.BackColor = panel.ModEnabled ? Color.FromArgb(30, 30, 30) : Color.FromArgb(192, 0, 0);
+                            selectedPanels.Remove(panel);
+                        }
+                        else
+                        {
+                            panel.BackColor = Color.LightBlue;
+                            selectedPanels.Add(panel);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var selectedPanel in selectedPanels)
+                            selectedPanel.BackColor = selectedPanel.ModEnabled ? Color.FromArgb(30, 30, 30) : Color.FromArgb(192, 0, 0);
+
+                        selectedPanels.Clear();
+
+                        panel.BackColor = Color.LightBlue;
+                        selectedPanels.Add(panel);
                     }
 
-                    if (selectedPanel != panel)
+                    if (selectedPanels.Count > 0)
                     {
                         UninstallButton.Visible = true;
                         ModVersionLabel.Visible = true;
@@ -710,97 +866,91 @@ namespace Rumble_Mod_Manager
                         DependenciesLabel.Visible = true;
                         ModPictureDisplay.Visible = true;
                         ToggleModButton.Visible = true;
+
                         ToggleModLabel.Visible = true;
-                        selectedPanel = panel;
-                        ToggleModButton.BackgroundImage = selectedPanel.ModEnabled ? Properties.Resources.green : Properties.Resources.red;
-                        ToggleModLabel.BackColor = selectedPanel.ModEnabled ? Color.FromArgb(128, 255, 128) : Color.FromArgb(192, 0, 0);
-                        ToggleModLabel.ForeColor = selectedPanel.ModEnabled ? Color.Green : Color.Maroon;
-                        selectedPanel.BackColor = Color.LightBlue;
-                        ModNameLabel.Text = selectedPanel.ModNameLabel;
 
-                        LoadSettings(selectedPanel.ModNameLabel);
+                        ToggleModButton.BackgroundImage = selectedPanels.All(p => p.ModEnabled) ? Properties.Resources.green : Properties.Resources.red;
+                        ToggleModLabel.BackColor = selectedPanels.All(p => p.ModEnabled) ? Color.FromArgb(128, 255, 128) : Color.FromArgb(192, 0, 0);
+                        ToggleModLabel.ForeColor = selectedPanels.All(p => p.ModEnabled) ? Color.Green : Color.Maroon;
 
-                        modMappings.TryGetValue(selectedPanel.ModNameLabel + ".dll", out string modNameFromMapping);
-
-                        string modVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"), selectedPanel.ModNameLabel + ".dll", MelonLoaderModInfoType.Version);
-
-                        bool modFound = false;
-
-                        if (selectedPanel.Mod != null)
+                        if (selectedPanels.Count == 1)
                         {
-                            Mod mod = selectedPanel.Mod;
+                            var modPanel = selectedPanels[0];
+                            ModNameLabel.Text = modPanel.ModNameLabel;
 
-                            modVersionStr = modVersionStr ?? mod.Version;
-                            CurrentlySelectedName = selectedPanel.ModNameLabel;
-                            ModPictureDisplay.Image = mod.ModImage;
-                            CurrentlySelectedMod = mod;
-                            ModNameLabel.Text = mod.Name;
-                            DateUpdated.Text = mod.DateUpdated;
+                            string versionString = modPanel.label2.Text;
+                            string pattern = @"\d+\.\d+\.\d+";
 
-                            var cleanedDependencies = CurrentlySelectedMod.Dependencies
-                                .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
-                                .Select(d =>
-                                {
-                                    var parts = d.Split('-').ToList();
-                                    if (parts.Count == 2)
-                                    {
-                                        var name = parts[0];
-                                        var version = parts[1];
-                                        return $"{name} v{version}";
-                                    }
-                                    else if (parts.Count > 2)
-                                    {
-                                        var name = string.Join(" ", parts.Skip(1).Take(parts.Count - 2));
-                                        var version = parts.Last();
-                                        return $"{name} v{version}";
-                                    }
-                                    return d; // In case it doesn't follow the expected format
-                                })
-                                .Where(d => !d.Contains("MelonLoader", StringComparison.OrdinalIgnoreCase)) // Double check after cleaning
-                                .ToList();
+                            Match match = Regex.Match(versionString, pattern);
 
-
-                            DependenciesLabel.Text = $"Dependencies:\n{string.Join("\n", cleanedDependencies)}";
-                            CurrentlySelectedVersion = modVersionStr ?? mod.Version;
-                            ModAuthorLabel.Text = $"By {mod.Author}";
-                            ModDescriptionLabel.Text = mod.Description;
-
-                            if (modVersionStr != null)
+                            if (match.Success)
                             {
-                                int modVersion = int.Parse(modVersionStr.Replace(".", ""));
-                                int modVersionCache = int.Parse(mod.Version.Replace(".", ""));
-
-                                if (modVersion > modVersionCache)
-                                {
-                                    ModVersionLabel.ForeColor = Color.Cyan;
-                                }
-                                else if (modVersion == modVersionCache)
-                                {
-                                    ModVersionLabel.ForeColor = Color.Lime;
-                                }
-                                else
-                                {
-                                    ModVersionLabel.ForeColor = Color.Red;
-                                }
+                                ModVersionLabel.Text = $"Version {match.Value}";
                             }
                             else
                             {
-                                ModVersionLabel.ForeColor = Color.Lime;
+                                ModVersionLabel.Text = $"Unknown Version";
                             }
 
-                            modFound = true;
+                            string modAuthor = modPanel.Mod?.Author ?? (string)GetMelonLoaderModInfo(
+                                Path.Combine(
+                                    Properties.Settings.Default.RumblePath,
+                                    modPanel.ModEnabled ? "Mods" : "DisabledMods"),
+                                modPanel.ModNameLabel + ".dll",
+                                MelonLoaderModInfoType.Author) ?? "Unknown Author";
+
+                            ModAuthorLabel.Text = $"By {modAuthor}";
+                            ModDescriptionLabel.Text = modPanel.Mod?.Description ?? "Description not available.";
+
+                            if (modPanel.Mod != null)
+                            {
+                                var dependencies = modPanel.Mod.Dependencies
+                                    .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
+                                    .Select(d =>
+                                    {
+                                        var parts = d.Split('-').ToList();
+                                        if (parts.Count == 2) return $"{parts[0]} v{parts[1]}";
+                                        if (parts.Count > 2) return $"{string.Join(" ", parts.Skip(1).Take(parts.Count - 2))} v{parts.Last()}";
+                                        return d;
+                                    });
+
+                                DependenciesLabel.Text = $"Dependencies:\n{string.Join("\n", dependencies)}";
+                            }
+                            else
+                            {
+                                DependenciesLabel.Text = "Dependencies: None";
+                            }
+
+                            ModPictureDisplay.Image = modPanel.Mod?.ModImage ?? Properties.Resources.UnknownMod;
+                            DateUpdated.Text = modPanel.Mod?.DateUpdated ?? "Unknown Last Date Updated";
                         }
-
-                        ModVersionLabel.Text = $"Version {modVersionStr}";
-
-                        if (!modFound)
+                        else
                         {
-                            ModAuthorLabel.Text = $"By {GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, selectedPanel.ModEnabled ? "Mods" : "DisabledMods"), selectedPanel.ModNameLabel + ".dll", MelonLoaderModInfoType.Author)}";
+                            ModNameLabel.Text = $"{selectedPanels.Count} mods selected";
+
+                            var authors = selectedPanels.Select(p =>
+                                p.Mod?.Author ?? (string)GetMelonLoaderModInfo(
+                                    Path.Combine(
+                                        Properties.Settings.Default.RumblePath,
+                                        p.ModEnabled ? "Mods" : "DisabledMods"),
+                                    p.ModNameLabel + ".dll",
+                                    MelonLoaderModInfoType.Author) ?? "Unknown Author").Distinct();
+
+                            var versions = selectedPanels.Select(p =>
+                                (string)GetMelonLoaderModInfo(
+                                    Path.Combine(
+                                        Properties.Settings.Default.RumblePath,
+                                        p.ModEnabled ? "Mods" : "DisabledMods"),
+                                    p.ModNameLabel + ".dll",
+                                    MelonLoaderModInfoType.Version) ?? p.Mod?.Version ?? "Unknown").Distinct();
+
+                            ModVersionLabel.Text = versions.Count() == 1 ? $"Version {versions.First()}" : "Multiple versions";
+                            ModAuthorLabel.Text = authors.Count() == 1 ? $"By {authors.First()}" : "Multiple authors";
+                            ModDescriptionLabel.Text = "Multiple descriptions";
+
+                            DependenciesLabel.Text = "Multiple dependencies";
                             ModPictureDisplay.Image = Properties.Resources.UnknownMod;
-                            ModVersionLabel.ForeColor = Color.Cyan;
-                            DateUpdated.Text = "Unkown Last Date Updated";
-                            DependenciesLabel.Text = "Dependencies:";
-                            ModDescriptionLabel.Text = "This mod could not be found in the official repository. It may be unreleased or downloaded from an external source. However, you can still manage it through this page!";
+                            DateUpdated.Text = "Multiple last updated dates";
                         }
                     }
                     else
@@ -816,13 +966,11 @@ namespace Rumble_Mod_Manager
                         ModPictureDisplay.Visible = false;
                         ToggleModButton.Visible = false;
                         ToggleModLabel.Visible = false;
-
-                        selectedPanel = null;
                     }
                 }
                 else
                 {
-                    UserMessage errorMessage = new UserMessage("Panel is null", true);
+                    var errorMessage = new UserMessage("Panel is null", true);
                     errorMessage.Show();
                     errorMessage.BringToFront();
                 }
@@ -854,27 +1002,42 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private async Task button1_Click(object sender, EventArgs e)
         {
             try
             {
-                int currentVersion = int.Parse(CurrentlySelectedVersion.Replace(".", ""), CultureInfo.InvariantCulture);
-                int latestVersion = int.Parse(CurrentlySelectedMod.Version.Replace(".", ""), CultureInfo.InvariantCulture);
-
-                if (currentVersion < latestVersion)
+                if (sender is ModPanelControl parentControl)
                 {
-                    await ThunderstoreMods.DownloadModFromInternet(CurrentlySelectedMod, this, selectedPanel.ModEnabled, true);
-                    SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
-                    AddOrUpdateModPanel(selectedPanel);
-
-                    string updatedVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, "Mods"), CurrentlySelectedMod.Name + ".dll", MelonLoaderModInfoType.Version);
-                    int updatedVersion = int.Parse(updatedVersionStr.Replace(".", ""), CultureInfo.InvariantCulture);
-
-                    if (updatedVersion < latestVersion)
+                    if (parentControl.Mod != null)
                     {
-                        UserMessage brokenModMessage = new UserMessage("The mod has been updated successfully, but it still shows as out of date. This might indicate the mod is broken and will continue to show as out of date until the developer fixes it.", true);
-                        brokenModMessage.Show();
-                        brokenModMessage.BringToFront();
+                        int currentVersion = int.Parse(parentControl.VersionString.Replace(".", ""), CultureInfo.InvariantCulture);
+                        int latestVersion = int.Parse(parentControl.Mod.Version.Replace(".", ""), CultureInfo.InvariantCulture);
+
+                        if (currentVersion < latestVersion)
+                        {
+                            await ThunderstoreMods.DownloadModFromInternet(parentControl.Mod, this, parentControl.ModEnabled, true);
+                            SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+
+                            string updatedVersionStr = (string)GetMelonLoaderModInfo(Path.Combine(Properties.Settings.Default.RumblePath, "Mods"), parentControl.ModNameLabel + ".dll", MelonLoaderModInfoType.Version);
+                            int updatedVersion = int.Parse(updatedVersionStr.Replace(".", ""), CultureInfo.InvariantCulture);
+
+                            if (updatedVersion < latestVersion)
+                            {
+                                UserMessage brokenModMessage = new UserMessage("The mod has been updated successfully, but it still shows as out of date. This might indicate the mod is broken and will continue to show as out of date until the developer fixes it.", true);
+                                brokenModMessage.Show();
+                                brokenModMessage.BringToFront();
+                            }
+
+                            if (updatedVersion <= latestVersion)
+                            {
+                                parentControl.label2.Text = $"v{parentControl.Mod.Version} by {parentControl.Mod.Author}";
+                                parentControl.VersionString = parentControl.Mod.Version;
+                                parentControl.ImageButton.BackColor = Color.Lime;
+                                parentControl.ImageButton.Image = null;
+                            }
+
+                            AddOrUpdateModPanel(parentControl);
+                        }
                     }
                 }
             }
@@ -886,61 +1049,55 @@ namespace Rumble_Mod_Manager
             }
         }
 
-
         private void ToggleModButton_Click(object sender, EventArgs e)
         {
             try
             {
-                // Toggle the ModEnabled property and update the UI
-                selectedPanel.ModEnabled = !selectedPanel.ModEnabled;
-                ToggleModButton.BackgroundImage = selectedPanel.ModEnabled ? Properties.Resources.green : Properties.Resources.red;
-                ToggleModLabel.BackColor = selectedPanel.ModEnabled ? Color.FromArgb(128, 255, 128) : Color.FromArgb(192, 0, 0);
-                ToggleModLabel.ForeColor = selectedPanel.ModEnabled ? Color.Green : Color.Maroon;
-                selectedPanel.BackColor = Color.LightBlue;
-
-                // Determine source and destination paths based on the new ModEnabled state
-                string sourcePath = selectedPanel.ModEnabled
-                    ? Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods", Path.GetFileName(selectedPanel.ModDllPath))
-                    : Path.Combine(Properties.Settings.Default.RumblePath, "Mods", Path.GetFileName(selectedPanel.ModDllPath));
-
-                string destinationPath = selectedPanel.ModEnabled
-                    ? Path.Combine(Properties.Settings.Default.RumblePath, "Mods")
-                    : Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods");
-
-                string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(selectedPanel.ModDllPath));
-
-                // Ensure the source file exists
-                if (File.Exists(sourcePath))
+                foreach (var panel in selectedPanels)
                 {
+                    panel.ModEnabled = !panel.ModEnabled;
 
-                    // Create destination directory if it doesn't exist
-                    if (!Directory.Exists(destinationPath))
+                    string sourcePath = panel.ModEnabled
+                        ? Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods", Path.GetFileName(panel.ModDllPath))
+                        : Path.Combine(Properties.Settings.Default.RumblePath, "Mods", Path.GetFileName(panel.ModDllPath));
+
+                    string destinationPath = panel.ModEnabled
+                        ? Path.Combine(Properties.Settings.Default.RumblePath, "Mods")
+                        : Path.Combine(Properties.Settings.Default.RumblePath, "DisabledMods");
+
+                    string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(panel.ModDllPath));
+
+                    if (File.Exists(sourcePath))
                     {
-                        Directory.CreateDirectory(destinationPath);
+                        if (!Directory.Exists(destinationPath))
+                        {
+                            Directory.CreateDirectory(destinationPath);
+                        }
+
+                        if (File.Exists(destinationFilePath))
+                        {
+                            File.Delete(destinationFilePath);
+                        }
+
+                        File.Move(sourcePath, destinationFilePath, true);
+                        panel.ModDllPath = Path.Combine(destinationPath, Path.GetFileName(panel.ModDllPath));
+                        AddOrUpdateModPanel(panel);
+                    }
+                    else
+                    {
+                        UserMessage errorMessage = new UserMessage($"Source file for {panel.ModNameLabel} does not exist.", true);
+                        errorMessage.Show();
+                        errorMessage.BringToFront();
                     }
 
-                    // Check if the destination file exists and delete it if it does
-                    if (File.Exists(destinationFilePath))
-                    {
-                        UserMessage message = new UserMessage("Destination file already exists. Deleting...", true);
-                        message.Show();
-                        message.BringToFront();
-                        File.Delete(destinationFilePath);
-                    }
-
-                    // Move the file
-                    File.Move(sourcePath, destinationFilePath, true);
-                    selectedPanel.ModDllPath = Path.Combine(destinationPath, Path.GetFileName(selectedPanel.ModDllPath));
-
-                    SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
-                    AddOrUpdateModPanel(selectedPanel);
+                    panel.BackColor = Color.LightBlue;
                 }
-                else
-                {
-                    UserMessage errorMessage = new UserMessage("Source file does not exist.", true);
-                    errorMessage.Show();
-                    errorMessage.BringToFront();
-                }
+
+                ToggleModButton.BackgroundImage = selectedPanels[0].ModEnabled ? Properties.Resources.green : Properties.Resources.red;
+                ToggleModLabel.BackColor = selectedPanels[0].ModEnabled ? Color.FromArgb(128, 255, 128) : Color.FromArgb(192, 0, 0);
+                ToggleModLabel.ForeColor = selectedPanels[0].ModEnabled ? Color.Green : Color.Maroon;
+
+                SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
             }
             catch (Exception ex)
             {
@@ -1076,6 +1233,11 @@ namespace Rumble_Mod_Manager
         private void button1_Click_1(object sender, EventArgs e)
         {
             LaunchPage.CheckForUpdates(true);
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Minimized;
         }
     }
 

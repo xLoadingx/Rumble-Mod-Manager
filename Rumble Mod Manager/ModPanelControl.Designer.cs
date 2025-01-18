@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             toolTip1 = new ToolTip(components);
             guna2PictureBox1 = new Guna.UI2.WinForms.Guna2PictureBox();
             ModName = new Label();
@@ -52,11 +52,11 @@
             // 
             guna2PictureBox1.BackColor = Color.Transparent;
             guna2PictureBox1.BorderRadius = 12;
-            guna2PictureBox1.CustomizableEdges = customizableEdges5;
+            guna2PictureBox1.CustomizableEdges = customizableEdges1;
             guna2PictureBox1.ImageRotate = 0F;
             guna2PictureBox1.Location = new Point(7, 9);
             guna2PictureBox1.Name = "guna2PictureBox1";
-            guna2PictureBox1.ShadowDecoration.CustomizableEdges = customizableEdges6;
+            guna2PictureBox1.ShadowDecoration.CustomizableEdges = customizableEdges2;
             guna2PictureBox1.Size = new Size(65, 65);
             guna2PictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             guna2PictureBox1.TabIndex = 0;
@@ -98,7 +98,7 @@
             ImageButton.Location = new Point(545, 0);
             ImageButton.Name = "ImageButton";
             ImageButton.PressedState.ImageSize = new Size(35, 24);
-            ImageButton.ShadowDecoration.CustomizableEdges = customizableEdges7;
+            ImageButton.ShadowDecoration.CustomizableEdges = customizableEdges4;
             ImageButton.Size = new Size(35, 35);
             ImageButton.TabIndex = 3;
             // 
@@ -119,7 +119,7 @@
             FavoritedStar.ImageSize = new Size(25, 25);
             FavoritedStar.Location = new Point(545, 45);
             FavoritedStar.Name = "FavoritedStar";
-            FavoritedStar.ShadowDecoration.CustomizableEdges = customizableEdges8;
+            FavoritedStar.ShadowDecoration.CustomizableEdges = customizableEdges3;
             FavoritedStar.Size = new Size(35, 35);
             FavoritedStar.TabIndex = 4;
             // 
@@ -141,6 +141,7 @@
         }
 
         #endregion
+#pragma warning disable CS0169
         private ToolTip toolTip1;
         private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
         private Guna.UI2.WinForms.Guna2PictureBox pictureBox1;
@@ -152,7 +153,7 @@
         private Guna.UI2.WinForms.Guna2HtmlLabel Details;
         private Label ModName;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse3;
-        private Guna.UI2.WinForms.Guna2ImageButton ImageButton;
+        public Guna.UI2.WinForms.Guna2ImageButton ImageButton;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse4;
         public Label label2;
         public Guna.UI2.WinForms.Guna2ImageCheckBox FavoritedStar;

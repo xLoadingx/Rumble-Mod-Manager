@@ -143,8 +143,8 @@
             LaunchButton.CustomizableEdges = customizableEdges1;
             LaunchButton.DisabledState.BorderColor = Color.White;
             LaunchButton.DisabledState.CustomBorderColor = Color.White;
-            LaunchButton.DisabledState.FillColor = Color.FromArgb(128, 255, 128);
-            LaunchButton.DisabledState.ForeColor = Color.FromArgb(22, 149, 12);
+            LaunchButton.DisabledState.FillColor = Color.FromArgb(0, 192, 0);
+            LaunchButton.DisabledState.ForeColor = Color.FromArgb(0, 64, 0);
             LaunchButton.FillColor = Color.FromArgb(128, 255, 128);
             LaunchButton.Font = new Font("Arial", 14.25F);
             LaunchButton.ForeColor = Color.FromArgb(22, 149, 12);
@@ -247,7 +247,7 @@
         }
 
         #endregion
-
+#pragma warning disable CS0169
         private Label RUMBLELabel;
         private Label ModManagerLabel;
         private Label Credits;
