@@ -784,14 +784,8 @@ namespace Rumble_Mod_Manager
                     DependenciesLabel.Visible = true;
                     linkLabel1.Visible = true;
 
-                    linkLabel1.Click += (sender, e) =>
-                    {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = selectedPanel.OnlineModLink,
-                            UseShellExecute = true
-                        });
-                    };
+                    linkLabel1.Click -= LinkLabel1_Click;
+                    linkLabel1.Click += LinkLabel1_Click;
 
                     var cleanedDependencies = CurrentlySelectedMod.Dependencies
                         .Where(d => !d.StartsWith("MelonLoader", StringComparison.OrdinalIgnoreCase))
@@ -815,6 +809,15 @@ namespace Rumble_Mod_Manager
                     DependenciesLabel.Text = string.Empty;
                 }
             }
+        }
+
+        private void LinkLabel1_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = selectedPanel.OnlineModLink,
+                UseShellExecute = true
+            });
         }
     }
 }

@@ -625,7 +625,7 @@ namespace Rumble_Mod_Manager
         public static async Task CheckForUpdates(bool showScreen = false)
         {
             if (!IsConnectedToInternet()) return; 
-            int currentVersion = 142;
+            int currentVersion = 143;
 
             var client = new HttpClient();
 
@@ -744,7 +744,12 @@ namespace Rumble_Mod_Manager
                         FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(melonLoaderPath);
                         string currentMelonVersionString = fileVersionInfo.FileVersion;
 
-                        currentMelonVersionString = string.Join(".", currentMelonVersionString.Split('.').Reverse().SkipWhile(part => part == "0").Reverse());
+                        string[] versionParts = currentMelonVersionString.Split('.');
+                        while (versionParts.Length < 3)
+                        {
+                            currentMelonVersionString += ".0";
+                        }
+
                         Version currentMelonVersion = new Version(currentMelonVersionString);
 
                         string latestMelonVersionString = await GetLatestMelonLoaderVersionAsync();

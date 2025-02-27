@@ -24,13 +24,34 @@ namespace Updater
             {
                 Console.WriteLine("Updating the application. Please wait...");
 
+                string processName = Path.GetFileNameWithoutExtension(mainAppPath);
+                CloseApplication(processName);
+
+                string tempExtractPath = Path.Combine(Path.GetTempPath(), "UpdaterTemp");
+                Directory.CreateDirectory(tempExtractPath);
+
                 using (ZipFile zip = ZipFile.Read(zipFilePath))
                 {
                     foreach (ZipEntry entry in zip)
                     {
-                        entry.Extract(targetDirectory, ExtractExistingFileAction.OverwriteSilently);
+                        entry.Extract(tempExtractPath, ExtractExistingFileAction.OverwriteSilently);
                     }
                 }
+
+                foreach (var file in Directory.GetFiles(tempExtractPath))
+                {
+                    string destFile = Path.Combine(targetDirectory, Path.GetFileName(file));
+
+                    if (File.Exists(destFile))
+                    {
+                        File.Delete(destFile);
+                    }
+
+                    File.Move(file, destFile);
+                }
+
+                Directory.Delete(tempExtractPath, true);
+                File.Delete(zipFilePath);
 
                 Console.WriteLine("Update completed successfully!");
 
@@ -51,6 +72,21 @@ namespace Updater
             {
                 Console.WriteLine($"Update failed: {ex.Message}");
                 Console.ReadKey();
+            }
+        }
+
+        static void CloseApplication(string processName)
+        {
+            foreach (var process in Process.GetProcessesByName(processName))
+            {
+                try
+                {
+                    process.Kill();
+                    process.WaitForExit();
+                }
+                catch (Exception ex) {
+                    Console.WriteLine($"Failed to close application: {ex.Message}");
+                }
             }
         }
     }
