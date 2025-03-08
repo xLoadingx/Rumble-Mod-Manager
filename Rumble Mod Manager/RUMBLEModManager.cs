@@ -71,8 +71,12 @@ namespace Rumble_Mod_Manager
 
         private async void CheckForModUpdates()
         {
-            foreach (ModPanelControl mod in allMods)
+            List<ModPanelControl> currentMods = new List<ModPanelControl>(allMods);
+
+            for (int i = 0; i < currentMods.Count; i++)
             {
+                ModPanelControl mod = currentMods[i];
+
                 if (mod != null && mod.Outdated)
                 {
                     await DownloadModFromInternet(mod.Mod, this, mod.Enabled, true, showMessage: false);

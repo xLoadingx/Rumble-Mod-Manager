@@ -177,6 +177,7 @@
             label3.TabIndex = 11;
             label3.Text = "Auto mod \r\nupdating";
             label3.TextAlign = ContentAlignment.MiddleCenter;
+            label3.Visible = false;
             // 
             // guna2ToggleSwitch2
             // 
@@ -200,6 +201,7 @@
             guna2ToggleSwitch2.UncheckedState.InnerBorderColor = Color.White;
             guna2ToggleSwitch2.UncheckedState.InnerBorderRadius = 10;
             guna2ToggleSwitch2.UncheckedState.InnerColor = Color.White;
+            guna2ToggleSwitch2.Visible = false;
             // 
             // Settings
             // 

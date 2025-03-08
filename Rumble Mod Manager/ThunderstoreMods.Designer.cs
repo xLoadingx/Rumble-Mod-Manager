@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ThunderstoreMods));
             panel1 = new Panel();
             linkLabel1 = new LinkLabel();
@@ -43,6 +45,7 @@
             ModDescriptionLabel = new Label();
             DependenciesLabel = new Label();
             panel2 = new Panel();
+            guna2ComboBox1 = new Guna.UI2.WinForms.Guna2ComboBox();
             textBox1 = new TextBox();
             guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
             guna2Elipse2 = new Guna.UI2.WinForms.Guna2Elipse(components);
@@ -217,16 +220,39 @@
             // panel2
             // 
             panel2.BackColor = Color.FromArgb(40, 40, 40);
-            panel2.Location = new Point(12, 33);
+            panel2.Location = new Point(12, 48);
             panel2.Name = "panel2";
-            panel2.Size = new Size(592, 405);
+            panel2.Size = new Size(592, 390);
             panel2.TabIndex = 3;
+            // 
+            // guna2ComboBox1
+            // 
+            guna2ComboBox1.BackColor = Color.FromArgb(64, 64, 64);
+            guna2ComboBox1.BorderColor = Color.White;
+            guna2ComboBox1.BorderRadius = 5;
+            guna2ComboBox1.BorderThickness = 2;
+            guna2ComboBox1.CustomizableEdges = customizableEdges1;
+            guna2ComboBox1.DrawMode = DrawMode.OwnerDrawFixed;
+            guna2ComboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
+            guna2ComboBox1.FillColor = Color.FromArgb(64, 64, 64);
+            guna2ComboBox1.FocusedColor = Color.FromArgb(94, 148, 255);
+            guna2ComboBox1.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            guna2ComboBox1.Font = new Font("Segoe UI", 10F);
+            guna2ComboBox1.ForeColor = Color.White;
+            guna2ComboBox1.ItemHeight = 30;
+            guna2ComboBox1.Items.AddRange(new object[] { "Recently Updated", "Downloads", "Alphabetical (A-Z)" });
+            guna2ComboBox1.Location = new Point(417, 6);
+            guna2ComboBox1.Name = "guna2ComboBox1";
+            guna2ComboBox1.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            guna2ComboBox1.Size = new Size(187, 36);
+            guna2ComboBox1.TabIndex = 0;
+            guna2ComboBox1.SelectedIndexChanged += guna2ComboBox1_SelectedIndexChanged;
             // 
             // textBox1
             // 
             textBox1.BackColor = Color.FromArgb(64, 64, 64);
             textBox1.ForeColor = Color.White;
-            textBox1.Location = new Point(12, 6);
+            textBox1.Location = new Point(12, 12);
             textBox1.Name = "textBox1";
             textBox1.PlaceholderText = "Search for mods via name, author, or description";
             textBox1.Size = new Size(278, 23);
@@ -255,6 +281,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 20, 20);
             ClientSize = new Size(1033, 444);
+            Controls.Add(guna2ComboBox1);
             Controls.Add(textBox1);
             Controls.Add(panel2);
             Controls.Add(panel1);
@@ -289,5 +316,6 @@
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse3;
         private LinkLabel linkLabel1;
         private System.Windows.Forms.Timer debounceTimer;
+        private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox1;
     }
 }

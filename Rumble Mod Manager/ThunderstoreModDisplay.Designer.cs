@@ -69,7 +69,7 @@
             Description.ForeColor = Color.White;
             Description.Location = new Point(0, 211);
             Description.Name = "Description";
-            Description.Size = new Size(171, 55);
+            Description.Size = new Size(168, 55);
             Description.TabIndex = 7;
             Description.Text = "label1";
             // 

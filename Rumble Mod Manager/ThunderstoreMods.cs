@@ -352,7 +352,7 @@ namespace Rumble_Mod_Manager
 
                                     await Task.Delay(100);
                                 }
-                                
+
                                 if (File.Exists(modPath))
                                 {
                                     File.Delete(modPath);
@@ -377,7 +377,7 @@ namespace Rumble_Mod_Manager
                             {
                                 destinationDir = Path.Combine(Properties.Settings.Default.RumblePath, "UserData");
                             }
-                            else 
+                            else
                             {
                                 destinationDir = modsFolder;
                             }
@@ -390,7 +390,7 @@ namespace Rumble_Mod_Manager
                     {
                         ModPanelControl newModPanel = LaunchPage.CreateModPanel(modPath, ModEnabled, Properties.Settings.Default.RumblePath);
                         newModPanel.Click += form1.ModPanel_Click;
-                        
+
                         form1.AddOrUpdateModPanel(newModPanel);
                         form1.AdjustPanelLocations();
                         form1.SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
@@ -398,7 +398,8 @@ namespace Rumble_Mod_Manager
                         return newModPanel;
                     }
 
-                } else
+                }
+                else
                 {
                     UserMessage errorMessage = new UserMessage("This ZIP file does not contain a valid mod.", true);
                     errorMessage.ShowDialog();
@@ -550,7 +551,9 @@ namespace Rumble_Mod_Manager
 
                                     string name = modName;
                                     string description = latestVersion?.GetValue("description")?.ToString();
+                                    string downloads = latestVersion?.GetValue("downloads").ToString();
                                     string author = modDict.GetValueOrDefault("owner")?.ToString();
+                                    bool isPinned = modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true";
                                     string imageUrl = latestVersion?.GetValue("icon")?.ToString();
                                     string version = latestVersion?.GetValue("version_number")?.ToString();
 
@@ -558,6 +561,8 @@ namespace Rumble_Mod_Manager
                                     {
                                         Name = name,
                                         Description = description,
+                                        Downloads = int.TryParse(downloads, out int downloadCount) ? downloadCount : 0,
+                                        isPinned = isPinned,
                                         Author = author,
                                         ImageUrl = imageUrl,
                                         Version = version,
@@ -658,6 +663,8 @@ namespace Rumble_Mod_Manager
         {
             public string Name { get; set; }
             public string Description { get; set; }
+            public int Downloads { get; set; }
+            public bool isPinned { get; set; } = false;
             public string Author { get; set; }
             public string ModPageUrl { get; set; }
             public string OnlinePageUrl { get; set; }
@@ -720,11 +727,38 @@ namespace Rumble_Mod_Manager
             if (ModCache.ModsByPage != null && ModCache.ModsByPage.Count > 0)
             {
                 var allMods = ModCache.ModsByPage.Values.SelectMany(modList => modList).ToList();
-                var filteredMods = allMods.Where(mod => mod.Name.ToLower().Contains(searchText.Replace(" ", "_")) ||
+                bool isSearching = !string.IsNullOrWhiteSpace(searchText);
+
+                var pinnedMods = allMods.Where(mod => mod.isPinned).ToList();
+                var filteredMods = allMods.Where(mod => (mod.Name.ToLower().Contains(searchText.Replace(" ", "_")) ||
                                                         mod.Description.ToLower().Contains(searchText) ||
                                                         mod.isOutdated ||
                                                         mod.isDeprecated ||
-                                                        mod.Author.ToLower().Contains(searchText)).ToList();
+                                                        mod.Author.ToLower().Contains(searchText))).ToList();
+
+                string selectedOption = guna2ComboBox1.SelectedItem?.ToString();
+
+                if (!string.IsNullOrEmpty(selectedOption))
+                {
+                    switch (selectedOption)
+                    {
+                        case "Alphabetical (A-Z)":
+                            filteredMods = filteredMods.OrderBy(mod => mod.Name).ToList();
+                            break;
+                        case "Recently Updated":
+                            filteredMods = filteredMods.OrderByDescending(mod => DateTime.Parse(mod.DateUpdated)).ToList();
+                            break;
+                        case "Downloads":
+                            filteredMods = filteredMods.OrderByDescending(mod => mod.Downloads).ToList();
+                            break;
+                        default:
+                            filteredMods = filteredMods.OrderByDescending(mod => DateTime.Parse(mod.DateUpdated)).ToList();
+                            break;
+                    }
+                }
+
+                if (!isSearching)
+                    filteredMods.InsertRange(0, pinnedMods);
 
                 // Paginate filtered results
                 int pageSize = 26;
@@ -818,6 +852,11 @@ namespace Rumble_Mod_Manager
                 FileName = selectedPanel.OnlineModLink,
                 UseShellExecute = true
             });
+        }
+
+        private void guna2ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            FilterMods(textBox1.Text);
         }
     }
 }
