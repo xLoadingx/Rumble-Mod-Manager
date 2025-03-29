@@ -47,7 +47,17 @@ namespace Updater
                         File.Delete(destFile);
                     }
 
-                    File.Move(file, destFile);
+                    try
+                    {
+                        if (File.Exists(destFile))
+                            File.Delete(destFile);
+
+                        File.Move(file, destFile);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Skipping file '{file}': {ex.Message}");
+                    }
                 }
 
                 Directory.Delete(tempExtractPath, true);
