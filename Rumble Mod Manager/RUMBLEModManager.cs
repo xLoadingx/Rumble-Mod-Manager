@@ -755,12 +755,12 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                MoveAllFiles(modsPath, inactiveModsPath);
-                MoveAllFiles(disabledModsPath, inactiveModsPath);
-
                 string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{profileName}_profile.json");
                 string json = await File.ReadAllTextAsync(profilePath);
                 var profile = JsonConvert.DeserializeObject<ModProfile>(json);
+
+                MoveAllFiles(modsPath, inactiveModsPath, profile);
+                MoveAllFiles(disabledModsPath, inactiveModsPath, profile);
 
                 Properties.Settings.Default.LastLoadedProfile = profileName;
                 Properties.Settings.Default.Save();
@@ -790,20 +790,21 @@ namespace Rumble_Mod_Manager
             }
         }
 
-        private static void MoveAllFiles(string sourceDir, string targetDir)
+        private static void MoveAllFiles(string sourceDir, string targetDir, ModProfile profile)
         {
-            var files = Directory.GetFiles(sourceDir, "*.dll");
-            foreach (var file in files)
+            foreach (var mod in profile.enabledMods.Concat(profile.disabledMods))
             {
-                string fileName = Path.GetFileName(file);
+                string fileName = mod.ModName + ".dll";
+                string sourceFile = Path.Combine(sourceDir, fileName);
                 string destinationFile = Path.Combine(targetDir, fileName);
 
-                if (File.Exists(destinationFile))
+                if (File.Exists(sourceFile))
                 {
-                    File.Delete(destinationFile);
-                }
+                    if (File.Exists(destinationFile))
+                        File.Delete(destinationFile);
 
-                File.Move(file, destinationFile);
+                    File.Move(sourceFile, destinationFile);
+                }
             }
         }
 
