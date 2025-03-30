@@ -42,6 +42,7 @@ namespace Rumble_Mod_Manager
             SettingsButton.Controls.Add(pictureBox1);
             pictureBox1.Location = new Point(SettingsButton.Width - pictureBox1.PreferredSize.Width - 23, SettingsButton.Height - pictureBox1.PreferredSize.Height - 20);
             pictureBox1.BackColor = Color.Transparent;
+            gameCheckTimer.Start();
 
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(ModManager_KeyDown);
@@ -260,6 +261,7 @@ namespace Rumble_Mod_Manager
             WelcomeLabel.Font = new Font(privateFonts.Families[1], 20.0F, FontStyle.Regular);
             FormTitle.Font = new Font(privateFonts.Families[0], 15.0f, FontStyle.Regular);
             button1.Font = new Font(privateFonts.Families[1], 12.0f, FontStyle.Regular);
+            button2.Font = new Font(privateFonts.Families[1], 12.0f, FontStyle.Regular);
         }
 
         private void Settings_Button_Click(object sender, EventArgs e)
@@ -1131,9 +1133,21 @@ namespace Rumble_Mod_Manager
             this.Close();
         }
 
-        private async void LaunchGame_Click(object sender, EventArgs e)
+        private async void LaunchGameModded_Click(object sender, EventArgs e)
+        {
+            LaunchRumble(true);
+        }
+
+        private async void LaunchGameVanilla_Click(object sender, EventArgs e)
+        {
+            LaunchRumble(false);
+        }
+
+        private async void LaunchRumble(bool modded)
         {
             string steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
+
+            string arguments = modded ? "-applaunch 890550" : "-applaunch 890550 --no-mods --melonloader.hideconsole --melonloader.disablestartscreen";
 
             if (steamInstallPath == null)
             {
@@ -1156,39 +1170,18 @@ namespace Rumble_Mod_Manager
                     Process.Start(new ProcessStartInfo
                     {
                         FileName = steamExePath,
-                        Arguments = $"-applaunch 890550",
+                        Arguments = arguments,
                         UseShellExecute = true
                     });
-
-                    await Task.Run(() =>
-                    {
-                        while (gameProcess == null || gameProcess.HasExited)
-                        {
-                            gameProcess = Process.GetProcessesByName("RUMBLE").FirstOrDefault();
-                            if (gameProcess != null)
-                            {
-                                break;
-                            }
-                            Thread.Sleep(250);
-                        }
-                    });
-
-                    LaunchGame.Text = "Stop Game";
-                    LaunchGame.BackColor = Color.Red;
-                    LaunchGame.ForeColor = Color.Maroon;
                 }
                 else
                 {
                     if (!gameProcess.HasExited)
                     {
                         gameProcess.Kill();
-                        gameProcess.WaitForExit();
-                        gameProcess = null;
+                        gameProcess.WaitForExitAsync();
                     }
-
-                    LaunchGame.Text = "Launch Game";
-                    LaunchGame.BackColor = Color.Lime;
-                    LaunchGame.ForeColor = Color.Green;
+                    gameProcess = null;
                 }
             }
             catch (Exception ex)
@@ -1243,6 +1236,27 @@ namespace Rumble_Mod_Manager
         private void pictureBox3_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
+        }
+
+        private void gameCheckTimer_Tick(object sender, EventArgs e)
+        {
+            Process existing = Process.GetProcessesByName("RUMBLE").FirstOrDefault();
+
+            if (existing != null)
+            {
+                gameProcess = existing;
+                LaunchGame.Text = "Stop Game";
+                button2.Visible = false;
+                LaunchGame.BackColor = Color.Red;
+                LaunchGame.ForeColor = Color.Maroon;
+            } else
+            {
+                gameProcess = null;
+                LaunchGame.Text = "Launch Modded";
+                button2.Visible = true;
+                LaunchGame.BackColor = Color.Lime;
+                LaunchGame.ForeColor = Color.Green;
+            }
         }
     }
 

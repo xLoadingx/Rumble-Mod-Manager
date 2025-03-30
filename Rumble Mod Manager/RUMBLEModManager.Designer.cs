@@ -55,6 +55,7 @@
             guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
             guna2Elipse5 = new Guna.UI2.WinForms.Guna2Elipse(components);
             panel3 = new Panel();
+            button2 = new Button();
             pictureBox3 = new PictureBox();
             button1 = new Button();
             pictureBox2 = new PictureBox();
@@ -63,6 +64,7 @@
             textBox1 = new TextBox();
             debounceTimer = new System.Windows.Forms.Timer(components);
             guna2Elipse6 = new Guna.UI2.WinForms.Guna2Elipse(components);
+            gameCheckTimer = new System.Windows.Forms.Timer(components);
             panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)SettingsButton).BeginInit();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).BeginInit();
@@ -101,11 +103,11 @@
             LaunchGame.ForeColor = Color.Green;
             LaunchGame.Location = new Point(192, 5);
             LaunchGame.Name = "LaunchGame";
-            LaunchGame.Size = new Size(102, 25);
+            LaunchGame.Size = new Size(104, 25);
             LaunchGame.TabIndex = 27;
-            LaunchGame.Text = "Launch Game";
+            LaunchGame.Text = "Launch Modded";
             LaunchGame.UseVisualStyleBackColor = false;
-            LaunchGame.Click += LaunchGame_Click;
+            LaunchGame.Click += LaunchGameModded_Click;
             // 
             // SettingsButton
             // 
@@ -349,6 +351,7 @@
             // panel3
             // 
             panel3.BackColor = Color.FromArgb(15, 15, 15);
+            panel3.Controls.Add(button2);
             panel3.Controls.Add(pictureBox3);
             panel3.Controls.Add(button1);
             panel3.Controls.Add(LaunchGame);
@@ -358,6 +361,19 @@
             panel3.Name = "panel3";
             panel3.Size = new Size(1049, 33);
             panel3.TabIndex = 3;
+            // 
+            // button2
+            // 
+            button2.AutoSize = true;
+            button2.BackColor = Color.Lime;
+            button2.ForeColor = Color.Green;
+            button2.Location = new Point(311, 5);
+            button2.Name = "button2";
+            button2.Size = new Size(104, 25);
+            button2.TabIndex = 30;
+            button2.Text = "Launch Vanilla";
+            button2.UseVisualStyleBackColor = false;
+            button2.Click += LaunchGameVanilla_Click;
             // 
             // pictureBox3
             // 
@@ -438,6 +454,11 @@
             guna2Elipse6.BorderRadius = 12;
             guna2Elipse6.TargetControl = textBox1;
             // 
+            // gameCheckTimer
+            // 
+            gameCheckTimer.Interval = 1000;
+            gameCheckTimer.Tick += gameCheckTimer_Tick;
+            // 
             // RUMBLEModManager
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -505,5 +526,7 @@
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse6;
         private Button button1;
         private PictureBox pictureBox3;
+        private System.Windows.Forms.Timer gameCheckTimer;
+        private Button button2;
     }
 }
