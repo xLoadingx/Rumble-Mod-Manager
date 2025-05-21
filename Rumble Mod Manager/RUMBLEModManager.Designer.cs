@@ -41,11 +41,11 @@
             ModPictureDisplay = new PictureBox();
             ThunderstoreButton = new Button();
             UninstallButton = new Button();
-            DateUpdated = new Label();
             pictureBox1 = new PictureBox();
             ToggleModButton = new PictureBox();
             ToggleModLabel = new Button();
             panel1 = new Panel();
+            linkLabel1 = new LinkLabel();
             CustomMapsDownloadButton = new Button();
             ModDescriptionLabel = new Label();
             guna2Elipse1 = new Guna.UI2.WinForms.Guna2Elipse(components);
@@ -140,7 +140,7 @@
             ModAuthorLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModAuthorLabel.Font = new Font("Arial Narrow", 15F);
             ModAuthorLabel.ForeColor = Color.White;
-            ModAuthorLabel.Location = new Point(152, 42);
+            ModAuthorLabel.Location = new Point(154, 43);
             ModAuthorLabel.Name = "ModAuthorLabel";
             ModAuthorLabel.Size = new Size(252, 25);
             ModAuthorLabel.TabIndex = 7;
@@ -169,7 +169,7 @@
             ModVersionLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModVersionLabel.Font = new Font("Arial Narrow", 26.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModVersionLabel.ForeColor = Color.White;
-            ModVersionLabel.Location = new Point(148, 86);
+            ModVersionLabel.Location = new Point(150, 109);
             ModVersionLabel.Name = "ModVersionLabel";
             ModVersionLabel.Size = new Size(253, 42);
             ModVersionLabel.TabIndex = 9;
@@ -215,20 +215,6 @@
             UninstallButton.UseVisualStyleBackColor = false;
             UninstallButton.Click += Uninstall_Button_Click;
             // 
-            // DateUpdated
-            // 
-            DateUpdated.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            DateUpdated.AutoEllipsis = true;
-            DateUpdated.BackColor = Color.FromArgb(40, 40, 40);
-            DateUpdated.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            DateUpdated.ForeColor = Color.White;
-            DateUpdated.Location = new Point(151, 119);
-            DateUpdated.Name = "DateUpdated";
-            DateUpdated.Size = new Size(255, 33);
-            DateUpdated.TabIndex = 18;
-            DateUpdated.Text = "Version 6.9.4";
-            DateUpdated.TextAlign = ContentAlignment.MiddleLeft;
-            // 
             // pictureBox1
             // 
             pictureBox1.BackColor = Color.Transparent;
@@ -270,11 +256,11 @@
             // panel1
             // 
             panel1.BackColor = Color.FromArgb(40, 40, 40);
+            panel1.Controls.Add(linkLabel1);
             panel1.Controls.Add(CustomMapsDownloadButton);
             panel1.Controls.Add(ToggleModLabel);
             panel1.Controls.Add(ToggleModButton);
             panel1.Controls.Add(pictureBox1);
-            panel1.Controls.Add(DateUpdated);
             panel1.Controls.Add(UninstallButton);
             panel1.Controls.Add(SettingsButton);
             panel1.Controls.Add(ThunderstoreButton);
@@ -288,6 +274,19 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(406, 447);
             panel1.TabIndex = 2;
+            // 
+            // linkLabel1
+            // 
+            linkLabel1.AutoSize = true;
+            linkLabel1.LinkColor = Color.ForestGreen;
+            linkLabel1.Location = new Point(157, 82);
+            linkLabel1.Name = "linkLabel1";
+            linkLabel1.Size = new Size(146, 15);
+            linkLabel1.TabIndex = 27;
+            linkLabel1.TabStop = true;
+            linkLabel1.Text = "See Mod On Thunderstore";
+            linkLabel1.VisitedLinkColor = Color.ForestGreen;
+            linkLabel1.LinkClicked += linkLabel1_LinkClicked;
             // 
             // CustomMapsDownloadButton
             // 
@@ -502,7 +501,6 @@
         private PictureBox ModPictureDisplay;
         private Button ThunderstoreButton;
         private Button UninstallButton;
-        private Label DateUpdated;
         private PictureBox pictureBox1;
         private PictureBox ToggleModButton;
         private Button ToggleModLabel;
@@ -528,5 +526,6 @@
         private PictureBox pictureBox3;
         private System.Windows.Forms.Timer gameCheckTimer;
         private Button button2;
+        private LinkLabel linkLabel1;
     }
 }

@@ -254,7 +254,7 @@ namespace Rumble_Mod_Manager
             SettingsButton.Font = new Font(privateFonts.Families[1], 24.0F, FontStyle.Regular);
             ModNameLabel.Font = new Font(privateFonts.Families[1], 24.0F, FontStyle.Regular);
             ModVersionLabel.Font = new Font(privateFonts.Families[1], 26.0F, FontStyle.Regular);
-            DateUpdated.Font = new Font(privateFonts.Families[1], 16.0F, FontStyle.Regular);
+            linkLabel1.Font = new Font(privateFonts.Families[1], 18.0F, FontStyle.Regular);
             ModAuthorLabel.Font = new Font(privateFonts.Families[1], 15.0F, FontStyle.Regular);
             DependenciesLabel.Font = new Font(privateFonts.Families[1], 11.0F, FontStyle.Regular);
             ModDescriptionLabel.Font = new Font(privateFonts.Families[1], 13.0F, FontStyle.Regular);
@@ -334,16 +334,7 @@ namespace Rumble_Mod_Manager
 
         public async Task LoadMods(ModProfile loadedProfile)
         {
-            UninstallButton.Visible = false;
-            ModNameLabel.Visible = false;
-            ModVersionLabel.Visible = false;
-            ModAuthorLabel.Visible = false;
-            ModDescriptionLabel.Visible = false;
-            DependenciesLabel.Visible = false;
-            DateUpdated.Visible = false;
-            ModPictureDisplay.Visible = false;
-            ToggleModButton.Visible = false;
-            ToggleModLabel.Visible = false;
+            ToggleModDisplay(false);
             if (selectedPanels.Count != 0)
             {
                 foreach (var panel in selectedPanels)
@@ -511,6 +502,7 @@ namespace Rumble_Mod_Manager
             }
 
             AdjustPanelLocations();
+            allMods = panel2.Controls.OfType<ModPanelControl>().ToList();
 
             isLoadingDisplay = false;
         }
@@ -817,6 +809,16 @@ namespace Rumble_Mod_Manager
                 ModPanelControl panel = sender as ModPanelControl;
                 if (panel != null)
                 {
+                    if (selectedPanels.Count == 1 && selectedPanels.Contains(panel))
+                    {
+                        panel.BackColor = panel.ModEnabled ? Color.FromArgb(30, 30, 30) : Color.FromArgb(192, 0, 0);
+                        selectedPanels.Clear();
+
+                        ToggleModDisplay(false);
+
+                        return;
+                    }
+
                     bool shiftHeld = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
                     bool ctrlHeld = (Control.ModifierKeys & Keys.Control) == Keys.Control;
 
@@ -864,15 +866,7 @@ namespace Rumble_Mod_Manager
 
                     if (selectedPanels.Count > 0)
                     {
-                        UninstallButton.Visible = true;
-                        ModVersionLabel.Visible = true;
-                        ModAuthorLabel.Visible = true;
-                        ModNameLabel.Visible = true;
-                        ModDescriptionLabel.Visible = true;
-                        DateUpdated.Visible = true;
-                        DependenciesLabel.Visible = true;
-                        ModPictureDisplay.Visible = true;
-                        ToggleModButton.Visible = true;
+                        ToggleModDisplay(true);
 
                         ToggleModLabel.Visible = true;
 
@@ -929,7 +923,6 @@ namespace Rumble_Mod_Manager
                             }
 
                             ModPictureDisplay.Image = modPanel.Mod?.ModImage ?? Properties.Resources.UnknownMod;
-                            DateUpdated.Text = modPanel.Mod?.DateUpdated ?? "Unknown Last Date Updated";
                         }
                         else
                         {
@@ -957,22 +950,11 @@ namespace Rumble_Mod_Manager
 
                             DependenciesLabel.Text = "Multiple dependencies";
                             ModPictureDisplay.Image = Properties.Resources.UnknownMod;
-                            DateUpdated.Text = "Multiple last updated dates";
                         }
                     }
                     else
                     {
-                        UninstallButton.Visible = false;
-                        ModNameLabel.Visible = false;
-                        ModVersionLabel.Visible = false;
-                        ModAuthorLabel.Visible = false;
-                        ModDescriptionLabel.Visible = false;
-                        DateUpdated.Visible = false;
-                        DependenciesLabel.Visible = false;
-                        ModPictureDisplay.Image = null;
-                        ModPictureDisplay.Visible = false;
-                        ToggleModButton.Visible = false;
-                        ToggleModLabel.Visible = false;
+                        ToggleModDisplay(false);
                     }
                 }
                 else
@@ -1228,6 +1210,22 @@ namespace Rumble_Mod_Manager
             AdjustPanelLocations();
         }
 
+        private void ToggleModDisplay(bool toggle)
+        {
+            UninstallButton.Visible = toggle;
+            ModNameLabel.Visible = toggle;
+            ModVersionLabel.Visible = toggle;
+            ModAuthorLabel.Visible = toggle;
+            ModDescriptionLabel.Visible = toggle;
+            linkLabel1.Visible = toggle;
+            DependenciesLabel.Visible = toggle;
+            if (!toggle)
+                ModPictureDisplay.Image = null;
+            ModPictureDisplay.Visible = toggle;
+            ToggleModButton.Visible = toggle;
+            ToggleModLabel.Visible = toggle;
+        }
+
         private void button1_Click_1(object sender, EventArgs e)
         {
             LaunchPage.CheckForUpdates(true);
@@ -1249,13 +1247,35 @@ namespace Rumble_Mod_Manager
                 button2.Visible = false;
                 LaunchGame.BackColor = Color.Red;
                 LaunchGame.ForeColor = Color.Maroon;
-            } else
+            }
+            else
             {
                 gameProcess = null;
                 LaunchGame.Text = "Launch Modded";
                 button2.Visible = true;
                 LaunchGame.BackColor = Color.Lime;
                 LaunchGame.ForeColor = Color.Green;
+            }
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (selectedPanels.Count > 1)
+            {
+                UserMessage msg = new UserMessage($"You have more than one mod selected ({selectedPanels.Count} Mods). Do you want to open all of them?", showYesNo: true);
+                if (msg.ShowDialog() == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
+            foreach (var selectedPanel in selectedPanels.Where(p => p.OnlineModLink != null))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = selectedPanel.OnlineModLink,
+                    UseShellExecute = true
+                });
             }
         }
     }

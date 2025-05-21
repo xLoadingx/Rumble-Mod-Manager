@@ -743,7 +743,7 @@ namespace Rumble_Mod_Manager
                     switch (selectedOption)
                     {
                         case "Alphabetical (A-Z)":
-                            filteredMods = filteredMods.OrderBy(mod => mod.Name).ToList();
+                            filteredMods = filteredMods.OrderBy(mod => mod.Name[0]).ToList();
                             break;
                         case "Recently Updated":
                             filteredMods = filteredMods.OrderByDescending(mod => DateTime.Parse(mod.DateUpdated)).ToList();

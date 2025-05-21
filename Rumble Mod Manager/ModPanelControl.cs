@@ -6,6 +6,7 @@
         private bool _outdated = false;
         private string _modDLLPath = string.Empty;
         private string _versionString = string.Empty;
+        private string _onlineModLink = string.Empty;
         public ThunderstoreMods.Mod Mod { get; set; }
 
 
@@ -88,6 +89,12 @@
         {
             get { return _modDLLPath; }
             set { _modDLLPath = value; }
+        }
+
+        public string OnlineModLink
+        {
+            get { return _onlineModLink; }
+            set { _onlineModLink = value; }
         }
     }
 }

@@ -616,7 +616,8 @@ namespace Rumble_Mod_Manager
                 ModEnabled = isEnabled,
                 ModDllPath = modFile,
                 Mod = panelMod,
-                VersionString = modVersionStr
+                VersionString = modVersionStr,
+                OnlineModLink = panelMod?.OnlinePageUrl
             };
 
             return modPanel;
