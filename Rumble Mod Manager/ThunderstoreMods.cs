@@ -41,17 +41,10 @@ namespace Rumble_Mod_Manager
             if (!string.IsNullOrEmpty(filterOption))
             {
                 guna2ComboBox1.SelectedItem = filterOption;
-            }
-
-            if (ModCache.ModsByPage != null && ModCache.ModsByPage.ContainsKey(CurrentPage))
-            {
+                FilterMods(filterOption);
+            } else if (ModCache.ModsByPage != null && ModCache.ModsByPage.ContainsKey(CurrentPage))
                 DisplayMods(ModCache.ModsByPage[CurrentPage]);
-            }
-            else
-            {
-                UserMessage errorMessage = new UserMessage("No mods found in cache. Mods were not found when first loaded. (Contact the developer 'error_real_sir' on discord for help)", true, showCopyDialog: true);
-                errorMessage.Show();
-            }
+
             ModAuthorLabel.Text = string.Empty;
             ModDescriptionLabel.Text = string.Empty;
             ModNameLabel.Text = string.Empty;
@@ -742,6 +735,8 @@ namespace Rumble_Mod_Manager
                                                         !mod.isPinned).ToList();
 
                 string selectedOption = guna2ComboBox1.SelectedItem?.ToString();
+                Properties.Settings.Default.SortingOption = selectedOption;
+                Properties.Settings.Default.Save();
 
                 if (!string.IsNullOrEmpty(selectedOption))
                 {
@@ -865,8 +860,6 @@ namespace Rumble_Mod_Manager
 
         private void guna2ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.SortingOption = textBox1.Text;
-
             FilterMods(textBox1.Text);
         }
 
