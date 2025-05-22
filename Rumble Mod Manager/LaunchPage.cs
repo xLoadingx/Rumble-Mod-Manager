@@ -639,6 +639,9 @@ namespace Rumble_Mod_Manager
                 FileSize = fileSize
             };
 
+            modPanel.label1.Left = modPanel.label2.Right;
+            modPanel.label1.Top = modPanel.label2.Top;
+
             return modPanel;
         }
 

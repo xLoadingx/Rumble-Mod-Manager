@@ -82,5 +82,17 @@ namespace Rumble_Mod_Manager.Properties {
                 this["AutoModUpdating"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SortingOption {
+            get {
+                return ((string)(this["SortingOption"]));
+            }
+            set {
+                this["SortingOption"] = value;
+            }
+        }
     }
 }

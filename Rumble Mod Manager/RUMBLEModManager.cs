@@ -11,6 +11,7 @@ namespace Rumble_Mod_Manager
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Reflection.Emit;
     using System.Text.RegularExpressions;
     using System.Windows.Controls;
     using System.Windows.Forms;
@@ -812,6 +813,7 @@ namespace Rumble_Mod_Manager
                     if (selectedPanels.Count == 1 && selectedPanels.Contains(panel))
                     {
                         panel.BackColor = panel.ModEnabled ? Color.FromArgb(30, 30, 30) : Color.FromArgb(192, 0, 0);
+                        panel.label1.ForeColor = panel.ModEnabled ? Color.DimGray : Color.White;
                         selectedPanels.Clear();
 
                         ToggleModDisplay(false);
@@ -836,6 +838,7 @@ namespace Rumble_Mod_Manager
                             if (!selectedPanels.Contains(p))
                             {
                                 selectedPanels.Add(p);
+                                panel.label1.ForeColor = Color.White;
                                 p.BackColor = Color.LightBlue;
                             }
                         }
@@ -849,6 +852,7 @@ namespace Rumble_Mod_Manager
                         }
                         else
                         {
+                            panel.label1.ForeColor = Color.White;
                             panel.BackColor = Color.LightBlue;
                             selectedPanels.Add(panel);
                         }
@@ -856,10 +860,14 @@ namespace Rumble_Mod_Manager
                     else
                     {
                         foreach (var selectedPanel in selectedPanels)
+                        {
                             selectedPanel.BackColor = selectedPanel.ModEnabled ? Color.FromArgb(30, 30, 30) : Color.FromArgb(192, 0, 0);
+                            panel.label1.ForeColor = panel.ModEnabled ? Color.DimGray : Color.White;
+                        }
 
                         selectedPanels.Clear();
 
+                        panel.label1.ForeColor = Color.White;
                         panel.BackColor = Color.LightBlue;
                         selectedPanels.Add(panel);
                     }

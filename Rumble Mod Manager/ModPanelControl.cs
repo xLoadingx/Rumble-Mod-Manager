@@ -1,4 +1,6 @@
-﻿namespace Rumble_Mod_Manager
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Rumble_Mod_Manager
 {
     public partial class ModPanelControl : UserControl
     {
@@ -8,12 +10,14 @@
         private string _versionString = string.Empty;
         private string _onlineModLink = string.Empty;
         private long _fileSize = 0;
+        int fixedRight;
         public ThunderstoreMods.Mod Mod { get; set; }
 
 
         public ModPanelControl()
         {
             InitializeComponent();
+            fixedRight = this.Right;
         }
 
         public string ModNameLabel

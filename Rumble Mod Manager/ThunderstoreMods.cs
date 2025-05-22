@@ -1,31 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using HtmlAgilityPack;
-using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Reflection;
+﻿using System.Data;
 using System.IO.Compression;
-using Rumble_Mod_Manager.Properties;
-using System.Diagnostics;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Drawing.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
-using Microsoft.VisualBasic;
-using Microsoft.VisualBasic.FileIO;
-using System.Collections;
-using System.Xml.Linq;
-using System.Globalization;
-using static System.Windows.Forms.DataFormats;
 
 namespace Rumble_Mod_Manager
 {
@@ -40,6 +19,8 @@ namespace Rumble_Mod_Manager
         RUMBLEModManager RumbleManager;
 
         private List<ThunderstoreModDisplay> currentModCards = new();
+        private Dictionary<int, List<Mod>> filteredModPages = null;
+        private bool isFilterActive = false;
 
         public ThunderstoreMods(RUMBLEModManager form1)
         {
@@ -56,6 +37,12 @@ namespace Rumble_Mod_Manager
             BackButton.Enabled = CurrentPage > 1;
             ForwardButton.Enabled = ModCache.ModsByPage.ContainsKey(CurrentPage + 1);
 
+            string filterOption = Properties.Settings.Default.SortingOption;
+            if (!string.IsNullOrEmpty(filterOption))
+            {
+                guna2ComboBox1.SelectedItem = filterOption;
+            }
+
             if (ModCache.ModsByPage != null && ModCache.ModsByPage.ContainsKey(CurrentPage))
             {
                 DisplayMods(ModCache.ModsByPage[CurrentPage]);
@@ -65,7 +52,6 @@ namespace Rumble_Mod_Manager
                 UserMessage errorMessage = new UserMessage("No mods found in cache. Mods were not found when first loaded. (Contact the developer 'error_real_sir' on discord for help)", true, showCopyDialog: true);
                 errorMessage.Show();
             }
-
             ModAuthorLabel.Text = string.Empty;
             ModDescriptionLabel.Text = string.Empty;
             ModNameLabel.Text = string.Empty;
@@ -688,22 +674,34 @@ namespace Rumble_Mod_Manager
             if (CurrentPage > 1)
             {
                 CurrentPage--;
-                DisplayMods(ModCache.ModsByPage[CurrentPage]);
-                PageNumberLabel.Text = $"Page {CurrentPage}";
-                BackButton.Enabled = CurrentPage > 1;
-                ForwardButton.Enabled = ModCache.ModsByPage.ContainsKey(CurrentPage + 1);
+
+                var source = isFilterActive ? filteredModPages : ModCache.ModsByPage;
+
+                if (source.ContainsKey(CurrentPage))
+                {
+                    DisplayMods(source[CurrentPage]);
+                    PageNumberLabel.Text = $"Page {CurrentPage}";
+                    BackButton.Enabled = CurrentPage > 1;
+                    ForwardButton.Enabled = source.ContainsKey(CurrentPage + 1);
+                }
             }
         }
 
         private void ForwardButton_Click(object sender, EventArgs e)
         {
-            if (ModCache.ModsByPage.ContainsKey(CurrentPage + 1))
+            var source = isFilterActive ? filteredModPages : ModCache.ModsByPage;
+
+            if (source.ContainsKey(CurrentPage + 1))
             {
                 CurrentPage++;
-                DisplayMods(ModCache.ModsByPage[CurrentPage]);
-                PageNumberLabel.Text = $"Page {CurrentPage}";
-                BackButton.Enabled = CurrentPage > 1;
-                ForwardButton.Enabled = ModCache.ModsByPage.ContainsKey(CurrentPage + 1);
+
+                if (source.ContainsKey(CurrentPage))
+                {
+                    DisplayMods(source[CurrentPage]);
+                    PageNumberLabel.Text = $"Page {CurrentPage}";
+                    BackButton.Enabled = CurrentPage > 1;
+                    ForwardButton.Enabled = source.ContainsKey(CurrentPage + 1);
+                }
             }
         }
 
@@ -740,7 +738,8 @@ namespace Rumble_Mod_Manager
                                                         mod.Description.ToLower().Contains(searchText) ||
                                                         mod.isOutdated ||
                                                         mod.isDeprecated ||
-                                                        mod.Author.ToLower().Contains(searchText))).ToList();
+                                                        mod.Author.ToLower().Contains(searchText)) &&
+                                                        !mod.isPinned).ToList();
 
                 string selectedOption = guna2ComboBox1.SelectedItem?.ToString();
 
@@ -776,6 +775,9 @@ namespace Rumble_Mod_Manager
                     var modsForPage = filteredMods.Skip(i * pageSize).Take(pageSize).ToList();
                     filteredModsByPage[i + 1] = modsForPage;
                 }
+
+                filteredModPages = filteredModsByPage;
+                isFilterActive = isSearching || !string.IsNullOrWhiteSpace(selectedOption);
 
                 // Update the display
                 if (filteredModsByPage.ContainsKey(1))
@@ -863,6 +865,8 @@ namespace Rumble_Mod_Manager
 
         private void guna2ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            Properties.Settings.Default.SortingOption = textBox1.Text;
+
             FilterMods(textBox1.Text);
         }
 

@@ -66,6 +66,7 @@
             // ModName
             // 
             ModName.AutoSize = true;
+            ModName.BackColor = Color.Transparent;
             ModName.ForeColor = Color.White;
             ModName.Location = new Point(78, 19);
             ModName.Name = "ModName";
@@ -91,7 +92,7 @@
             // ImageButton
             // 
             ImageButton.CheckedState.ImageSize = new Size(64, 64);
-            ImageButton.HoverState.ImageSize = new Size(35, 24);
+            ImageButton.HoverState.ImageSize = new Size(41, 30);
             ImageButton.Image = Properties.Resources.UpdateIcon;
             ImageButton.ImageOffset = new Point(0, 0);
             ImageButton.ImageRotate = 0F;
@@ -127,8 +128,9 @@
             // label1
             // 
             label1.AutoSize = true;
+            label1.BackColor = Color.Transparent;
             label1.ForeColor = Color.DimGray;
-            label1.Location = new Point(484, 9);
+            label1.Location = new Point(122, 45);
             label1.Name = "label1";
             label1.Size = new Size(38, 15);
             label1.TabIndex = 5;
