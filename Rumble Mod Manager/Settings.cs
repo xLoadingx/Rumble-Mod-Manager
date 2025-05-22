@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace Rumble_Mod_Manager
 {
-    public partial class Settings : Form
+    public partial class Settings : PersistentForm
     {
         RUMBLEModManager ModMangager;
         LaunchPage launchPage;

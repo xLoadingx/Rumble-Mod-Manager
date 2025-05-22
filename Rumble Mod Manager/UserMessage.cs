@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -15,12 +16,12 @@ namespace Rumble_Mod_Manager
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
 
-        public UserMessage(string message, bool showButton = true, bool showYesNo = false)
+        public UserMessage(string message, bool showButton = true, bool showYesNo = false, bool showCopyDialog = false)
         {
             InitializeComponent();
             LoadCustomFont();
 
-            ShowButtons(showButton, showYesNo);
+            ShowButtons(showButton, showYesNo, showCopyDialog);
             UpdateStatusMessage(message);
         }
 
@@ -43,11 +44,12 @@ namespace Rumble_Mod_Manager
             label1.Text = message;
         }
 
-        public void ShowButtons(bool showButton, bool showYesNo = false)
+        public void ShowButtons(bool showButton, bool showYesNo = false, bool showCopyLog = false)
         {
             button1.Visible = showButton && !showYesNo;
             button2.Visible = showYesNo;
             button3.Visible = showYesNo;
+            button4.Visible = showCopyLog && !showYesNo;
         }
 
         private void LoadCustomFont()
@@ -57,6 +59,7 @@ namespace Rumble_Mod_Manager
             button1.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             button2.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
             button3.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
+            button4.Font = new Font(privateFonts.Families[0], 18.0F, FontStyle.Regular);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -74,6 +77,22 @@ namespace Rumble_Mod_Manager
         {
             DialogResult = DialogResult.No;
             Close();
+        }
+
+        private async void button4_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Clipboard.SetText(label1.Text);
+
+                button4.Text = "Copied!";
+                await Task.Delay(1000);
+                button4.Text = "Copy Log";
+            } catch (ExternalException ex)
+            {
+                UserMessage.ShowDialog($"Failed to copy to clipboard: {ex.StackTrace}", "Error", true);
+            }
+            
         }
     }
 }

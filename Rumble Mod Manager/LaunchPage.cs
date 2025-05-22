@@ -11,7 +11,7 @@ using Tulpep.NotificationWindow;
 
 namespace Rumble_Mod_Manager
 {
-    public partial class LaunchPage : Form
+    public partial class LaunchPage : PersistentForm
     {
         private static PrivateFontCollection privateFonts = new PrivateFontCollection();
         private static Settings _settingsInstance;
@@ -709,7 +709,7 @@ namespace Rumble_Mod_Manager
 
                 string basePath = Properties.Settings.Default.RumblePath;
 
-                if (!Properties.Settings.Default.SkipMapLoading)
+                if (false /*!Properties.Settings.Default.SkipMapLoading*/) // Custom maps is being rebuilt
                 {
                     string targetDirectory = Path.Combine(basePath, "UserData", "CustomMultiplayerMaps", "Maps");
 

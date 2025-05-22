@@ -29,7 +29,7 @@ using static System.Windows.Forms.DataFormats;
 
 namespace Rumble_Mod_Manager
 {
-    public partial class ThunderstoreMods : Form
+    public partial class ThunderstoreMods : PersistentForm
     {
         private PrivateFontCollection privateFonts = new();
         private static readonly HttpClient client = new();
@@ -62,7 +62,7 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                UserMessage errorMessage = new UserMessage("No mods found in cache. Mods were not found when first loaded. (Contact the developer 'error_real_sir' on discord for help)", true);
+                UserMessage errorMessage = new UserMessage("No mods found in cache. Mods were not found when first loaded. (Contact the developer 'error_real_sir' on discord for help)", true, showCopyDialog: true);
                 errorMessage.Show();
             }
 
@@ -227,7 +227,7 @@ namespace Rumble_Mod_Manager
                     }
                     catch (Exception ex)
                     {
-                        UserMessage errorMessage = new UserMessage($"Failed to create temp directory: {ex.Message}", true);
+                        UserMessage errorMessage = new UserMessage($"Failed to create temp directory: {ex.Message}", true, showCopyDialog: true);
                         errorMessage.Show();
                         installingMessage?.Close();
                         return;
@@ -250,7 +250,7 @@ namespace Rumble_Mod_Manager
 
                 if (!File.Exists(tempZipPath))
                 {
-                    UserMessage errorMessage = new UserMessage("Downloaded mod zip file could not be found. Please check if the download was successful.", true);
+                    UserMessage errorMessage = new UserMessage("Downloaded mod zip file could not be found. Please check if the download was successful.", true, showCopyDialog: true);
                     errorMessage.Show();
                     return;
                 }
@@ -271,7 +271,7 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                UserMessage errorMessage = new UserMessage($"An error occurred while downloading or extracting the mod: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"An error occurred while downloading or extracting the mod: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
             }
             finally
@@ -291,7 +291,7 @@ namespace Rumble_Mod_Manager
                 }
                 catch (Exception cleanupEx)
                 {
-                    UserMessage errorMessage = new UserMessage($"An error occurred during cleanup: {cleanupEx.Message}", true);
+                    UserMessage errorMessage = new UserMessage($"An error occurred during cleanup: {cleanupEx.Message}", true, showCopyDialog: true);
                     errorMessage.Show();
                 }
             }
@@ -407,28 +407,28 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    UserMessage errorMessage = new UserMessage("This ZIP file does not contain a valid mod.", true);
+                    UserMessage errorMessage = new UserMessage("This ZIP file does not contain a valid mod.", true, showCopyDialog: true);
                     errorMessage.ShowDialog();
                 }
             }
             catch (UnauthorizedAccessException ex)
             {
-                UserMessage errorMessage = new UserMessage($"Access denied: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"Access denied: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
             }
             catch (DirectoryNotFoundException ex)
             {
-                UserMessage errorMessage = new UserMessage($"Directory not found: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"Directory not found: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
             }
             catch (IOException ex)
             {
-                UserMessage errorMessage = new UserMessage($"IO error: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"IO error: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
             }
             catch (Exception ex)
             {
-                UserMessage errorMessage = new UserMessage($"Failed to install mod: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"Failed to install mod: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
             }
             finally
@@ -622,7 +622,7 @@ namespace Rumble_Mod_Manager
                             }
                             catch (Exception ex)
                             {
-                                UserMessage errorMessage = new UserMessage($"An error occurred while processing a mod: {ex.Message}", true);
+                                UserMessage errorMessage = new UserMessage($"An error occurred while processing a mod: {ex.Message}", true, showCopyDialog: true);
                                 errorMessage.Show();
                             }
                             finally
@@ -658,7 +658,7 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
             }
 

@@ -18,7 +18,7 @@ namespace Rumble_Mod_Manager
     using static System.Runtime.InteropServices.JavaScript.JSType;
     using Control = Control;
 
-    public partial class RUMBLEModManager : Form
+    public partial class RUMBLEModManager : PersistentForm
     {
         private List<ModPanelControl> selectedPanels = new List<ModPanelControl>();
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
@@ -152,7 +152,7 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    UserMessage errorMessage = new UserMessage("Invalid link or unsupported file type. Please drop a valid Thunderstore link or a .zip file.", true);
+                    UserMessage errorMessage = new UserMessage("Invalid link or unsupported file type. Please drop a valid Thunderstore link or a .zip file.", true, showCopyDialog: true);
                     errorMessage.Show();
                     errorMessage.BringToFront();
                 }
@@ -195,7 +195,7 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                UserMessage errorMessage = new UserMessage($"An error occurred while downloading or installing the mod: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"An error occurred while downloading or installing the mod: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
                 errorMessage.BringToFront();
             }
@@ -227,7 +227,7 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
                 errorMessage.BringToFront();
                 return null;
@@ -375,7 +375,7 @@ namespace Rumble_Mod_Manager
             isLoadingDisplay = true;
 
             var customMapsPath = Path.Combine(Properties.Settings.Default.RumblePath, "UserData", "CustomMultiplayerMaps", "Maps");
-            if (Directory.Exists(customMapsPath) && CustomMapsCache.MapsByPage.Count > 0)
+            if (false /*Directory.Exists(customMapsPath) && CustomMapsCache.MapsByPage.Count > 0*/ ) // Custom Maps is being rebuilt
             {
                 ThunderstoreButton.Font = new Font(privateFonts.Families[1], 22.0F, FontStyle.Regular);
                 ThunderstoreButton.Size = new Size(161, 48);
@@ -535,7 +535,7 @@ namespace Rumble_Mod_Manager
                     }
                     else
                     {
-                        UserMessage errorMessage = new UserMessage("Something went wrong. A file path does not exist.", true);
+                        UserMessage errorMessage = new UserMessage("Something went wrong. A file path does not exist.", true, showCopyDialog: true);
                         errorMessage.Show();
                         errorMessage.BringToFront();
                         return;
@@ -959,7 +959,7 @@ namespace Rumble_Mod_Manager
                 }
                 else
                 {
-                    var errorMessage = new UserMessage("Panel is null", true);
+                    var errorMessage = new UserMessage("Panel is null", true, showCopyDialog: true);
                     errorMessage.Show();
                     errorMessage.BringToFront();
                 }
@@ -985,7 +985,7 @@ namespace Rumble_Mod_Manager
             }
             else
             {
-                UserMessage errorMessage = new UserMessage("Please wait for mods to finish loading before accessing the Thunderstore mod page.", true);
+                UserMessage errorMessage = new UserMessage("Please wait for mods to finish loading before accessing the Thunderstore mod page.", true, showCopyDialog: true);
                 errorMessage.Show();
                 errorMessage.BringToFront();
             }
@@ -1074,7 +1074,7 @@ namespace Rumble_Mod_Manager
                     }
                     else
                     {
-                        UserMessage errorMessage = new UserMessage($"Source file for {panel.ModNameLabel} does not exist.", true);
+                        UserMessage errorMessage = new UserMessage($"Source file for {panel.ModNameLabel} does not exist.", true, showCopyDialog: true);
                         errorMessage.Show();
                         errorMessage.BringToFront();
                     }
@@ -1090,7 +1090,7 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true);
+                UserMessage errorMessage = new UserMessage($"An error occurred: {ex.Message}", true, showCopyDialog: true);
                 errorMessage.Show();
                 errorMessage.BringToFront();
             }
@@ -1140,7 +1140,7 @@ namespace Rumble_Mod_Manager
 
             if (!File.Exists(steamExePath))
             {
-                UserMessage error = new UserMessage("Steam executable not found at the specified path.", true);
+                UserMessage error = new UserMessage("Steam executable not found at the specified path.", true, showCopyDialog: true);
                 error.Show();
                 return;
             }
@@ -1168,7 +1168,7 @@ namespace Rumble_Mod_Manager
             }
             catch (Exception ex)
             {
-                UserMessage error = new UserMessage($"Failed to launch or stop RUMBLE: {ex.Message}", true);
+                UserMessage error = new UserMessage($"Failed to launch or stop RUMBLE: {ex.Message}", true, showCopyDialog: true);
                 error.Show();
             }
         }

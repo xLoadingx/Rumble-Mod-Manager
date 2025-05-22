@@ -292,6 +292,7 @@
             // 
             CustomMapsDownloadButton.AutoSize = true;
             CustomMapsDownloadButton.BackColor = Color.Purple;
+            CustomMapsDownloadButton.Font = new Font("Segoe UI", 9F);
             CustomMapsDownloadButton.ForeColor = Color.FromArgb(64, 0, 64);
             CustomMapsDownloadButton.Location = new Point(232, 385);
             CustomMapsDownloadButton.Name = "CustomMapsDownloadButton";

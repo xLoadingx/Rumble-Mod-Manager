@@ -37,6 +37,7 @@
             guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(components);
             button2 = new Button();
             button3 = new Button();
+            button4 = new Button();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -114,12 +115,27 @@
             button3.UseVisualStyleBackColor = false;
             button3.Click += button3_Click;
             // 
+            // button4
+            // 
+            button4.AutoSize = true;
+            button4.BackColor = Color.Purple;
+            button4.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            button4.ForeColor = Color.FromArgb(64, 0, 64);
+            button4.Location = new Point(344, 192);
+            button4.Name = "button4";
+            button4.Size = new Size(106, 39);
+            button4.TabIndex = 11;
+            button4.Text = "Copy Log";
+            button4.UseVisualStyleBackColor = false;
+            button4.Click += button4_Click;
+            // 
             // UserMessage
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
             ClientSize = new Size(462, 243);
+            Controls.Add(button4);
             Controls.Add(button3);
             Controls.Add(button2);
             Controls.Add(panel1);
@@ -142,5 +158,6 @@
         private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
         private Button button3;
         private Button button2;
+        private Button button4;
     }
 }
