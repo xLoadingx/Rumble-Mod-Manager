@@ -41,6 +41,7 @@
             ImageButton = new Guna.UI2.WinForms.Guna2ImageButton();
             guna2Elipse4 = new Guna.UI2.WinForms.Guna2Elipse(components);
             FavoritedStar = new Guna.UI2.WinForms.Guna2ImageCheckBox();
+            label1 = new Label();
             ((System.ComponentModel.ISupportInitialize)guna2PictureBox1).BeginInit();
             SuspendLayout();
             // 
@@ -123,11 +124,23 @@
             FavoritedStar.Size = new Size(35, 35);
             FavoritedStar.TabIndex = 4;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.ForeColor = Color.DimGray;
+            label1.Location = new Point(484, 9);
+            label1.Name = "label1";
+            label1.Size = new Size(38, 15);
+            label1.TabIndex = 5;
+            label1.Text = "label1";
+            label1.TextAlign = ContentAlignment.MiddleRight;
+            // 
             // ModPanelControl
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
+            Controls.Add(label1);
             Controls.Add(FavoritedStar);
             Controls.Add(ImageButton);
             Controls.Add(label2);
@@ -157,5 +170,6 @@
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse4;
         public Label label2;
         public Guna.UI2.WinForms.Guna2ImageCheckBox FavoritedStar;
+        public Label label1;
     }
 }

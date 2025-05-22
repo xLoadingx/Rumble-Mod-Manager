@@ -57,6 +57,7 @@
             // 
             // panel1
             // 
+            panel1.AutoSize = true;
             panel1.BackColor = Color.FromArgb(40, 40, 40);
             panel1.Controls.Add(linkLabel1);
             panel1.Controls.Add(ForwardButton);
@@ -69,13 +70,16 @@
             panel1.Controls.Add(ModPictureDisplay);
             panel1.Controls.Add(ModDescriptionLabel);
             panel1.Controls.Add(DependenciesLabel);
-            panel1.Location = new Point(627, 3);
+            panel1.Dock = DockStyle.Right;
+            panel1.Location = new Point(626, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(406, 442);
+            panel1.Size = new Size(407, 444);
             panel1.TabIndex = 1;
+            panel1.SizeChanged += panel1_SizeChanged;
             // 
             // linkLabel1
             // 
+            linkLabel1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             linkLabel1.AutoSize = true;
             linkLabel1.LinkColor = Color.ForestGreen;
             linkLabel1.Location = new Point(164, 80);
@@ -88,6 +92,7 @@
             // 
             // ForwardButton
             // 
+            ForwardButton.Anchor = AnchorStyles.Bottom;
             ForwardButton.BackColor = Color.FromArgb(128, 128, 255);
             ForwardButton.Font = new Font("Arial Narrow", 27.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ForwardButton.ForeColor = Color.SlateBlue;
@@ -101,6 +106,7 @@
             // 
             // PageNumberLabel
             // 
+            PageNumberLabel.Anchor = AnchorStyles.Bottom;
             PageNumberLabel.BackColor = Color.FromArgb(128, 128, 255);
             PageNumberLabel.Font = new Font("Arial Narrow", 27.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             PageNumberLabel.ForeColor = Color.SlateBlue;
@@ -113,6 +119,7 @@
             // 
             // BackButton
             // 
+            BackButton.Anchor = AnchorStyles.Bottom;
             BackButton.BackColor = Color.FromArgb(128, 128, 255);
             BackButton.Font = new Font("Arial Narrow", 27.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             BackButton.ForeColor = Color.SlateBlue;
@@ -126,6 +133,7 @@
             // 
             // InstallButton
             // 
+            InstallButton.Anchor = AnchorStyles.Bottom;
             InstallButton.BackColor = Color.FromArgb(128, 255, 128);
             InstallButton.Font = new Font("Arial Narrow", 27.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             InstallButton.ForeColor = Color.Green;
@@ -139,21 +147,21 @@
             // 
             // ModVersionLabel
             // 
-            ModVersionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModVersionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ModVersionLabel.AutoEllipsis = true;
             ModVersionLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModVersionLabel.Font = new Font("Arial Narrow", 26.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModVersionLabel.ForeColor = Color.White;
             ModVersionLabel.Location = new Point(161, 115);
             ModVersionLabel.Name = "ModVersionLabel";
-            ModVersionLabel.Size = new Size(242, 40);
+            ModVersionLabel.Size = new Size(243, 42);
             ModVersionLabel.TabIndex = 6;
             ModVersionLabel.Text = "Version 6.9.4";
             ModVersionLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModNameLabel
             // 
-            ModNameLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModNameLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ModNameLabel.AutoEllipsis = true;
             ModNameLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModNameLabel.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
@@ -161,29 +169,29 @@
             ModNameLabel.ImageAlign = ContentAlignment.MiddleLeft;
             ModNameLabel.Location = new Point(161, 6);
             ModNameLabel.Name = "ModNameLabel";
-            ModNameLabel.Size = new Size(242, 29);
+            ModNameLabel.Size = new Size(243, 31);
             ModNameLabel.TabIndex = 5;
             ModNameLabel.Text = "Rumble Modding API";
             ModNameLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModAuthorLabel
             // 
-            ModAuthorLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ModAuthorLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ModAuthorLabel.AutoEllipsis = true;
             ModAuthorLabel.BackColor = Color.FromArgb(40, 40, 40);
             ModAuthorLabel.Font = new Font("Arial Narrow", 24F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModAuthorLabel.ForeColor = Color.White;
             ModAuthorLabel.Location = new Point(158, 37);
             ModAuthorLabel.Name = "ModAuthorLabel";
-            ModAuthorLabel.Size = new Size(242, 38);
+            ModAuthorLabel.Size = new Size(243, 40);
             ModAuthorLabel.TabIndex = 3;
             ModAuthorLabel.Text = "By UlvakSkillz";
             ModAuthorLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // ModPictureDisplay
             // 
-            ModPictureDisplay.Anchor = AnchorStyles.None;
-            ModPictureDisplay.Location = new Point(2, 0);
+            ModPictureDisplay.Image = Properties.Resources.UnknownMod;
+            ModPictureDisplay.Location = new Point(2, 1);
             ModPictureDisplay.Name = "ModPictureDisplay";
             ModPictureDisplay.Size = new Size(155, 155);
             ModPictureDisplay.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -192,41 +200,45 @@
             // 
             // ModDescriptionLabel
             // 
-            ModDescriptionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            ModDescriptionLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             ModDescriptionLabel.AutoEllipsis = true;
             ModDescriptionLabel.BackColor = Color.FromArgb(20, 20, 20);
             ModDescriptionLabel.Font = new Font("Arial Narrow", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             ModDescriptionLabel.ForeColor = Color.White;
-            ModDescriptionLabel.Location = new Point(2, 158);
+            ModDescriptionLabel.Location = new Point(2, 163);
             ModDescriptionLabel.Name = "ModDescriptionLabel";
-            ModDescriptionLabel.Size = new Size(155, 162);
+            ModDescriptionLabel.Size = new Size(155, 155);
             ModDescriptionLabel.TabIndex = 4;
             ModDescriptionLabel.Text = "API to Help Modders Get Started and to remove the necessity of GameObject.Find";
             ModDescriptionLabel.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // DependenciesLabel
             // 
+            DependenciesLabel.Anchor = AnchorStyles.Bottom;
             DependenciesLabel.AutoEllipsis = true;
             DependenciesLabel.BackColor = Color.FromArgb(20, 20, 20);
             DependenciesLabel.Font = new Font("Arial Narrow", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             DependenciesLabel.ForeColor = Color.White;
-            DependenciesLabel.Location = new Point(161, 158);
+            DependenciesLabel.Location = new Point(167, 163);
             DependenciesLabel.Name = "DependenciesLabel";
-            DependenciesLabel.Size = new Size(243, 162);
+            DependenciesLabel.Size = new Size(237, 155);
             DependenciesLabel.TabIndex = 12;
             DependenciesLabel.Text = "Dependencies:\r\nLavaGang-MelonLoader-0.6.3\r\nUlvakSkillz-Rumble-Additional_Sounds-2.2.0\r\n";
             DependenciesLabel.TextAlign = ContentAlignment.TopCenter;
             // 
             // panel2
             // 
+            panel2.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             panel2.BackColor = Color.FromArgb(40, 40, 40);
             panel2.Location = new Point(12, 48);
             panel2.Name = "panel2";
             panel2.Size = new Size(592, 390);
             panel2.TabIndex = 3;
+            panel2.SizeChanged += panel2_SizeChanged;
             // 
             // guna2ComboBox1
             // 
+            guna2ComboBox1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             guna2ComboBox1.BackColor = Color.FromArgb(64, 64, 64);
             guna2ComboBox1.BorderColor = Color.White;
             guna2ComboBox1.BorderRadius = 5;
@@ -286,10 +298,9 @@
             Controls.Add(panel2);
             Controls.Add(panel1);
             Icon = (Icon)resources.GetObject("$this.Icon");
-            MaximumSize = new Size(1049, 483);
             MinimumSize = new Size(1049, 483);
             Name = "ThunderstoreMods";
-            Text = "a";
+            Text = "Thunderstore Mods";
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)ModPictureDisplay).EndInit();

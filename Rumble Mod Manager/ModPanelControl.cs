@@ -7,6 +7,7 @@
         private string _modDLLPath = string.Empty;
         private string _versionString = string.Empty;
         private string _onlineModLink = string.Empty;
+        private long _fileSize = 0;
         public ThunderstoreMods.Mod Mod { get; set; }
 
 
@@ -31,6 +32,18 @@
         {
             get { return label2.Text; }
             set { label2.Text = value; }
+        }
+
+        public string FileSizeLabel
+        {
+            get { return label1.Text; }
+            set { label1.Text = value; }
+        }
+
+        public Font FileSizeFont
+        {
+            get { return label1.Font; }
+            set { label1.Font = value; }
         }
 
         public Font ModLabelFont
@@ -82,6 +95,7 @@
             {
                 _modEnabled = value;
                 this.ForeColor = _modEnabled ? Color.White : Color.Maroon; this.BackColor = value == true ? Color.FromArgb(255, 30, 30, 30) : Color.FromArgb(255, 192, 0, 0);
+                this.label1.ForeColor = _modEnabled ? Color.DimGray : Color.White;
             }
         }
 
@@ -95,6 +109,12 @@
         {
             get { return _onlineModLink; }
             set { _onlineModLink = value; }
+        }
+
+        public long FileSize
+        {
+            get { return _fileSize; }
+            set { _fileSize = value; }
         }
     }
 }

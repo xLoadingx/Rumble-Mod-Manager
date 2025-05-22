@@ -55,9 +55,11 @@
             // 
             // ModPictureDisplay
             // 
+            ModPictureDisplay.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            ModPictureDisplay.Image = Properties.Resources.UnknownMod;
             ModPictureDisplay.Location = new Point(0, 0);
             ModPictureDisplay.Name = "ModPictureDisplay";
-            ModPictureDisplay.Size = new Size(170, 174);
+            ModPictureDisplay.Size = new Size(171, 174);
             ModPictureDisplay.SizeMode = PictureBoxSizeMode.StretchImage;
             ModPictureDisplay.TabIndex = 5;
             ModPictureDisplay.TabStop = false;

@@ -538,6 +538,22 @@ namespace Rumble_Mod_Manager
 
             string modVersionStr = (string)RUMBLEModManager.GetMelonLoaderModInfo(Path.Combine(rumblePath, folderPath), modFileName, MelonLoaderModInfoType.Version);
 
+            long fileSize = new FileInfo(Path.Combine(rumblePath, folderPath, modFileName)).Length;
+            double displaySize;
+            string fileText = "MB";
+
+            if (fileSize >= 1024 * 1024)
+                displaySize = fileSize / (1024.0 * 1024.0);
+            else if (fileSize >= 1024)
+            {
+                displaySize = fileSize / 1024.0;
+                fileText = "KB";
+            } else {
+                displaySize = fileSize;
+                fileText = "bytes";
+            }
+                
+
             Color color = Color.Lime;
             Image cloudIcon = null;
             Image modImage = null;
@@ -608,6 +624,8 @@ namespace Rumble_Mod_Manager
                 DetailsLabel = $"v{modVersionStr} by {ModAuthor}",
                 ModLabelFont = new Font(privateFonts.Families[1], 15.0F, FontStyle.Bold),
                 DetailsLabelFont = new Font(privateFonts.Families[1], 15.0F, FontStyle.Regular),
+                FileSizeLabel = $"{displaySize.ToString("0.##")} {fileText}",
+                FileSizeFont = new Font(privateFonts.Families[1], 15.0F, FontStyle.Regular),
                 UpdateNeededImage = cloudIcon,
                 UpdateColor = color,
                 Outdated = outdated,
@@ -617,7 +635,8 @@ namespace Rumble_Mod_Manager
                 ModDllPath = modFile,
                 Mod = panelMod,
                 VersionString = modVersionStr,
-                OnlineModLink = panelMod?.OnlinePageUrl
+                OnlineModLink = panelMod?.OnlinePageUrl,
+                FileSize = fileSize
             };
 
             return modPanel;

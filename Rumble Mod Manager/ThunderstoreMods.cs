@@ -31,12 +31,15 @@ namespace Rumble_Mod_Manager
 {
     public partial class ThunderstoreMods : Form
     {
-        private PrivateFontCollection privateFonts = new PrivateFontCollection();
-        private static readonly HttpClient client = new HttpClient();
+        private PrivateFontCollection privateFonts = new();
+        private static readonly HttpClient client = new();
         private ThunderstoreModDisplay selectedPanel;
         private Mod CurrentlySelectedMod;
         private int CurrentPage = 1;
+        private int lastPanel2Width = -1;
         RUMBLEModManager RumbleManager;
+
+        private List<ThunderstoreModDisplay> currentModCards = new();
 
         public ThunderstoreMods(RUMBLEModManager form1)
         {
@@ -48,6 +51,7 @@ namespace Rumble_Mod_Manager
             InstallButton.Visible = false;
             DependenciesLabel.Visible = false;
             ModDescriptionLabel.Visible = false;
+            ModPictureDisplay.Visible = false;
             linkLabel1.Visible = false;
             BackButton.Enabled = CurrentPage > 1;
             ForwardButton.Enabled = ModCache.ModsByPage.ContainsKey(CurrentPage + 1);
@@ -88,55 +92,57 @@ namespace Rumble_Mod_Manager
 
         private void DisplayMods(List<Mod> mods)
         {
-            panel2.Controls.Clear();
+            panel1.AutoScrollPosition = new Point(0, 0);
 
-            List<ThunderstoreModDisplay> modPanels = new List<ThunderstoreModDisplay>();
+            panel2.Controls.Clear();
+            currentModCards.Clear();
 
             foreach (var mod in mods)
             {
                 if (!(mod.isOutdated || mod.isDeprecated))
                 {
-                    ThunderstoreModDisplay modPanel = CreateModPanel(mod);
-                    modPanels.Add(modPanel);
+                    var panel = CreateModPanel(mod);
+                    currentModCards.Add(panel);
+                    panel2.Controls.Add(panel);
                 }
             }
 
-            int panelWidth = 171;
-            int panelHeight = 265;
-            int ceilingMargin = 10; // Space between the top of panel2 and the first row
-            int wallMargin = 10; // Wall margin for both sides
-
-            int availableWidth = panel2.ClientSize.Width - 2 * wallMargin;
-            int panelsPerRow = Math.Max(1, availableWidth / panelWidth);
-
-            // Calculate the total space left after fitting panels
-            int totalPanelWidth = panelsPerRow * panelWidth;
-            int remainingSpace = availableWidth - totalPanelWidth;
-
-            // Distribute the remaining space as padding between panels
-            int horizontalSpacing = panelsPerRow > 1 ? remainingSpace / (panelsPerRow - 1) : 0;
-
-            for (int i = 0; i < modPanels.Count; i++)
-            {
-                int row = i / panelsPerRow;
-                int col = i % panelsPerRow;
-
-                // Calculate the X and Y positions for each panel
-                int x = wallMargin + col * (panelWidth + horizontalSpacing);
-                int y = ceilingMargin + row * (panelHeight + ceilingMargin);
-
-                modPanels[i].Size = new Size(panelWidth, panelHeight);
-                modPanels[i].Location = new Point(x, y);
-                panel2.Controls.Add(modPanels[i]);
-            }
-
-            // Set auto scroll options
             panel2.HorizontalScroll.Maximum = 0;
             panel2.AutoScroll = false;
             panel2.VerticalScroll.Maximum = 0;
             panel2.VerticalScroll.Visible = false;
             panel2.AutoScroll = true;
 
+            RepositionModCards();
+        }
+
+        private void RepositionModCards()
+        {
+            int panelHeight = 265;
+            int ceilingMargin = 10;
+            int wallMargin = 10;
+            int spacing = 10;
+            int minPanelWidth = 171;
+
+            int availableWidth = panel2.ClientSize.Width - 2 * wallMargin;
+            int panelsPerRow = Math.Max(1, availableWidth / (minPanelWidth + spacing));
+            int totalSpacing = (panelsPerRow - 1) * spacing;
+            int panelWidth = (availableWidth - totalSpacing) / panelsPerRow;
+
+            for (int i = 0; i < currentModCards.Count; i++)
+            {
+                int row = i / panelsPerRow;
+                int col = i % panelsPerRow;
+
+                int x = wallMargin + col * (panelWidth + spacing);
+                int y = ceilingMargin + row * (panelHeight + ceilingMargin);
+
+                currentModCards[i].Size = new Size(panelWidth, panelHeight);
+                currentModCards[i].Location = new Point(x, y);
+            }
+
+            int totalRows = (currentModCards.Count + panelsPerRow - 1) / panelsPerRow;
+            panel2.AutoScrollMinSize = new Size(0, totalRows * (panelHeight + ceilingMargin));
         }
 
         private ThunderstoreModDisplay CreateModPanel(Mod mod)
@@ -817,6 +823,7 @@ namespace Rumble_Mod_Manager
                     ModDescriptionLabel.Visible = true;
                     DependenciesLabel.Visible = true;
                     linkLabel1.Visible = true;
+                    ModPictureDisplay.Visible = true;
 
                     linkLabel1.Click -= LinkLabel1_Click;
                     linkLabel1.Click += LinkLabel1_Click;
@@ -857,6 +864,37 @@ namespace Rumble_Mod_Manager
         private void guna2ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             FilterMods(textBox1.Text);
+        }
+
+        private void panel2_SizeChanged(object sender, EventArgs e)
+        {
+            if (panel2.Width == lastPanel2Width) return;
+
+            lastPanel2Width = panel2.Width;
+            RepositionModCards();
+        }
+
+        private void panel1_SizeChanged(object sender, EventArgs e)
+        {
+            if (panel1.Height > 551)
+            {
+                // Expanded Mode
+                ModDescriptionLabel.Top = 163;
+                ModDescriptionLabel.Anchor = AnchorStyles.Top;
+                ModDescriptionLabel.Size = new Size(402, 96);
+
+                DependenciesLabel.Left = 2;
+                DependenciesLabel.Size = new Size(402, 155);
+            } else
+            {
+                // Compact Mode
+                ModDescriptionLabel.Top = DependenciesLabel.Top;
+                ModDescriptionLabel.Size = new Size(155, 155);
+                ModDescriptionLabel.Anchor = AnchorStyles.Bottom;
+
+                DependenciesLabel.Left = 167;
+                DependenciesLabel.Size = new Size(237, 155);
+            }
         }
     }
 }
