@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using Ionic.Zip;
+using System.IO.Compression;
 
 namespace Updater
 {
@@ -30,13 +30,10 @@ namespace Updater
                 string tempExtractPath = Path.Combine(Path.GetTempPath(), "UpdaterTemp");
                 Directory.CreateDirectory(tempExtractPath);
 
-                using (ZipFile zip = ZipFile.Read(zipFilePath))
-                {
-                    foreach (ZipEntry entry in zip)
-                    {
-                        entry.Extract(tempExtractPath, ExtractExistingFileAction.OverwriteSilently);
-                    }
-                }
+                if (Directory.Exists(tempExtractPath))
+                    Directory.Delete(tempExtractPath, true);
+
+                ZipFile.ExtractToDirectory(zipFilePath, tempExtractPath);
 
                 foreach (var file in Directory.GetFiles(tempExtractPath))
                 {

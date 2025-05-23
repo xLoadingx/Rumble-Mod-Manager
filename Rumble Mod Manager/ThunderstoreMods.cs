@@ -41,7 +41,7 @@ namespace Rumble_Mod_Manager
             if (!string.IsNullOrEmpty(filterOption))
             {
                 guna2ComboBox1.SelectedItem = filterOption;
-                FilterMods(filterOption);
+                FilterMods("");
             } else if (ModCache.ModsByPage != null && ModCache.ModsByPage.ContainsKey(CurrentPage))
                 DisplayMods(ModCache.ModsByPage[CurrentPage]);
 
@@ -536,7 +536,17 @@ namespace Rumble_Mod_Manager
 
                                     string name = modName;
                                     string description = latestVersion?.GetValue("description")?.ToString();
-                                    string downloads = latestVersion?.GetValue("downloads").ToString();
+
+                                    int downloads = 0;
+
+                                    foreach (JObject currentVersion in versions)
+                                    {
+                                        if (int.TryParse(currentVersion?["downloads"]?.ToString(), out int count))
+                                        {
+                                            downloads += count;
+                                        }
+                                    }
+
                                     string author = modDict.GetValueOrDefault("owner")?.ToString();
                                     bool isPinned = modDict.GetValueOrDefault("is_pinned")?.ToString().ToLower() == "true";
                                     string imageUrl = latestVersion?.GetValue("icon")?.ToString();
@@ -546,7 +556,7 @@ namespace Rumble_Mod_Manager
                                     {
                                         Name = name,
                                         Description = description,
-                                        Downloads = int.TryParse(downloads, out int downloadCount) ? downloadCount : 0,
+                                        Downloads = downloads,
                                         isPinned = isPinned,
                                         Author = author,
                                         ImageUrl = imageUrl,

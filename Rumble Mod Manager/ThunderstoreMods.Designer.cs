@@ -58,6 +58,7 @@
             // panel1
             // 
             panel1.AutoSize = true;
+            panel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             panel1.BackColor = Color.FromArgb(40, 40, 40);
             panel1.Controls.Add(linkLabel1);
             panel1.Controls.Add(ForwardButton);

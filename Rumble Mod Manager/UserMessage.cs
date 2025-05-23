@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace Rumble_Mod_Manager
 {
-    public partial class UserMessage : Form
+    public partial class UserMessage : PersistentForm
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
 

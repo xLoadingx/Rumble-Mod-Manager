@@ -18,6 +18,8 @@ namespace Rumble_Mod_Manager
             this.FormClosing += PersistentForm_FormClosing;
         }
 
+        protected virtual void OnLayoutRestored() { }
+
         private void PersistentForm_Load(object sender, EventArgs e)
         {
             var key = Registry.CurrentUser.OpenSubKey($"Software\\{Application.ProductName}\\{PersistenceKey}");
@@ -32,6 +34,8 @@ namespace Rumble_Mod_Manager
             this.Location = new Point(x, y);
 
             key.Close();
+
+            OnLayoutRestored();
         }
 
         private void PersistentForm_FormClosing(object sender, EventArgs e)

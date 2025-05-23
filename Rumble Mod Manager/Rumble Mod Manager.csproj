@@ -58,4 +58,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;if (-not (Test-Path '$(ProjectDir)Manager.zip')) { Compress-Archive -Path \&quot;$(TargetDir)*\&quot; -DestinationPath \&quot;$(ProjectDir)Manager.zip\&quot; -Force; Start-Process '$(ProjectDir)' }&quot;&#xD;&#xA;" />
+  </Target>
+
 </Project>

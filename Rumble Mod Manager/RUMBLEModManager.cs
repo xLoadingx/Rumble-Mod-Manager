@@ -6,6 +6,7 @@ namespace Rumble_Mod_Manager
     using Newtonsoft.Json;
     using System;
     using System.Diagnostics;
+    using System.Drawing.Drawing2D;
     using System.Drawing.Text;
     using System.Globalization;
     using System.IO;
@@ -39,6 +40,7 @@ namespace Rumble_Mod_Manager
         public RUMBLEModManager(List<ModPanelControl> preloadedPanels)
         {
             InitializeComponent();
+
             this.Text = "RUMBLE Mod Manager";
             SettingsButton.Controls.Add(pictureBox1);
             pictureBox1.Location = new Point(SettingsButton.Width - pictureBox1.PreferredSize.Width - 23, SettingsButton.Height - pictureBox1.PreferredSize.Height - 20);
@@ -52,6 +54,40 @@ namespace Rumble_Mod_Manager
 
             StartManager();
         }
+
+        protected override void OnLayoutRestored()
+        {
+            Control[] targets = { this, panel1, panel2 };
+
+            ApplyAllRoundedCorners();
+            this.ResizeBegin += (s, e) =>
+            {
+                foreach (var ctrl in targets)
+                    ctrl.Region = null;
+
+                foreach (Control ctrl in panel2.Controls)
+                    ctrl.Region = null;
+            };
+            this.ResizeEnd += (s, e) =>
+            {
+                ApplyAllRoundedCorners();
+            };
+        }
+
+        private void ApplyAllRoundedCorners()
+        {
+            Control[] targets = { this, panel1, panel2 };
+
+            foreach (var ctrl in targets)
+                ApplyRoundedCorners(ctrl);
+
+            foreach (Control control in panel2.Controls)
+            {
+                if (control is ModPanelControl)
+                    ApplyRoundedCorners(control);
+            }
+        }
+
 
         private async void StartManager()
         {
@@ -298,13 +334,13 @@ namespace Rumble_Mod_Manager
 
         public void AdjustPanelLocations()
         {
-            int panelWidth = 580;
+            int panelWidth = panel2.ClientSize.Width - 20;
             int panelHeight = 84;
             int verticalMargin = 10;
 
             int panel2Width = panel2.ClientSize.Width;
             int totalPanelsWidth = panelWidth;
-            int startX = (panel2Width - totalPanelsWidth) / 2;
+            int startX = 10;
 
             panel2.AutoScroll = false;
 
@@ -502,8 +538,21 @@ namespace Rumble_Mod_Manager
                 }
             }
 
+            panel2.HorizontalScroll.Maximum = 0;
+            panel2.AutoScroll = false;
+            panel2.VerticalScroll.Maximum = 0;
+            panel2.VerticalScroll.Visible = false;
+            panel2.AutoScroll = true;
+
             AdjustPanelLocations();
+
             allMods = panel2.Controls.OfType<ModPanelControl>().ToList();
+
+            foreach (Control control in panel2.Controls)
+            {
+                if (control is ModPanelControl)
+                    ApplyRoundedCorners(control);
+            }
 
             isLoadingDisplay = false;
         }
@@ -924,10 +973,12 @@ namespace Rumble_Mod_Manager
                                     });
 
                                 DependenciesLabel.Text = $"Dependencies:\n{string.Join("\n", dependencies)}";
+                                linkLabel1.Visible = true;
                             }
                             else
                             {
                                 DependenciesLabel.Text = "Dependencies: None";
+                                linkLabel1.Visible = false;
                             }
 
                             ModPictureDisplay.Image = modPanel.Mod?.ModImage ?? Properties.Resources.UnknownMod;
@@ -1285,6 +1336,95 @@ namespace Rumble_Mod_Manager
                     UseShellExecute = true
                 });
             }
+        }
+
+        private void ApplyRoundedCorners(Control ctrl, int radius = 20)
+        {
+            if (ctrl.Width <= 0 || ctrl.Height <= 0)
+                return;
+
+            using (var path = new System.Drawing.Drawing2D.GraphicsPath())
+            {
+                path.AddArc(0, 0, radius, radius, 180, 90);
+                path.AddArc(ctrl.Width - radius, 0, radius, radius, 270, 90);
+                path.AddArc(ctrl.Width - radius, ctrl.Height - radius, radius, radius, 0, 90);
+                path.AddArc(0, ctrl.Height - radius, radius, radius, 90, 90);
+                path.CloseFigure();
+
+                ctrl.Region?.Dispose();
+                ctrl.Region = new Region(path);
+            }
+        }
+
+        private void panel1_SizeChanged(object sender, EventArgs e)
+        {
+            if (panel1.Height > 551)
+            {
+                // Expanded Mode
+                ModDescriptionLabel.Top = 163;
+                ModDescriptionLabel.Anchor = AnchorStyles.Top;
+                ModDescriptionLabel.Size = new Size(376, 96);
+
+                DependenciesLabel.Left = 17;
+                DependenciesLabel.Size = new Size(376, 153);
+            }
+            else
+            {
+                // Compact Mode
+                ModDescriptionLabel.Top = DependenciesLabel.Top;
+                ModDescriptionLabel.Size = new Size(155, 155);
+                ModDescriptionLabel.Anchor = AnchorStyles.Bottom;
+
+                DependenciesLabel.Left = 175;
+                DependenciesLabel.Size = new Size(217, 153);
+            }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_NCHITTEST = 0x84;
+            const int HTLEFT = 10;
+            const int HTRIGHT = 11;
+            const int HTTOP = 12;
+            const int HTTOPLEFT = 13;
+            const int HTTOPRIGHT = 14;
+            const int HTBOTTOM = 15;
+            const int HTBOTTOMLEFT = 16;
+            const int HTBOTTOMRIGHT = 17;
+
+            if (m.Msg == WM_NCHITTEST)
+            {
+                Point pos = PointToClient(new Point(m.LParam.ToInt32()));
+                int grip = 10;
+
+                if (pos.X < grip && pos.Y < grip)
+                    m.Result = (IntPtr)HTTOPLEFT;
+                else if (pos.X > Width - grip && pos.Y < grip)
+                    m.Result = (IntPtr)HTTOPRIGHT;
+                else if (pos.X < grip && pos.Y > Height - grip)
+                    m.Result = (IntPtr)HTBOTTOMLEFT;
+                else if (pos.X > Width - grip && pos.Y > Height - grip)
+                    m.Result = (IntPtr)HTBOTTOMRIGHT;
+                else if (pos.X < grip)
+                    m.Result = (IntPtr)HTLEFT;
+                else if (pos.X > Width - grip)
+                    m.Result = (IntPtr)HTRIGHT;
+                else if (pos.Y < grip)
+                    m.Result = (IntPtr)HTTOP;
+                else if (pos.Y > Height - grip)
+                    m.Result = (IntPtr)HTBOTTOM;
+                else
+                    base.WndProc(ref m);
+
+                return;
+            }
+
+            base.WndProc(ref m);
+        }
+
+        private void RUMBLEModManager_Resize(object sender, EventArgs e)
+        {
+            AdjustPanelLocations();
         }
     }
 

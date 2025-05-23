@@ -647,49 +647,82 @@ namespace Rumble_Mod_Manager
 
         public static async Task CheckForUpdates(bool showScreen = false)
         {
-            if (!IsConnectedToInternet()) return; 
-            int currentVersion = 143;
+            if (!IsConnectedToInternet()) return;
 
-            var client = new HttpClient();
+            int currentVersion = 145;
+            string apiUrl = "https://api.github.com/repos/xLoadingx/Rumble-Mod-Manager/releases/latest";
 
-            var url = "https://raw.githubusercontent.com/xLoadingx/Rumble-Mod-Manager/main/update/updates.json";
-            url += "?nocache=" + DateTime.Now.Ticks;
-            var response = await client.GetStringAsync(url);
-            dynamic updateInfo = JsonConvert.DeserializeObject(response);
-            string versionString = (string)updateInfo["version"];
+            HttpClient client = new();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
 
-            if (currentVersion < int.Parse(versionString.Replace(".", "")))
+            try
             {
-                UserMessage updateMessage = new UserMessage($"A new version of the manager is available! Do you want to install? \n\n {string.Join(".", currentVersion.ToString().ToCharArray())} => {updateInfo.version.ToString()}", false, true);
-                if (updateMessage.ShowDialog() == DialogResult.Yes)
-                {
-                    string tempZipPath = Path.Combine(Path.GetTempPath(), "Manager.zip");
-                    using (var download = await client.GetStreamAsync(updateInfo.url.ToString()))
-                    using (var fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write))
-                    {
-                        await download.CopyToAsync(fileStream);
-                    }
+                string response = await client.GetStringAsync(apiUrl);
+                dynamic releaseInfo = JsonConvert.DeserializeObject(response);
 
-                    string updaterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Updater.exe");
-                    if (File.Exists(updaterPath))
+                string latestVersionTag = (string)releaseInfo.tag_name;
+                string changelog = (string)releaseInfo.body;
+                string zipUrl = (string)releaseInfo.assets[0].browser_download_url;
+
+                int latestVersion = int.Parse(latestVersionTag.TrimStart('v').Replace(".", ""));
+
+                if (currentVersion < latestVersion)
+                {
+                    string formattedCurrent = string.Join(".", currentVersion.ToString().ToCharArray());
+                    changelog = changelog
+                        .Replace("**", "")
+                        .Replace("###", "")
+                        .Replace("*", "");
+
+                    string updateText =
+                        $"A new version of the manager is available!\nDo you want to update?\n\n" +
+                        $"{formattedCurrent} => {latestVersionTag}\n\n" +
+                        $"Changelog:\n{changelog}";
+
+                    UserMessage updateMessage = new UserMessage(updateText, false, true);
+
+                    if (updateMessage.ShowDialog() == DialogResult.Yes)
                     {
-                        Process.Start(updaterPath, $"\"{tempZipPath}\" \"{AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')}\" \"{Environment.ProcessPath}\"");
-                        Application.Exit();
-                    }
-                    else
-                    {
-                        UserMessage error = new UserMessage("Updater not found. Please reinstall the application.");
-                        error.Show();
+                        string tempZipPath = Path.Combine(Path.GetTempPath(), "Manager.zip");
+                        using (var download = await client.GetStreamAsync(zipUrl))
+                        using (var fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write))
+                        {
+                            await download.CopyToAsync(fileStream);
+                        }
+
+                        string sourceUpdaterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Updater.exe");
+                        string tempUpdater = Path.Combine(Path.GetTempPath(), "RMM-Updater.exe");
+                        File.Copy(sourceUpdaterPath, tempUpdater, true);
+
+                        if (File.Exists(tempUpdater))
+                        {
+                            Process.Start(tempUpdater, $"\"{tempZipPath}\" \"{AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')}\" \"{Environment.ProcessPath}\"");
+                            Application.Exit();
+                        }
+                        else
+                        {
+                            UserMessage error = new UserMessage("Updater not found. Please reinstall the application.", showCopyDialog: true);
+                            error.Show();
+                        }
                     }
                 }
-            } else if (showScreen)
+                else if (showScreen)
+                {
+                    string message = $"You have the latest version of Rumble Mod Manager!\n\n{latestVersionTag}";
+                    if (Environment.MachineName == "Desktop-49CDQ")
+                        message = $"You have the latest version.\nYou are the developer, idiot.\n\n{latestVersionTag}";
+
+                    UserMessage upToDate = new UserMessage(message);
+                    upToDate.Show();
+                }
+            }
+            catch (Exception ex)
             {
-                string message = "You have the latest version of Rumble Mod Manager!";
-
-                if (Environment.MachineName == "Desktop-49CDQ") message = "You have the latest version. \n You are the developer idiot.";
-
-                UserMessage upToDate = new UserMessage(message);
-                upToDate.Show();
+                if (showScreen)
+                {
+                    UserMessage error = new UserMessage($"Update check failed: {ex.Message}", showCopyDialog: true);
+                    error.Show();
+                }
             }
         }
 

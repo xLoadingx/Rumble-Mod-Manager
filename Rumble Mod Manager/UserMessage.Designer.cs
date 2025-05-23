@@ -43,6 +43,7 @@
             // 
             // button1
             // 
+            button1.Anchor = AnchorStyles.Bottom;
             button1.AutoSize = true;
             button1.BackColor = Color.FromArgb(128, 255, 128);
             button1.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
@@ -57,6 +58,9 @@
             // 
             // panel1
             // 
+            panel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            panel1.AutoScroll = true;
+            panel1.AutoSize = true;
             panel1.BackColor = Color.FromArgb(20, 20, 20);
             panel1.Controls.Add(label1);
             panel1.Location = new Point(12, 12);
@@ -66,6 +70,7 @@
             // 
             // label1
             // 
+            label1.BackColor = Color.FromArgb(20, 20, 20);
             label1.Dock = DockStyle.Fill;
             label1.ForeColor = Color.White;
             label1.Location = new Point(0, 0);
@@ -89,6 +94,7 @@
             // 
             // button2
             // 
+            button2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             button2.AutoSize = true;
             button2.BackColor = Color.FromArgb(128, 255, 128);
             button2.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
@@ -103,6 +109,7 @@
             // 
             // button3
             // 
+            button3.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             button3.AutoSize = true;
             button3.BackColor = Color.Red;
             button3.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
@@ -117,6 +124,7 @@
             // 
             // button4
             // 
+            button4.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             button4.AutoSize = true;
             button4.BackColor = Color.Purple;
             button4.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
@@ -142,6 +150,7 @@
             Controls.Add(button1);
             FormBorderStyle = FormBorderStyle.None;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MinimumSize = new Size(462, 243);
             Name = "UserMessage";
             Text = "UserMessage";
             panel1.ResumeLayout(false);
@@ -152,8 +161,8 @@
         #endregion
 
         private Button button1;
-        private Panel panel1;
-        private Label label1;
+        public Panel panel1;
+        public Label label1;
         private Guna.UI2.WinForms.Guna2Elipse guna2Elipse1;
         private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
         private Button button3;
