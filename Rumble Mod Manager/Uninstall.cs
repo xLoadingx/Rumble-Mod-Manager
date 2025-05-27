@@ -25,7 +25,8 @@ namespace Rumble_Mod_Manager
             if (modNames.Count == 1)
             {
                 label2.Text = modNames[0];
-            } else
+            }
+            else
             {
                 label2.Text = $"{modNames.Count} Mod{(modNames.Count != 1 ? "s" : "")}";
             }
@@ -39,7 +40,8 @@ namespace Rumble_Mod_Manager
             if (e.KeyCode == Keys.Escape)
             {
                 button1_Click(sender, e);
-            } else if (e.KeyCode == Keys.Return)
+            }
+            else if (e.KeyCode == Keys.Return)
             {
                 button2_Click(sender, e);
             }
@@ -55,14 +57,20 @@ namespace Rumble_Mod_Manager
             privateFonts.AddFontFile("GoodDogPlain.ttf");
             label1.Font = new Font(privateFonts.Families[0], 21.0F, FontStyle.Regular);
             label2.Font = new Font(privateFonts.Families[0], 27.0F, FontStyle.Regular);
-            button2.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Regular);
-            button1.Font = new Font(privateFonts.Families[0], 24.0F, FontStyle.Regular);
+            button2.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
+            AllProfiles.Font = new Font(privateFonts.Families[0], 20.0F, FontStyle.Regular);
         }
 
 
         private void button2_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
+            this.Close();
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Abort;
             this.Close();
         }
     }

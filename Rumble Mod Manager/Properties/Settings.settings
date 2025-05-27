@@ -8,9 +8,6 @@
     <Setting Name="LastLoadedProfile" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="PreviousLoadedProfile" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="SkipMapLoading" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>

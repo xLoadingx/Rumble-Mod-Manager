@@ -148,6 +148,39 @@ namespace Rumble_Mod_Manager
             return modPanel;
         }
 
+        void AddModAndDependenciesToProfile(Mod mod, ModProfile profile, bool modEnabled)
+        {
+            string dllName = LaunchPage.modMappings.FirstOrDefault(x => x.Value == mod.Name).Key;
+            string modId = Path.GetFileNameWithoutExtension(dllName).ToLowerInvariant();
+
+            if (mod.Dependencies != null)
+            {
+                foreach (var dep in mod.Dependencies)
+                {
+                    if (dep.Contains("LavaGang-MelonLoader", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    var parts = dep.Split('-');
+                    if (parts.Length >= 2)
+                    {
+                        string author = parts[0];
+                        string name = parts[1];
+
+                        var depMod = FindModByAuthorAndName(author, name);
+                        if (depMod != null)
+                            AddModAndDependenciesToProfile(depMod, profile, modEnabled);
+                    }
+                }
+            }
+
+            if (!profile.EnabledModIds.Contains(modId) && !profile.DisabledModIds.Contains(modId))
+            {
+                if (modEnabled)
+                    profile.EnabledModIds.Add(modId);
+                else
+                    profile.DisabledModIds.Add(modId);
+            }
+        }
+
         public static async Task DownloadModFromInternet(Mod mod, RUMBLEModManager form1, bool ModEnabled, bool initialMod, UserMessage installingMessage = null, ModPanelControl panel = null, bool showMessage = true)
         {
             string tempDir = Path.Combine(Properties.Settings.Default.RumblePath, $"temp_mod_download_{Guid.NewGuid()}");
@@ -316,36 +349,36 @@ namespace Rumble_Mod_Manager
 
                 if (IsValidMod(tempDir))
                 {
-                    string modsFolder = Path.Combine(Properties.Settings.Default.RumblePath, ModEnabled ? "Mods" : "DisabledMods");
+                    string cacheFolder = ProfileSystem.ModCacheDirectory;
+                    string modsFolder = ProfileSystem.ModsDirectory;
+
+                    Directory.CreateDirectory(cacheFolder);
+                    Directory.CreateDirectory(modsFolder);
 
                     Directory.CreateDirectory(modsFolder);
 
                     var allowedDirs = new[] { "Mods", "UserLibs", "UserData" };
 
-                    string dllFilePath = Directory.GetFiles(Path.Combine(tempDir, "Mods"))[0];
-                    string modPath = Path.Combine(modsFolder, Path.GetFileName(dllFilePath));
+                    string dllFilePath = Directory.GetFiles(Path.Combine(tempDir, "Mods"), "*.dll")[0];
+                    string modId = Path.GetFileNameWithoutExtension(dllFilePath);
+                    string cachePath = Path.Combine(cacheFolder, Path.GetFileName(dllFilePath));
 
-                    if (form1 != null)
+                    File.Copy(dllFilePath, cachePath, overwrite: true);
+
+                    if (ModEnabled)
                     {
-                        foreach (var panel in form1.preloadedModPanels)
-                        {
-                            if (string.Equals(Path.GetFileNameWithoutExtension(dllFilePath), panel.ModNameLabel, StringComparison.OrdinalIgnoreCase))
-                            {
-                                if (message != null)
-                                {
-                                    message.UpdateStatusMessage("Mod already installed. Updating existing mod...");
+                        string modsPath = Path.Combine(modsFolder, Path.GetFileName(dllFilePath));
+                        File.Copy(cachePath, modsPath, overwrite: true);
 
-                                    await Task.Delay(100);
-                                }
-
-                                if (File.Exists(modPath))
-                                {
-                                    File.Delete(modPath);
-                                }
-                                File.Copy(dllFilePath, modPath, true);
-                            }
-                        }
+                        if (!ProfileSystem.CurrentProfile.EnabledModIds.Contains(modId))
+                            ProfileSystem.CurrentProfile.EnabledModIds.Add(modId);
+                    } else
+                    {
+                        if (!ProfileSystem.CurrentProfile.EnabledModIds.Contains(modId))
+                            ProfileSystem.CurrentProfile.EnabledModIds.Add(modId);
                     }
+
+                    ProfileSystem.SaveProfile(ProfileSystem.CurrentProfile);
 
                     foreach (var subDir in Directory.EnumerateDirectories(tempDir))
                     {
@@ -373,12 +406,12 @@ namespace Rumble_Mod_Manager
 
                     if (form1 != null)
                     {
-                        ModPanelControl newModPanel = LaunchPage.CreateModPanel(modPath, ModEnabled, Properties.Settings.Default.RumblePath);
+                        ModPanelControl newModPanel = LaunchPage.CreateModPanel(dllFilePath, ModEnabled, Properties.Settings.Default.RumblePath);
                         newModPanel.Click += form1.ModPanel_Click;
 
                         form1.AddOrUpdateModPanel(newModPanel);
                         form1.AdjustPanelLocations();
-                        form1.SaveProfile(Properties.Settings.Default.LastLoadedProfile, false);
+                        
 
                         return newModPanel;
                     }

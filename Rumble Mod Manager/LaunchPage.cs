@@ -18,7 +18,7 @@ namespace Rumble_Mod_Manager
         private static Credits _creditsInstance;
         private static RUMBLEModManager _rumbleModManagerInstance;
 
-        private static Dictionary<string, string> modMappings = new Dictionary<string, string>();
+        public static Dictionary<string, string> modMappings = new Dictionary<string, string>();
 
         public LaunchPage()
         {
@@ -44,6 +44,141 @@ namespace Rumble_Mod_Manager
                 Task.Run(() => CheckForInternetConnectionBackground());
 
                 await CheckForUpdates();
+
+                ProfileMigrationCheck();
+            }
+        }
+
+        private void MigrateJsonProfile(string path)
+        {
+            string json = File.ReadAllText(path);
+            var legacyData = JsonConvert.DeserializeObject<LegacyProfile>(json);
+
+            if (legacyData == null)
+                return;
+
+            var migrated = new ModProfile
+            {
+                Name = legacyData.ProfileName ?? "Unnamed",
+                EnabledModIds = new List<string>(),
+                DisabledModIds = new List<string>(),
+                FavoritedModIds = new List<string>()
+            };
+
+            foreach (var oldMod in legacyData.enabledMods)
+            {
+                string id = oldMod.ModName.ToLowerInvariant();
+
+                migrated.EnabledModIds.Add(id);
+                if (oldMod.Favorited)
+                    migrated.FavoritedModIds.Add(id);
+            }
+
+            foreach (var oldMod in legacyData.disabledMods)
+            {
+                string id = oldMod.ModName.ToLowerInvariant();
+
+                migrated.DisabledModIds.Add(id);
+                if (oldMod.Favorited)
+                    migrated.FavoritedModIds.Add(id);
+            }
+
+            migrated.EnabledModIds = migrated.EnabledModIds.Distinct().ToList();
+            migrated.DisabledModIds = migrated.DisabledModIds.Distinct().ToList();
+            migrated.FavoritedModIds = migrated.FavoritedModIds.Distinct().ToList();
+
+            string newPath = Path.Combine(ProfileSystem.ProfilesDirectory, migrated.Name + ".json");
+            string newJson = JsonConvert.SerializeObject(migrated, Formatting.Indented);
+            File.WriteAllText(newPath, newJson);
+
+            if (File.Exists(newPath))
+            {
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception ex)
+                {
+                    UserMessage error = new UserMessage($"Failed to delete old profile '{path}': {ex.Message}", true, showCopyDialog: true);
+                    error.ShowDialog();
+                }
+            }
+        }
+
+        private void ProfileMigrationCheck()
+        {
+            string rumblePath = Properties.Settings.Default.RumblePath;
+            string oldProfilesDir = Path.Combine(rumblePath, "Mod_Profiles");
+            if (Directory.Exists(oldProfilesDir) && Directory.GetFiles(oldProfilesDir, "*.json").Length > 0)
+            {
+                UserMessage message = new UserMessage("It seems you have old profiles from the previous version of Rumble Mod Manager.\nBefore proceeding, we will migrate your old profiles to the new format.\n\nThis may take a bit, please wait...", true);
+                if (message.ShowDialog() == DialogResult.OK)
+                {
+                    UserMessage details = new UserMessage("", false);
+                    details.ShowDialog();
+
+                    string[] legacyModDirs =
+                    {
+                        Path.Combine(rumblePath, "Mods"),
+                        Path.Combine(oldProfilesDir, "InactiveMods"),
+                        Path.Combine(rumblePath, "DisabledMods")
+                    };
+
+                    details.UpdateStatusMessage("Moving all mods to Mod-Cache...");
+
+                    foreach (var dir in legacyModDirs)
+                    {
+                        if (!Directory.Exists(dir)) continue;
+                        Directory.CreateDirectory(ProfileSystem.ModCacheDirectory);
+
+                        foreach (var file in Directory.GetFiles(dir, "*.dll"))
+                        {
+                            string fileName = Path.GetFileName(file);
+                            string targetPath = Path.Combine(ProfileSystem.ModCacheDirectory, fileName);
+
+                            if (!File.Exists(targetPath))
+                            {
+                                File.Move(file, targetPath);
+                            }
+                        }
+                    }
+
+                    details.UpdateStatusMessage("Deleting old folders...");
+                    Directory.Delete(Path.Combine(oldProfilesDir, "InactiveMods"), true);
+                    Directory.Delete(Path.Combine(rumblePath, "DisabledMods"), true);
+
+                    details.UpdateStatusMessage("Creating new directories...");
+                    Directory.CreateDirectory(ProfileSystem.ProfilesDirectory);
+
+                    details.UpdateStatusMessage("Moving old profiles to new directory...");
+                    foreach (var file in Directory.GetFiles(oldProfilesDir, "*.json"))
+                    {
+                        string dest = Path.Combine(ProfileSystem.ProfilesDirectory, Path.GetFileName(file));
+                        File.Move(file, dest, true);
+                    }
+
+                    details.UpdateStatusMessage("Deleting old profiles directory...");
+                    Directory.Delete(oldProfilesDir, true);
+
+                    details.UpdateStatusMessage("Migrating old profiles to new format...");
+                    foreach (var profile in Directory.GetFiles(ProfileSystem.ProfilesDirectory, "*.json"))
+                    {
+                        MigrateJsonProfile(profile);
+                    }
+
+                    details.UpdateStatusMessage("Loading previous profile...");
+                    var allProfiles = ProfileSystem.AllProfiles;
+
+                    var targetProfile = allProfiles.FirstOrDefault(p => p.Name == Properties.Settings.Default.LastLoadedProfile)
+                        ?? allProfiles.FirstOrDefault();
+
+                    if (targetProfile != null)
+                    {
+                        ProfileSystem.ApplyProfile(targetProfile);
+                        details.UpdateStatusMessage("Migration Complete!");
+                        details.ShowButtons(true);
+                    }
+                }
             }
         }
 

@@ -40,6 +40,7 @@
             button3 = new Button();
             Import = new Button();
             Export = new Button();
+            AddProfile = new Button();
             SuspendLayout();
             // 
             // Title
@@ -149,12 +150,27 @@
             Export.UseVisualStyleBackColor = false;
             Export.Click += Export_Click;
             // 
+            // AddProfile
+            // 
+            AddProfile.AutoSize = true;
+            AddProfile.BackColor = Color.FromArgb(128, 255, 128);
+            AddProfile.Font = new Font("Arial Narrow", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            AddProfile.ForeColor = Color.Green;
+            AddProfile.Location = new Point(333, 399);
+            AddProfile.Name = "AddProfile";
+            AddProfile.Size = new Size(39, 39);
+            AddProfile.TabIndex = 11;
+            AddProfile.Text = "+";
+            AddProfile.UseVisualStyleBackColor = false;
+            AddProfile.Click += AddProfile_Click;
+            // 
             // SwitchProfileScreen
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(30, 30, 30);
             ClientSize = new Size(387, 450);
+            Controls.Add(AddProfile);
             Controls.Add(Export);
             Controls.Add(Import);
             Controls.Add(button3);
@@ -185,5 +201,6 @@
         private Button button3;
         private Button Import;
         private Button Export;
+        private Button AddProfile;
     }
 }
