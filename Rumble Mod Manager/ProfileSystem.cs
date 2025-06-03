@@ -67,18 +67,27 @@ namespace Rumble_Mod_Manager
 
         public static void ApplyProfile(ModProfile profile)
         {
+            var previousProfile = CurrentProfile;
             CurrentProfile = profile;
 
             Directory.CreateDirectory(ModsDirectory);
             Directory.CreateDirectory(ModCacheDirectory);
 
-            foreach (string modId in CurrentProfile.EnabledModIds)
+            if (previousProfile != null)
             {
-                string sourcePath = Path.Combine(ModsDirectory, modId + ".dll");
-                string targetPath = Path.Combine(ModCacheDirectory, modId + ".dll");
+                foreach (string modId in previousProfile.EnabledModIds)
+                {
+                    string sourcePath = Path.Combine(ModsDirectory, modId + ".dll");
+                    string targetPath = Path.Combine(ModCacheDirectory, modId + ".dll");
 
-                if (File.Exists(sourcePath))
-                    File.Move(sourcePath, targetPath);
+                    if (File.Exists(sourcePath))
+                    {
+                        if (File.Exists(targetPath))
+                            File.Delete(targetPath);
+
+                        File.Move(sourcePath, targetPath);
+                    }
+                }
             }
 
             foreach (string modId in profile.EnabledModIds)
@@ -87,7 +96,12 @@ namespace Rumble_Mod_Manager
                 string target = Path.Combine(ModsDirectory, modId + ".dll");
 
                 if (File.Exists(source))
+                {
+                    if (File.Exists(target))
+                        File.Delete(target);
+
                     File.Move(source, target);
+                }
             }
 
             Properties.Settings.Default.LastLoadedProfile = profile.Name;

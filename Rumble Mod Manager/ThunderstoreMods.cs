@@ -172,11 +172,16 @@ namespace Rumble_Mod_Manager
                 }
             }
 
-            if (!profile.EnabledModIds.Contains(modId) && !profile.DisabledModIds.Contains(modId))
+            if (modEnabled)
             {
-                if (modEnabled)
+                profile.DisabledModIds.Remove(modId);
+                if (!profile.EnabledModIds.Contains(modId))
                     profile.EnabledModIds.Add(modId);
-                else
+            }
+            else
+            {
+                profile.EnabledModIds.Remove(modId);
+                if (!profile.DisabledModIds.Contains(modId))
                     profile.DisabledModIds.Add(modId);
             }
         }
@@ -274,11 +279,7 @@ namespace Rumble_Mod_Manager
                     installingMessage?.UpdateStatusMessage($"'{mod.Name}' successfully installed");
                     installingMessage?.ShowButtons(true);
 
-                    string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{Properties.Settings.Default.LastLoadedProfile}_profile.json");
-                    string json = File.ReadAllText(profilePath);
-                    var profile = JsonConvert.DeserializeObject<ModProfile>(json);
-
-                    form1.LoadMods(profile);
+                    form1.LoadMods(ProfileSystem.CurrentProfile);
                 }
             }
             catch (Exception ex)
@@ -370,12 +371,15 @@ namespace Rumble_Mod_Manager
                         string modsPath = Path.Combine(modsFolder, Path.GetFileName(dllFilePath));
                         File.Copy(cachePath, modsPath, overwrite: true);
 
+                        ProfileSystem.CurrentProfile.DisabledModIds.Remove(modId);
                         if (!ProfileSystem.CurrentProfile.EnabledModIds.Contains(modId))
                             ProfileSystem.CurrentProfile.EnabledModIds.Add(modId);
-                    } else
+                    }
+                    else
                     {
-                        if (!ProfileSystem.CurrentProfile.EnabledModIds.Contains(modId))
-                            ProfileSystem.CurrentProfile.EnabledModIds.Add(modId);
+                        ProfileSystem.CurrentProfile.EnabledModIds.Remove(modId);
+                        if (!ProfileSystem.CurrentProfile.DisabledModIds.Contains(modId))
+                            ProfileSystem.CurrentProfile.DisabledModIds.Add(modId);
                     }
 
                     ProfileSystem.SaveProfile(ProfileSystem.CurrentProfile);

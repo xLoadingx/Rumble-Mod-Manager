@@ -62,11 +62,7 @@ namespace Rumble_Mod_Manager
 
             if (ModMangager != null)
             {
-                string profilePath = Path.Combine(Properties.Settings.Default.RumblePath, "Mod_Profiles", $"{Properties.Settings.Default.LastLoadedProfile}_profile.json");
-                string json = File.ReadAllText(profilePath);
-                var profile = JsonConvert.DeserializeObject<ModProfile>(json);
-
-                ModMangager.LoadMods(profile);
+                ModMangager.LoadMods(ProfileSystem.CurrentProfile);
             }
             else if (launchPage != null)
             {
