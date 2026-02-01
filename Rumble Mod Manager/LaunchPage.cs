@@ -648,7 +648,7 @@ namespace Rumble_Mod_Manager
         public static async Task CheckForUpdates(bool showScreen = false)
         {
             if (!IsConnectedToInternet()) return; 
-            int currentVersion = 146;
+            int currentVersion = 147;
 
             var client = new HttpClient();
 
@@ -742,7 +742,7 @@ namespace Rumble_Mod_Manager
                     }
                 }
 
-                if (!Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
+                if (!Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator")))
                 {
                     label1.Text = "Installing MelonLoader...";
                     await InstallMelonLoader();
@@ -758,7 +758,7 @@ namespace Rumble_Mod_Manager
                 progressBar1.Visible = false;
                 label1.Visible = false;
 
-                if (Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "UnityDependencies")))
+                if (Directory.Exists(Path.Combine(basePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator")))
                 {
                     string melonLoaderPath = Path.Combine(Properties.Settings.Default.RumblePath, "MelonLoader", "net6", "MelonLoader.dll");
 
@@ -777,6 +777,9 @@ namespace Rumble_Mod_Manager
 
                         string latestMelonVersionString = await GetLatestMelonLoaderVersionAsync();
                         Version latestMelonVersion = new Version(latestMelonVersionString);
+
+                        if (currentMelonVersion > latestMelonVersion)
+                            return;
 
                         if (currentMelonVersion < latestMelonVersion)
                         {

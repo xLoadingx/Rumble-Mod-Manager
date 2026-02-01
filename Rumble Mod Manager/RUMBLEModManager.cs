@@ -1135,48 +1135,28 @@ namespace Rumble_Mod_Manager
 
         private async void LaunchRumble(bool modded)
         {
-            string steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
+            string arguments = modded
+                ? ""
+                : "--no-mods --melonloader.hideconsole --melonloader.disablestartscreen";
 
-            string arguments = modded ? "-applaunch 890550" : "-applaunch 890550 --no-mods --melonloader.hideconsole --melonloader.disablestartscreen";
-
-            if (steamInstallPath == null)
-            {
-                steamInstallPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) as string;
-            }
-
-            string steamExePath = Path.Combine(steamInstallPath, "steam.exe");
-
-            if (!File.Exists(steamExePath))
-            {
-                UserMessage error = new UserMessage("Steam executable not found at the specified path.", true, showCopyDialog: true);
-                error.Show();
-                return;
-            }
+            string steamUri = string.IsNullOrWhiteSpace(arguments)
+                ? "steam://run/890550"
+                : $"steam://run/890550//{arguments}";
 
             try
             {
-                if (gameProcess == null)
+                Process.Start(new ProcessStartInfo
                 {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = steamExePath,
-                        Arguments = arguments,
-                        UseShellExecute = true
-                    });
-                }
-                else
-                {
-                    if (!gameProcess.HasExited)
-                    {
-                        gameProcess.Kill();
-                        gameProcess.WaitForExitAsync();
-                    }
-                    gameProcess = null;
-                }
+                    FileName = steamUri, UseShellExecute = true
+                });
             }
             catch (Exception ex)
             {
-                UserMessage error = new UserMessage($"Failed to launch or stop RUMBLE: {ex.Message}", true, showCopyDialog: true);
+                UserMessage error = new UserMessage(
+                    $"Failed to launch RUMBLE via Steam protocol: {ex.Message}",
+                    true,
+                    showCopyDialog: true
+                );
                 error.Show();
             }
         }
